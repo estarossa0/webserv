@@ -1,6 +1,6 @@
 #include "websrv.h"
 
-server::server(int port)
+Server::Server(int port)
 {
 	int	opt(1);
 
@@ -33,7 +33,7 @@ server::server(int port)
 	}
 }
 
-void	server::connect()
+int		Server::connect()
 {
 	int	len(sizeof(addr));
 
@@ -42,4 +42,5 @@ void	server::connect()
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
+	return http_socket;
 }

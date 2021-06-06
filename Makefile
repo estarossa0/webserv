@@ -11,7 +11,7 @@
 # **************************************************************************** #
 
 NAME = webserv
-FLAGS = -Wall -Wextra -Werror
+FLAGS = #-Wall -Wextra -Werror
 
 #FOLDERS
 SRC_FOLDER = ./srcs

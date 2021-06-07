@@ -55,7 +55,8 @@ namespace parser
 		return_location return_location;
 		cgi_location cgi_location;
 
-
+	public:
+	
 
 	};
 
@@ -63,8 +64,8 @@ namespace parser
 	{
 	private:
 		char const *filename;
+		std::vector<Server> servers;
 
-		// std::vector<>
 
 	public:
 		ConfigParser(char const *inFilename);

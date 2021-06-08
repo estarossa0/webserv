@@ -1,13 +1,27 @@
 #include "ConfigParser.hpp"
 
+std::string const parser::ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRIMITIVES] = {
+	PORT_OP,
+	HOST_OP,
+	SERVER_NAME_OP,
+	CLIENT_MAX_SIZE_BODY_OP,
+	ERROR_PAGE_OP,
+	ROOT_OP,
+	LOCATION_OP,
+	RETURN_LOCATION_OP,
+	CGI_LOCATION_OP,
+	UPLOAD_LOCATION_OP,
+};
+
 parser::ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename),
 															 _serversNumber(0)
 {
-	getFileContent();
+	_getFileContent();
 	std::cout << "got file content successfully" << std::endl;
-	indexServers();
+	_indexServers();
 	std::cout << "servers has been indexed successfully" << std::endl;
-	parseContent();
+	_initParsersFuntions();
+	_parseContent();
 	std::cout << "content has been parsed successfully" << std::endl;
 }
 
@@ -23,7 +37,7 @@ std::vector<parser::Server> const &parser::ConfigParser::getServers() const
 	return this->_servers;
 }
 
-void parser::ConfigParser::trim(std::string &str)
+void parser::ConfigParser::_trim(std::string &str)
 {
 	size_t start = 0;
 	size_t end = str.size() > 0 ? str.size() - 1 : 0;
@@ -36,7 +50,7 @@ void parser::ConfigParser::trim(std::string &str)
 	str = str.substr(start, end - start + 1);
 }
 
-void parser::ConfigParser::getFileContent()
+void parser::ConfigParser::_getFileContent()
 {
 	std::ifstream inFile(_filename);
 	std::string buff;
@@ -48,7 +62,7 @@ void parser::ConfigParser::getFileContent()
 
 	while (std::getline(inFile, buff))
 	{
-		trim(buff);
+		_trim(buff);
 		if (!buff.empty())
 			_fileLines.push_back(buff);
 	}
@@ -56,7 +70,7 @@ void parser::ConfigParser::getFileContent()
 	inFile.close();
 }
 
-void parser::ConfigParser::indexServers()
+void parser::ConfigParser::_indexServers()
 {
 	int isBracesValid = 0;
 	bool serverBraceOpen = false;
@@ -107,7 +121,7 @@ void parser::ConfigParser::indexServers()
 		throw std::runtime_error(ERROR_BRACES);
 }
 
-void parser::ConfigParser::parseContent()
+void parser::ConfigParser::_parseContent()
 {
 	size_t start;
 	size_t end;
@@ -115,10 +129,35 @@ void parser::ConfigParser::parseContent()
 	size_t i = 0;
 	while (i < _serversIndexing.size())
 	{
-		start = _serversIndexing[i];
+		start = _serversIndexing[i] + 1;
 		end = _serversIndexing[i + 1];
+		if (start >= end)
+			throw std::runtime_error(ERROR_EMPTY_CONFIGURATION);
+		Server sv;
+		while(start < end)
+		{
+			for (size_t j = 0; j < NUMBER_OF_SERVER_PRIMITIVES; i++)
+			{
+				if (_fileLines[i].compare(primitives_openings[j]))
+				{
+					
+				}
+			}
+		}
 		
-		i+=2;
+		
+
+
+		i += 2;
 	}
-	
+}
+
+void parser::ConfigParser::_initParsersFuntions()
+{
+	for (size_t i = 0; i < NUMBER_OF_SERVER_PRIMITIVES ; i++)
+	{
+		_checked_primitives.insert(std::pair<std::string, bool>(primitives_openings[i], false));
+	}
+
+	// _server_primitive_parser[0] = 
 }

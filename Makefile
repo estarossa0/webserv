@@ -11,7 +11,7 @@
 # **************************************************************************** #
 
 NAME = webserv
-FLAGS = -Wall -Wextra -Werror
+FLAGS = #-Wall -Wextra -Werror
 
 #FOLDERS
 SRC_FOLDER = ./srcs
@@ -27,6 +27,7 @@ RESET = \033[0m
 
 #FILES
 SRC_FILES = main.cpp \
+			server.cpp \
 
 
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)

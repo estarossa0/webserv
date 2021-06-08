@@ -97,13 +97,13 @@ void Request::parseRequest(const std::string &data)
 	int status = 0;
 	std::string buffer;
 	std::istringstream lines(data);
-	log "Data to parse: " << data << "\n---------\n" line;
+	// log "Data to parse: " << data << "\n---------\n" line;
 	while (std::getline(lines, buffer))
 	{
 		// log "current line: " << buffer line;
 		if (!clen)
 		{
-			if (buffer.find("GET") != std::string::npos)
+			if (buffer.find("HTTP/1.1") != std::string::npos)
 			{
 				method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
 				uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
@@ -151,7 +151,7 @@ void Request::parseRequest(const std::string &data)
 
 void Request::clear()
 {
-	log "Clearing request" line;
+	// log "Clearing request" line;
 	this->body = "";
 	this->boundary = "";
 }

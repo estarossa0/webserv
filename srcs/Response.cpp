@@ -32,7 +32,6 @@ const char *Response::Forbidden::what() const throw()
 	return "Forbidden";
 }
 
-
 std::string Response::getCodeStatus()
 {
 	if (this->_status == 200)
@@ -54,6 +53,24 @@ std::string Response::getCodeStatus()
 	return "";
 }
 
+void Response::checkFilePermission(std::string &path, int mode)
+{
+	int returnval = access(path.c_str(), mode);
+	if (returnval != 0)
+	{
+		if (errno == ENOENT)
+		{
+			_status = 404;
+			throw Response::NotFound();
+		}
+		else if (errno == EACCES)
+		{
+			_status = 403;
+			throw Response::Forbidden();
+		}
+	}
+}
+
 void Response::methodGet()
 {
 	std::string file = getFilePath(_request.getUri());
@@ -73,30 +90,18 @@ void Response::methodDelete()
 
 void Response::deleteFile(std::string &path)
 {
-	if (access(path.c_str(), F_OK) == -1)
-	{
-		_status = 404;
-		throw Response::NotFound();
-	}
-	if (std::remove(path.c_str()) != 0)
-	{
-		_status = 403;
-		throw Response::Forbidden();
-	}
+	checkFilePermission(path, W_OK);
 	_status = 200;
+	_body = "File Deleted";
 }
 
 void Response::readFile(std::string &path)
 {
-	if (access(path.c_str(), F_OK) == -1)
-	{
-		_status = 404;
-		throw Response::NotFound();
-	}
-	// throw permission 403 error
+	checkFilePermission(path, R_OK);
 	std::string buffer;
 	std::ifstream fileReader(path);
 	std::string body;
+	
 	while (getline(fileReader, buffer))
 		body.append(buffer).append("\n");
 	fileReader.close();
@@ -136,21 +141,22 @@ void Response::makeBody()
 	std::string res;
 	try
 	{
+		// log _request.getMethod() << "|" line;
 		if (_request.getMethod().compare("GET") == 0)
 			methodGet();
-		else if (_request.getMethod() == "POST")
+		else if (_request.getMethod().compare("POST") == 0)
 			methodPost();
-		else if (_request.getMethod() == "DELETE")
+		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
 		else
 		{
-			_status = 405;
+			_status = 501;
 			throw Response::NotImplemented();
 		}
 	}
 	catch (std::exception &e)
 	{
-		log "exception: " << e.what() line;
+		log "Exception: " << e.what() line;
 	}
 }
 
@@ -172,10 +178,11 @@ void Response::makeResponse()
 		// read error page
 		_resp.append("Error page\r\n");
 	}
+
 	if (_body.length() > 0)
 	{
 		_resp.append("Content-Type: ");
-		// get content type 
+		// get content type
 		_resp.append("text/plain\r\n");
 		_resp.append("Content-Length: ");
 		_resp.append(std::to_string(strlen(_body.c_str())));
@@ -184,8 +191,8 @@ void Response::makeResponse()
 		_resp.append("\r\n");
 	}
 	else
-		_resp.append("");
-	// log "response: " << _resp line;
+		_resp.append("\n");
+	log "response: " << _resp line;
 }
 
 const std::string &Response::getResponse() const

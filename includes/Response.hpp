@@ -21,20 +21,21 @@ private:
 	void methodPost();
 	void methodDelete();
 
+	void checkFilePermission(std::string &, int);
 	void deleteFile(std::string &);
 	void readFile(std::string &);
 	void uploadFile();
-	std::string getFilePath(std::string uri);
+	std::string getFilePath(std::string);
 	std::string getCurrentDirectory();
 	void makeBody();
 
 public:
 	Response();
-	Response(Request request);
+	Response(Request);
 	~Response();
 
 	void makeResponse();
-	void	setRequest(Request request);
+	void setRequest(Request);
 
 	unsigned int getStatus() const;
 	const std::string &getName() const;
@@ -45,21 +46,21 @@ public:
 
 	class NotFound : public std::exception
 	{
-		virtual const char * what () const throw();
+		virtual const char *what() const throw();
 	};
 
 	class NotImplemented : public std::exception
 	{
-		virtual const char * what () const throw();
+		virtual const char *what() const throw();
 	};
 
 	class MethodNotAllowed : public std::exception
 	{
-		virtual const char * what () const throw();
+		virtual const char *what() const throw();
 	};
 
 	class Forbidden : public std::exception
 	{
-		virtual const char * what () const throw();
+		virtual const char *what() const throw();
 	};
 };

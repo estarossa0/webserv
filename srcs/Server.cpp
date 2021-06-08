@@ -1,6 +1,6 @@
 #include "websrv.h"
 
-Server::Server(int port)
+Server::Server(int port, size_t index) : _index(index)
 {
 	int	opt(1);
 
@@ -75,4 +75,9 @@ Connection &Server::operator[](int index)
 Server::operator int()
 {
 	return this->_socketfd;
+}
+
+size_t	Server::size()
+{
+	return this->_connections.size();
 }

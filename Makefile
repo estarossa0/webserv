@@ -29,6 +29,7 @@ RESET = \033[0m
 SRC_FILES = main.cpp \
 			Server.cpp \
 			Connection.cpp \
+			Request.cpp \
 
 
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)

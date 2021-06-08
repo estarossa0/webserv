@@ -2,13 +2,14 @@
 
 #include "websrv.h"
 
+class 	Request;
 class	Server;
 
 class	Connection
 {
 	int				_socketfd;
 	const Server	*_server;
-	std::string		_request;
+	Request			_request;
 	std::string		_response;
 
 public:
@@ -16,7 +17,7 @@ public:
 	Connection(const Connection &);
 	int					read();
 	int					send();
-	std::string			&getRequest();
+	Request				&getRequest();
 	std::string			&getResponse();
 	void				setRequest(char *);
 	void				setResponse(char *);

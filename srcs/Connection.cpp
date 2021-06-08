@@ -1,9 +1,9 @@
 #include "websrv.h"
 
-Connection::Connection(int fd, Server* sv) : _socketfd(fd), _server(sv), _request(""), _response("")
+Connection::Connection(int fd, Server* sv) : _socketfd(fd), _server(sv), _response("")
 {};
 
-Connection::Connection(const Connection &other) : _socketfd(other._socketfd), _server(other._server) , _request(""), _response("")
+Connection::Connection(const Connection &other) : _socketfd(other._socketfd), _server(other._server) , _response("")
 {};
 
 int				Connection::read()
@@ -18,8 +18,9 @@ int				Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd , (void *)&buffer, 1000, 0);
+		if (buffer[0])
+			_request.parseRequest(buffer);
 		size += retval;
-		this->_request += buffer;
 		if (retval < 1000)
 			break ;
 	}
@@ -31,7 +32,7 @@ int				Connection::send()
 	return ::send(this->_socketfd, (void *)this->_response.c_str(), this->_response.size(), 0);
 }
 
-std::string		&Connection::getRequest()
+Request		&Connection::getRequest()
 {
 	return this->_request;
 }
@@ -43,7 +44,7 @@ std::string		&Connection::getResponse()
 
 void			Connection::setRequest(char *str)
 {
-	this->_request = str;
+	// this->_request = str;
 }
 
 void			Connection::setResponse(char *str)

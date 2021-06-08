@@ -7,7 +7,11 @@
 #include <unistd.h>
 #include <sys/poll.h>
 #include <fcntl.h>
+#include <fstream>
+#include <limits.h>
+#include <sstream>
 
+#include "Request.hpp"
 #include "Connection.hpp"
 #include "Server.hpp"
 

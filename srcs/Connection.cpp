@@ -1,58 +1,58 @@
 #include "websrv.h"
 
-Connection::Connection(int fd, Server* sv) : _socketfd(fd), _server(sv), _response("")
-{};
+Connection::Connection(int fd, Server *sv) : _socketfd(fd), _server(sv){};
 
-Connection::Connection(const Connection &other) : _socketfd(other._socketfd), _server(other._server) , _response("")
-{};
+Connection::Connection(const Connection &other) : _socketfd(other._socketfd), _server(other._server){};
 
-int				Connection::read()
+int Connection::read()
 {
-	char	buffer[1000] = {0};
-	int		retval;
-	int		size;
+	char buffer[1000] = {0};
+	int retval;
+	int size;
 
 	size = 0;
 	retval = 1;
 	while (retval > 0)
 	{
 		bzero(buffer, 1000);
-		retval = recv(this->_socketfd , (void *)&buffer, 1000, 0);
+		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
 		if (buffer[0])
 			_request.parseRequest(buffer);
 		size += retval;
 		if (retval < 1000)
-			break ;
+			break;
 	}
 	return size;
 }
 
-int				Connection::send()
+int Connection::send()
 {
-	return ::send(this->_socketfd, (void *)this->_response.c_str(), this->_response.size(), 0);
+	this->_response.setRequest(this->_request);
+	this->_response.makeResponse();
+	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
 }
 
-Request		&Connection::getRequest()
+Request &Connection::getRequest()
 {
 	return this->_request;
 }
 
-std::string		&Connection::getResponse()
+Response &Connection::getResponse()
 {
 	return this->_response;
 }
 
-void			Connection::setRequest(char *str)
+void Connection::setRequest(char *str)
 {
 	// this->_request = str;
 }
 
-void			Connection::setResponse(char *str)
+void Connection::setResponse(char *str)
 {
-	this->_response = str;
+	// this->_response = str;
 }
 
-void			Connection::close()
+void Connection::close()
 {
 	::close(this->_socketfd);
 }

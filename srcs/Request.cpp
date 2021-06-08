@@ -97,7 +97,6 @@ void Request::parseRequest(const std::string &data)
 	int status = 0;
 	std::string buffer;
 	std::istringstream lines(data);
-
 	log "Data to parse: " << data << "\n---------\n" line;
 	while (std::getline(lines, buffer))
 	{

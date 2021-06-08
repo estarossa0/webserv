@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "Request.hpp"
+#include "Response.hpp"
 #include "Connection.hpp"
 #include "Server.hpp"
 

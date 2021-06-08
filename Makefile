@@ -30,6 +30,7 @@ SRC_FILES = main.cpp \
 			Server.cpp \
 			Connection.cpp \
 			Request.cpp \
+			Response.cpp \
 
 
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)

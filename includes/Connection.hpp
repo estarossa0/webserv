@@ -2,6 +2,7 @@
 
 #include "websrv.h"
 
+class 	Response;
 class 	Request;
 class	Server;
 
@@ -10,7 +11,7 @@ class	Connection
 	int				_socketfd;
 	const Server	*_server;
 	Request			_request;
-	std::string		_response;
+	Response		_response;
 
 public:
 	Connection(int, Server *);
@@ -18,7 +19,7 @@ public:
 	int					read();
 	int					send();
 	Request				&getRequest();
-	std::string			&getResponse();
+	Response			&getResponse();
 	void				setRequest(char *);
 	void				setResponse(char *);
 	void				close();

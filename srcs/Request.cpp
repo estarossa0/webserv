@@ -54,9 +54,9 @@ Request::Argument Request::parseArgument(const std::string &content)
 	while (std::getline(lines, buffer))
 	{
 		if (buffer.find("Content-Disposition") != std::string::npos)
-			arg.disp = buffer.substr(buffer.find(":") + 2);
+			arg.disp = buffer.substr(buffer.find(":") + 2, buffer.length() - 22);
 		else if (buffer.find("Content-Type") != std::string::npos)
-			arg.ctype = buffer.substr(buffer.find(":") + 2);
+			arg.ctype = buffer.substr(buffer.find(":") + 2, buffer.length() - 15);
 		else if (buffer.length() && buffer[0] != '\r')
 		{
 			if (arg.data.length())
@@ -71,6 +71,7 @@ void Request::appendToBody(const std::string &content)
 {
 	if (isSuffix(boundary, content))
 	{
+		log "Appending" line;
 		if (!isArg)
 			isArg = true;
 		else
@@ -82,6 +83,7 @@ void Request::appendToBody(const std::string &content)
 	}
 	else if (isPreffix(boundary, content))
 	{
+		log "ended" line;
 		isArg = false;
 		body.pop_back();
 		args.push_back(parseArgument(body));
@@ -97,10 +99,10 @@ void Request::parseRequest(const std::string &data)
 	int status = 0;
 	std::string buffer;
 	std::istringstream lines(data);
-	// log "Data to parse: " << data << "\n---------\n" line;
+	log "Data to parse: " << data << "\n---------\n" line;
 	while (std::getline(lines, buffer))
 	{
-		// log "current line: " << buffer line;
+		log "current line: " << buffer line;
 		if (!clen)
 		{
 			if (buffer.find("HTTP/1.1") != std::string::npos)
@@ -134,19 +136,23 @@ void Request::parseRequest(const std::string &data)
 			{
 				connection = buffer.substr(buffer.find(":") + 2);
 			}
-			else if (buffer.find("&") != std::string::npos)
+			else
 			{
-				// add to args if no connection is added
+				appendToBody(buffer);
 			}
+			// else if (buffer.find("&") != std::string::npos)
+			// {
+			// 	// add to args if no connection is added
+			// }
 		}
 		else
 			appendToBody(buffer);
 	}
-	// log "Arguments: " << args.size() line;
-	// for (size_t i = 0; i < args.size(); i++)
-	// {
-	// 	log args[i].data line;
-	// }
+	log "Arguments: " << args.size() line;
+	for (size_t i = 0; i < args.size(); i++)
+	{
+		log args[i].data line;
+	}
 }
 
 void Request::clear()
@@ -179,4 +185,14 @@ const std::string &Request::getContentType() const
 const std::string &Request::getBody() const
 {
 	return this->body;
+}
+
+size_t Request::getLenArguments()
+{
+	return this->args.size();
+}
+
+Request::Argument Request::getArgument(int i)
+{
+	return this->args[i];
 }

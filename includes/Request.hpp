@@ -4,7 +4,7 @@
 
 class Request
 {
-private:
+public:
 	struct Argument
 	{
 		std::string disp;
@@ -12,6 +12,7 @@ private:
 		std::string data;
 	};
 
+private:
 	std::string method;
 	std::string uri;
 	unsigned int clen;
@@ -43,4 +44,7 @@ public:
 	const std::string &getBody() const;
 	const std::string &getBoundary() const;
 	const std::string &getDisposition() const;
+
+	size_t getLenArguments();
+	Argument getArgument(int i);
 };

@@ -79,6 +79,8 @@ void Response::methodGet()
 
 void Response::methodPost()
 {
+	uploadFile();
+	_body = "File Uploaded";
 	_status = 200;
 }
 
@@ -101,7 +103,7 @@ void Response::readFile(std::string &path)
 	std::string buffer;
 	std::ifstream fileReader(path);
 	std::string body;
-	
+
 	while (getline(fileReader, buffer))
 		body.append(buffer).append("\n");
 	fileReader.close();
@@ -109,8 +111,27 @@ void Response::readFile(std::string &path)
 	_status = 200;
 }
 
+std::string getFileName(std::string disp)
+{
+	log disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11) line;
+	return disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11);
+}
+
 void Response::uploadFile()
 {
+	// check if file already exists = > should upload or not
+	for (size_t i = 0; i < _request.getLenArguments(); i++)
+	{
+		Request::Argument arg = _request.getArgument(i);
+		// must get filename from
+		if (_request.getArgument(i).ctype != "")
+		{
+			std::string dir = getFilePath("/" + getFileName(arg.disp));
+			std::ofstream file(dir);
+			file << arg.data;
+			file.close();
+		}
+	}
 }
 
 std::string Response::getFilePath(std::string uri)
@@ -191,7 +212,7 @@ void Response::makeResponse()
 		_resp.append("\r\n");
 	}
 	else
-		_resp.append("\n");
+		_resp.append("\n\r\n");
 	log "response: " << _resp line;
 }
 

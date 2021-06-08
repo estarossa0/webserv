@@ -20,8 +20,8 @@ public:
 	int					send();
 	Request				&getRequest();
 	Response			&getResponse();
-	void				setRequest(char *);
-	void				setResponse(char *);
+	void				setRequest(Request);
+	void				setResponse(Response);
 	void				close();
 	operator			int();
 };

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <limits.h>
 #include <sstream>
+#include <exception>
 
 #include "Request.hpp"
 #include "Response.hpp"

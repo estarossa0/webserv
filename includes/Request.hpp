@@ -36,7 +36,6 @@ public:
 	void parseRequest(const std::string &);
 	void clear();
 
-	// getters
 	const std::string &getMethod() const;
 	const std::string &getUri() const;
 	unsigned int getContentLen() const;

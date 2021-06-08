@@ -15,7 +15,7 @@ private:
 	std::string _resp;
 	Request _request;
 
-	std::string &getCodeStatus();
+	std::string getCodeStatus();
 
 	void methodGet();
 	void methodPost();
@@ -35,11 +35,31 @@ public:
 
 	void makeResponse();
 	void	setRequest(Request request);
-	//getters
+
 	unsigned int getStatus() const;
 	const std::string &getName() const;
 	const std::string &getContentType() const;
 	const std::string &getContentLength() const;
 	const std::string &getBody() const;
 	const std::string &getResponse() const;
+
+	class NotFound : public std::exception
+	{
+		virtual const char * what () const throw();
+	};
+
+	class NotImplemented : public std::exception
+	{
+		virtual const char * what () const throw();
+	};
+
+	class MethodNotAllowed : public std::exception
+	{
+		virtual const char * what () const throw();
+	};
+
+	class Forbidden : public std::exception
+	{
+		virtual const char * what () const throw();
+	};
 };

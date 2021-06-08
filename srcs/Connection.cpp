@@ -29,6 +29,7 @@ int Connection::send()
 {
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
+	this->_request.clear();
 	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
 }
 
@@ -42,14 +43,14 @@ Response &Connection::getResponse()
 	return this->_response;
 }
 
-void Connection::setRequest(char *str)
+void Connection::setRequest(Request request)
 {
-	// this->_request = str;
+	this->_response = request;
 }
 
-void Connection::setResponse(char *str)
+void Connection::setResponse(Response response)
 {
-	// this->_response = str;
+	this->_response = response;
 }
 
 void Connection::close()

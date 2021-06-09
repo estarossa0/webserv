@@ -62,6 +62,11 @@ Connection::operator int()
 	return this->_socketfd;
 }
 
+Server				*Connection::getServer()
+{
+	return this->_server;
+}
+
 bool			Connection::is_Server()
 {
 	return this->_is_Server;

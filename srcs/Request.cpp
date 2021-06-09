@@ -71,7 +71,7 @@ void Request::appendToBody(const std::string &content)
 {
 	if (isSuffix(boundary, content))
 	{
-		log "Appending" line;
+		// log "Appending" line;
 		if (!isArg)
 			isArg = true;
 		else
@@ -83,7 +83,7 @@ void Request::appendToBody(const std::string &content)
 	}
 	else if (isPreffix(boundary, content))
 	{
-		log "ended" line;
+		// log "ended" line;
 		isArg = false;
 		body.pop_back();
 		args.push_back(parseArgument(body));
@@ -99,13 +99,13 @@ void Request::parseRequest(const std::string &data)
 	int status = 0;
 	std::string buffer;
 	std::istringstream lines(data);
-	log "Data to parse: " << data << "\n---------\n" line;
+	// log "Data to parse: " << data << "\n---------\n" line;
 	while (std::getline(lines, buffer))
 	{
 		log "current line: " << buffer line;
 		if (!clen)
 		{
-			if (buffer.find("HTTP/1.1") != std::string::npos)
+			if (!method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 			{
 				method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
 				uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
@@ -137,9 +137,7 @@ void Request::parseRequest(const std::string &data)
 				connection = buffer.substr(buffer.find(":") + 2);
 			}
 			else
-			{
 				appendToBody(buffer);
-			}
 			// else if (buffer.find("&") != std::string::npos)
 			// {
 			// 	// add to args if no connection is added
@@ -148,11 +146,11 @@ void Request::parseRequest(const std::string &data)
 		else
 			appendToBody(buffer);
 	}
-	log "Arguments: " << args.size() line;
-	for (size_t i = 0; i < args.size(); i++)
-	{
-		log args[i].data line;
-	}
+	// log "Arguments: " << args.size() line;
+	// for (size_t i = 0; i < args.size(); i++)
+	// {
+	// 	log args[i].data line;
+	// }
 }
 
 void Request::clear()

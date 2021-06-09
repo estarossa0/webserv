@@ -32,6 +32,13 @@ const char *Response::Forbidden::what() const throw()
 	return "Forbidden";
 }
 
+std::string getFileNameFromUri(std::string uri)
+{
+	if (uri.find("?") != std::string::npos)
+		return uri.substr(0, uri.find("?"));
+	return uri;
+}
+
 std::string Response::getCodeStatus()
 {
 	if (this->_status == 200)
@@ -73,12 +80,13 @@ void Response::checkFilePermission(std::string &path, int mode)
 
 void Response::methodGet()
 {
-	std::string file = getFilePath(_request.getUri());
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
 	readFile(file);
 }
 
 void Response::methodPost()
 {
+	//check location with uri
 	uploadFile();
 	_body = "File Uploaded";
 	_status = 200;
@@ -86,7 +94,7 @@ void Response::methodPost()
 
 void Response::methodDelete()
 {
-	std::string file = getFilePath(_request.getUri());
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
 	deleteFile(file);
 }
 
@@ -111,9 +119,11 @@ void Response::readFile(std::string &path)
 	_status = 200;
 }
 
-std::string getFileName(std::string disp)
+
+
+std::string getFileNameFromDisp(std::string disp)
 {
-	log disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11) line;
+	// log disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11) line;
 	return disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11);
 }
 
@@ -126,7 +136,7 @@ void Response::uploadFile()
 		// must get filename from
 		if (_request.getArgument(i).ctype != "")
 		{
-			std::string dir = getFilePath("/" + getFileName(arg.disp));
+			std::string dir = getFilePath("/" + getFileNameFromDisp(arg.disp));
 			std::ofstream file(dir);
 			file << arg.data;
 			file.close();

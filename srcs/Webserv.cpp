@@ -13,7 +13,7 @@ Webserv::~Webserv()
 void		Webserv::addServer(int port)
 {
 	this->_servers.push_back(Server(port, this->_servers.size(), this));
-	this->updateIndexs(-2);
+	this->updateIndexs(-2, 1);
 }
 
 Connection &Webserv::operator[](int index)
@@ -26,19 +26,19 @@ Connection &Webserv::operator[](int index)
 	return _servers[it - this->_indexTable.begin()][index];
 }
 
-void	Webserv::updateIndexs(int index)
+void	Webserv::updateIndexs(int index, int type)
 {
 	if (index >= (int)this->_servers.size())
 		return ;
 	index++;
-	this->_conSize++;
+	this->_conSize += type;
 	if (index < 0)
 	{
 		if (this->_indexTable.size() == 0)
 			this->_indexTable.push_back(0);
 		else
 		{
-			index = this->_servers.size() - 1;
+			index = this->_servers.size() - 2;
 			this->_indexTable.push_back(this->_servers[index].size());
 			index = this->_indexTable.size() - 1;
 			this->_indexTable[index] += this->_indexTable[index - 1];
@@ -48,7 +48,7 @@ void	Webserv::updateIndexs(int index)
 	{
 		while(index < this->_indexTable.size())
 		{
-			this->_indexTable[index]++;
+			this->_indexTable[index] += type;
 			index++;
 		}
 	}

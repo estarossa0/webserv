@@ -25,7 +25,7 @@ public:
 	Server		&serverAt(int);
 	void		addServer(int);
 	Connection	&operator[](int);
-	void		updateIndexs(int);
+	void		updateIndexs(int, int);
 };
 
 #define log std::cout <<

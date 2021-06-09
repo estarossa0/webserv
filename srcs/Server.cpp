@@ -57,7 +57,7 @@ int		Server::connect()
 		exit(EXIT_FAILURE);
 	}
 	this->_connections.push_back(Connection(newfd, this, false));
-	this->_webserv->updateIndexs(this->_index);
+	this->_webserv->updateIndexs(this->_index, 1);
 	return newfd;
 }
 
@@ -68,6 +68,9 @@ int		Server::get_fd()
 
 void	Server::erase(int index)
 {
+	this->_webserv->updateIndexs(this->_index, -1);
+	index -= this->_webserv->_indexTable[this->_index];
+	this->_connections[index].close();
 	_connections.erase(_connections.begin() + index);
 }
 

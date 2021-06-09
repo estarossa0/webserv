@@ -42,6 +42,14 @@ Server::~Server()
 	}
 }
 
+Server::Server(Server const &other) :
+_socketfd(other._socketfd), _addr(other._addr), _index(other._index), _webserv(other._webserv)
+{
+	this->_connections = other._connections;
+	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); ++it)
+		it->_server = this;
+}
+
 int		Server::connect()
 {
 	int	len(sizeof(_addr));

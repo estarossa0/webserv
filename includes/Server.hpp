@@ -11,6 +11,8 @@ class	Server
 public:
 	Server(int, size_t);
 	~Server();
+	Server(Server const &);
+
 	int				connect();
 	int				get_fd();
 	void			erase(int);

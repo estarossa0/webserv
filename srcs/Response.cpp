@@ -39,23 +39,25 @@ std::string getFileNameFromUri(std::string uri)
 	return uri;
 }
 
+
+
 std::string Response::getCodeStatus()
 {
-	if (this->_status == 200)
+	if (this->_status == ST_OK)
 		return "OK\r\n";
-	else if (this->_status == 301)
+	else if (this->_status == ST_MOVED_PERM)
 		return "Moved permenantly\r\n";
-	else if (this->_status == 400)
+	else if (this->_status == ST_BAD_REQUEST)
 		return "Bad Request\r\n";
-	else if (this->_status == 403)
+	else if (this->_status == ST_FORBIDDEN)
 		return "Forbidden\r\n";
-	else if (this->_status == 404)
+	else if (this->_status == ST_NOT_FOUND)
 		return "Not Found\r\n";
-	else if (this->_status == 405)
+	else if (this->_status == ST_METHOD_NOT_ALLOWED)
 		return "Method Not Allowed\r\n";
-	else if (this->_status == 500)
+	else if (this->_status == ST_SERVER_ERROR)
 		return "Internal Server Error\r\n";
-	else if (this->_status == 501)
+	else if (this->_status == ST_NOT_IMPLEMENTED)
 		return "Not Implemented\r\n";
 	return "";
 }
@@ -67,41 +69,22 @@ void Response::checkFilePermission(std::string &path, int mode)
 	{
 		if (errno == ENOENT)
 		{
-			_status = 404;
+			_status = ST_NOT_FOUND;
 			throw Response::NotFound();
 		}
 		else if (errno == EACCES)
 		{
-			_status = 403;
+			_status = ST_FORBIDDEN;
 			throw Response::Forbidden();
 		}
 	}
 }
 
-void Response::methodGet()
-{
-	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	readFile(file);
-}
 
-void Response::methodPost()
-{
-	//check location with uri
-	uploadFile();
-	_body = "File Uploaded";
-	_status = 200;
-}
-
-void Response::methodDelete()
-{
-	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	deleteFile(file);
-}
 
 void Response::deleteFile(std::string &path)
 {
 	checkFilePermission(path, W_OK);
-	_status = 200;
 	_body = "File Deleted";
 }
 
@@ -116,7 +99,6 @@ void Response::readFile(std::string &path)
 		body.append(buffer).append("\n");
 	fileReader.close();
 	_body = body;
-	_status = 200;
 }
 
 
@@ -133,7 +115,6 @@ void Response::uploadFile()
 	for (size_t i = 0; i < _request.getLenArguments(); i++)
 	{
 		Request::Argument arg = _request.getArgument(i);
-		// must get filename from
 		if (_request.getArgument(i).ctype != "")
 		{
 			std::string dir = getFilePath("/" + getFileNameFromDisp(arg.disp));
@@ -167,12 +148,33 @@ std::string Response::getCurrentDirectory()
 	return dir;
 }
 
+void Response::methodGet()
+{
+	//check cgi
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	readFile(file);
+}
+
+void Response::methodPost()
+{
+	//check cgi
+	//check location with uri
+	uploadFile();
+	_body = "File Uploaded";
+}
+
+void Response::methodDelete()
+{
+	//check cgi
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	deleteFile(file);
+}
+
 void Response::makeBody()
 {
 	std::string res;
 	try
 	{
-		// log _request.getMethod() << "|" line;
 		if (_request.getMethod().compare("GET") == 0)
 			methodGet();
 		else if (_request.getMethod().compare("POST") == 0)
@@ -181,9 +183,10 @@ void Response::makeBody()
 			methodDelete();
 		else
 		{
-			_status = 501;
+			_status = ST_NOT_IMPLEMENTED;
 			throw Response::NotImplemented();
 		}
+		_status = ST_OK;
 	}
 	catch (std::exception &e)
 	{
@@ -200,8 +203,7 @@ void Response::makeResponse()
 	_resp.append(getCodeStatus());
 	// set server name
 	_resp.append("Server: Dial3bar\r\n");
-	// _resp.append(getContentType(isHtml));
-	if (_status != 200)
+	if (_status != ST_OK)
 	{
 		_resp.append("Content-Type: ");
 		_resp.append("text/plain\r\n");
@@ -209,7 +211,6 @@ void Response::makeResponse()
 		// read error page
 		_resp.append("Error page\r\n");
 	}
-
 	if (_body.length() > 0)
 	{
 		_resp.append("Content-Type: ");

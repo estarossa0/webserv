@@ -32,6 +32,7 @@ Server::Server(int port, size_t index, Webserv *wb) : _index(index), _webserv(wb
 		exit(EXIT_FAILURE);
 	}
 	this->_connections.push_back(Connection(this->_socketfd, this, true));
+	this->_webserv->_pollArray.push_back((struct pollfd){this->_socketfd, POLLIN, 0});
 }
 
 Server::~Server()
@@ -57,6 +58,10 @@ int		Server::connect()
 		exit(EXIT_FAILURE);
 	}
 	this->_connections.push_back(Connection(newfd, this, false));
+	this->_webserv->_pollArray
+	.insert(
+		this->_webserv->_pollArray.begin() + this->_webserv->_indexTable[this->_index] + (this->_connections.size() - 1),
+		(struct pollfd){newfd, POLLIN, 0});
 	this->_webserv->updateIndexs(this->_index, 1);
 	return newfd;
 }
@@ -68,6 +73,7 @@ int		Server::get_fd()
 
 void	Server::erase(int index)
 {
+	this->_webserv->_pollArray.erase(this->_webserv->_pollArray.begin() + index);
 	this->_webserv->updateIndexs(this->_index, -1);
 	index -= this->_webserv->_indexTable[this->_index];
 	this->_connections[index].close();

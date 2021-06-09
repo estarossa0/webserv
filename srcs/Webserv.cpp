@@ -58,3 +58,48 @@ Server	&Webserv::serverAt(int index)
 {
 	return this->_servers[index];
 }
+
+static void	hookPollIn(Webserv &web, size_t i)
+{
+	if (web[i].is_Server())
+		web[i].getServer()->connect();
+	else
+	{
+		web[i].read();
+		web._pollArray[i].events = POLLOUT | POLLIN;
+		web[i].getRequest().clear();
+	}
+}
+
+static void	hookPollOut(Webserv &web, size_t i)
+{
+	web[i].send();
+	web._pollArray[i].events = POLLIN;
+}
+
+void	Webserv::hook()
+{
+	int		p;
+	int		size;
+
+	while (1)
+	{
+		p = poll(&(this->_pollArray[0]), this->_conSize, -1);
+		if (p < 0)
+			break ;
+		size = this->_conSize;
+		for (size_t i = 0; i < size; i++)
+		{
+			if (this->_pollArray[i].revents == 0)
+				continue ;
+			if ((this->_pollArray[i].revents & POLLNVAL) || (this->_pollArray[i].revents & POLLERR))
+				exit(1);
+			if (this->_pollArray[i].revents & POLLIN)
+				hookPollIn(*this, i);
+			if (this->_pollArray[i].revents & POLLOUT)
+				hookPollOut(*this, i);
+			if (this->_pollArray[i].revents & POLLHUP)
+				(*this)[i].getServer()->erase(i);
+		}
+	}
+}

@@ -1,6 +1,6 @@
 #include "websrv.h"
 
-Server::Server(int port, size_t index) : _index(index)
+Server::Server(int port, size_t index, Webserv *wb) : _index(index), _webserv(wb)
 {
 	int	opt(1);
 
@@ -35,12 +35,7 @@ Server::Server(int port, size_t index) : _index(index)
 }
 
 Server::~Server()
-{
-	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); it++)
-	{
-		it->close();
-	}
-}
+{}
 
 Server::Server(Server const &other) :
 _socketfd(other._socketfd), _addr(other._addr), _index(other._index), _webserv(other._webserv)
@@ -62,6 +57,7 @@ int		Server::connect()
 		exit(EXIT_FAILURE);
 	}
 	this->_connections.push_back(Connection(newfd, this));
+	this->_webserv->updateIndexs(this->_index);
 	return newfd;
 }
 

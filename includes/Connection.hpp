@@ -6,6 +6,8 @@ class	Server;
 
 class	Connection
 {
+	friend class	Webserv;
+	friend class	Server;
 	int				_socketfd;
 	Server			*_server;
 	std::string		_request;

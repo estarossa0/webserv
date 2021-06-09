@@ -7,6 +7,7 @@
 #include <cctype>
 #include <map>
 #include <fstream>
+#include <sstream>
 #include <algorithm>
 
 #include "Server.hpp"
@@ -38,8 +39,11 @@ namespace parser
 #define ERROR_DOUBLE_BRACE "Only one curly brace is allowed per line"
 #define ERROR_BRACE_NOT_ALONE "the line which contains a curly brace must not contain something else"
 #define ERROR_DEFINE_SERVER_INSIDE_SERVER "You can't define a server inside another server"
-#define ERROR_EMPTY_CONFIGURATION "A server must not have an empty configuration"
-
+#define ERROR_EMPTY_SERVER_CONFIGURATION "A server must not have an empty configuration"
+#define ERROR_INVALID_CONFIGURATION "This configuration file is invalid: ERROR in this line -> "
+#define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
+#define ERROR_MISSING_SEMICOLON "missing a semicolon in this line: "
+#define ERROR_PORT_NAN "the value of port should be a number" 
 
 	class ConfigParser
 	{
@@ -51,14 +55,16 @@ namespace parser
 		std::vector<std::string> _fileLines;
 		std::vector<int> _serversIndexing;
 		std::map<std::string, bool> _checked_primitives;
-		void (*_server_primitive_parser[NUMBER_OF_SERVER_PRIMITIVES])(size_t start, size_t end);
 
 		// methods
 		void _trim(std::string &);
+		std::vector<std::string> _split(std::string const &);
+		bool _isSet(std::string const &, int (*func)(int ));
 		void _getFileContent();
 		void _indexServers();
-		void _initParsersFuntions();
+		int _isPrimitive(std::string const &);
 		// partial parsers
+		int _portParser(size_t, Server &);
 		void _parseContent();
 
 	public:
@@ -68,5 +74,6 @@ namespace parser
 		static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	};
 
+	typedef  int (ConfigParser::*ParserFuncPtr)(size_t, Server &);
 }
 #endif // !CONFIG_PARSER_HPP //Config

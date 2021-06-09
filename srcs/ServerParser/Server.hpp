@@ -40,7 +40,7 @@ namespace parser
 		std::string getName() const;
 		void setClientBodySize(int const &);
 		int getClientBodySize() const;
-		void addErrorPage(std::string const &, std::string const &);
+		void addErrorPage(int const &, std::string const &);
 		std::map<std::string, std::string> getErrorPageMap() const;
 		void setRootDir(std::string const &);
 		std::string getRootDir() const;

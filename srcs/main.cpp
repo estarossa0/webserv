@@ -71,8 +71,9 @@
 int main()
 {
 	std::string str = "Hello World";
+	std::string str1 = str;
 
-	std::cout << "[" << *(str.end() - 1) << "] " << str <<  std::endl;
-	str.erase(str.end() - 1);
-	std::cout << "[" << *(str.end() - 1) << "] " << str <<  std::endl;
+	std::cout << "[" << str1 << "] [" << str << "]" << std::endl;
+	str1.erase(str1.end() - 1);
+	std::cout << "[" << str1 << "] [" << str << "]" << std::endl;
 }

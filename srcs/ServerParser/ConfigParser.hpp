@@ -9,11 +9,14 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 
 #include "Server.hpp"
 
 namespace parser
 {
+
+// fields identifiers fields definitions
 
 // server file configuration requirements openings
 #define SERVER_OP "server"
@@ -28,10 +31,30 @@ namespace parser
 #define CGI_LOCATION_OP "location /cgi"
 #define UPLOAD_LOCATION_OP "location /upload"
 
+// location content fields identifiers
+#define LOC_PATH "loc_path"
+#define LOC_ROOT "root"
+#define LOC_AUTOINDEX "autoindex"
+#define LOC_INDEX "index"
+#define LOC_ALLOWED_METHODS "allowed_methods"
+
+// return location fields identifiers
+#define RETURN_LOC "return"
+
+// CGI location fields identifiers
+#define CGI_LOC "cgi"
+
+// upload location fields identifiers
+#define UPLOAD_LOC_ENABLE "upload_enable"
+#define UPLOAD_LOC_STORE "upload_store"
+
 #define NUMBER_OF_SERVER_PRIMITIVES 10
 
 #define OPENNING_BRACE "{"
 #define CLOSING_BRACE "}"
+
+#define OPENNING_BRACKET '['
+#define CLOSING_BRACKET ']'
 
 // error messages
 #define ERROR_FILE "Could not open configuration file"
@@ -43,7 +66,14 @@ namespace parser
 #define ERROR_INVALID_CONFIGURATION "This configuration file is invalid: ERROR in this line -> "
 #define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
 #define ERROR_MISSING_SEMICOLON "missing a semicolon in this line: "
-#define ERROR_PORT_NAN "the value of port should be a number" 
+#define ERROR_DOUBLE_SEMICOLON "should be only one semicolon at the end of this line: "
+#define ERROR_PORT_NAN "the value of port must be a non-zero positive number"
+#define ERROR_CLIENT_BODY_SIZE_UNITY "the client max body size must end with 'm' (refers to megabytes) as its unity"
+#define ERROR_CLIENT_BODY_SIZE_NAN "the value of client max body size must be a non-zero positive number"
+#define ERROR_ERRPAGE_CODE_NAN "the value of an error page code must be a non-zero positive number"
+#define ERROR_ALLOWED_METHODS_SYNTAX "bad syntax for allowed methods in line: "
+#define ERROR_DUPLICATED_FIELD "duplicate field in line: "
+#define ERROR_MISSING_LOC_FIELD "missing field in location config"
 
 	class ConfigParser
 	{
@@ -59,12 +89,23 @@ namespace parser
 		// methods
 		void _trim(std::string &);
 		std::vector<std::string> _split(std::string const &);
-		bool _isSet(std::string const &, int (*func)(int ));
+		std::vector<std::string> _split(std::string const &, char);
+		bool _isSet(std::string const &, int (*func)(int));
+		void _semicolonChecker(std::string &);
 		void _getFileContent();
 		void _indexServers();
 		int _isPrimitive(std::string const &);
+
 		// partial parsers
 		int _portParser(size_t, Server &);
+		int _hostParser(size_t, Server &);
+		int _serverNameParser(size_t, Server &);
+		int _clientBodySizeParser(size_t, Server &);
+		int _errorPageParser(size_t, Server &);
+		int _rootDirParser(size_t, Server &);
+		int _locationParser(size_t, Server &);
+		int _returnLocationParser(size_t, Server &);
+
 		void _parseContent();
 
 	public:
@@ -74,6 +115,7 @@ namespace parser
 		static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	};
 
-	typedef  int (ConfigParser::*ParserFuncPtr)(size_t, Server &);
-}
-#endif // !CONFIG_PARSER_HPP //Config
+	typedef int (ConfigParser::*ParserFuncPtr)(size_t, Server &);
+} // namespace parser
+
+#endif // !CONFIG_PARSER_HPP

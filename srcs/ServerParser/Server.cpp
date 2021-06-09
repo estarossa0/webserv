@@ -49,11 +49,11 @@ int parser::Server::getClientBodySize() const
 	return _client_body_size;
 }
 
-void parser::Server::addErrorPage(std::string const &code, std::string const &path)
+void parser::Server::addErrorPage(int const &code, std::string const &path)
 {
-	if (code.empty() || path.empty())
+	if (path.empty())
 		throw std::invalid_argument("empty argument");
-	_error_pages.insert(std::pair<std::string, std::string>(code, path));
+	_error_pages.insert(std::pair<int, std::string>(code, path));
 }
 
 std::map<std::string, std::string> parser::Server::getErrorPageMap() const

@@ -31,7 +31,7 @@ Server::Server(int port, size_t index, Webserv *wb) : _index(index), _webserv(wb
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-	this->_connections.push_back(Connection(this->_socketfd, this));
+	this->_connections.push_back(Connection(this->_socketfd, this, true));
 }
 
 Server::~Server()
@@ -56,7 +56,7 @@ int		Server::connect()
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
-	this->_connections.push_back(Connection(newfd, this));
+	this->_connections.push_back(Connection(newfd, this, false));
 	this->_webserv->updateIndexs(this->_index);
 	return newfd;
 }

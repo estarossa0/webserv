@@ -12,9 +12,10 @@ class	Connection
 	Server			*_server;
 	std::string		_request;
 	std::string		_response;
+	bool			_is_Server;
 
 public:
-	Connection(int, Server *);
+	Connection(int, Server *, bool);
 	Connection(const Connection &);
 
 	int					read();
@@ -25,5 +26,6 @@ public:
 	void				setRequest(char *);
 	void				setResponse(char *);
 	void				close();
+	bool				is_Server();
 	operator			int();
 };

@@ -1,9 +1,10 @@
 #include "websrv.h"
 
-Connection::Connection(int fd, Server* sv) : _socketfd(fd), _server(sv), _request(""), _response("")
+Connection::Connection(int fd, Server* sv, bool isserv) : _socketfd(fd), _server(sv), _request(""), _response(""), _is_Server(isserv)
 {};
 
-Connection::Connection(const Connection &other) : _socketfd(other._socketfd), _server(other._server) , _request(""), _response("")
+Connection::Connection(const Connection &other) :
+_socketfd(other._socketfd), _server(other._server) , _request(""), _response(""), _is_Server(other._is_Server)
 {};
 
 int				Connection::read()
@@ -59,4 +60,9 @@ void			Connection::close()
 Connection::operator int()
 {
 	return this->_socketfd;
+}
+
+bool			Connection::is_Server()
+{
+	return this->_is_Server;
 }

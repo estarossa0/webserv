@@ -1,5 +1,3 @@
-#pragma once
-
 #include "websrv.h"
 
 class	Server;
@@ -10,8 +8,8 @@ class	Connection
 	friend class	Server;
 	int				_socketfd;
 	Server			*_server;
-	std::string		_request;
-	std::string		_response;
+	Request			_request;
+	Response		_response;
 	bool			_is_Server;
 
 public:
@@ -21,10 +19,10 @@ public:
 	int					read();
 	int					send();
 	Server				*getServer();
-	std::string			&getRequest();
-	std::string			&getResponse();
-	void				setRequest(char *);
-	void				setResponse(char *);
+	Request				&getRequest();
+	Response			&getResponse();
+	void				setRequest(Request);
+	void				setResponse(Response);
 	void				close();
 	bool				is_Server();
 	operator			int();

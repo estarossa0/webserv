@@ -21,8 +21,6 @@ namespace parser
 		bool _upload_enable;
 		std::string _upload_location;
 
-
-
 	public:
 		Location();
 		~Location();

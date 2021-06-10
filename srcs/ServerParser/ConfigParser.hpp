@@ -74,7 +74,6 @@ namespace parser
 		// attributes
 		char const *_filename;
 		std::vector<Server> _servers;
-		int _serversNumber;
 		std::vector<std::string> _fileLines;
 		std::vector<int> _serversIndexing;
 		std::map<std::string, bool> _checked_primitives;
@@ -100,7 +99,12 @@ namespace parser
 		int _rootDirParser(size_t, Server &);
 		
 		// partial server location fields parsers 
-		int _locRootDirParser(size_t, Location &);
+		void _locRootDirParser(size_t, Location &);
+		void _locAutoIndexParser(size_t, Location &);
+		void _locIndexParser(size_t, Location &);
+		void _locAllowedMethodsParser(size_t, Location &);
+		
+
 		int _locationParser(size_t, Server &);
 
 		void _parseContent();
@@ -114,7 +118,7 @@ namespace parser
 	};
 
 	typedef int (ConfigParser::*ParserFuncPtr)(size_t, Server &);
-	typedef int (ConfigParser::*LocationFieldParserFuncPtr)(size_t, Location &);
+	typedef void (ConfigParser::*LocationFieldParserFuncPtr)(size_t, Location &);
 } // namespace parser
 
 #endif // !CONFIG_PARSER_HPP

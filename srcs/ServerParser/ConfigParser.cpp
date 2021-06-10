@@ -188,12 +188,13 @@ void parser::ConfigParser::_parseContent()
 			{
 				if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) >= end)
 					throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
+				start = static_cast<size_t>(doneParsingIndex);
+				continue;
 			}
 			else if (_fileLines[start].compare(OPENNING_BRACE) && _fileLines[start].compare(CLOSING_BRACE))
 				throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
-			start = static_cast<size_t>(doneParsingIndex);
+			start++;
 		}
-
 		i += 2;
 	}
 }
@@ -371,10 +372,11 @@ int parser::ConfigParser::_rootDirParser(size_t index, Server &sv)
 int parser::ConfigParser::_locationParser(size_t index, Server &sv)
 {
 	int parserIndex;
-	int doneParsingIndex;
-	bool isEmpty = false;
+	bool isEmpty = true;
 	LocationFieldParserFuncPtr _location_primitive_parser[NUMBER_OF_SERVER_PRIMITIVES] = {
-		
+		&parser::ConfigParser::_locRootDirParser,
+		&parser::ConfigParser::_locAutoIndexParser,
+
 	};
 
 	index += 2;
@@ -383,18 +385,20 @@ int parser::ConfigParser::_locationParser(size_t index, Server &sv)
 	{
 		if ((parserIndex = _isLocationPrimitive(_fileLines[index])) >= 0)
 		{
+			isEmpty = false;
 			(this->*_location_primitive_parser[parserIndex])(index, loc);
-			// if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(index, loc)) >= end)
-			// 	throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 		}
-		else/*  if (_fileLines[index].compare(OPENNING_BRACE) && _fileLines[index].compare(CLOSING_BRACE)) */
-			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+		else if (_fileLines[index].compare(OPENNING_BRACE) && _fileLines[index].compare(CLOSING_BRACE))
+			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);		
 		index++;
 	}
+	if (isEmpty)
+		throw std::runtime_error(ERROR_EMPTY_LOCATION_CONFIG);
+
 	return index + 1;
 }
 
-int parser::ConfigParser::_locRootDirParser(size_t index, Location &loc)
+void parser::ConfigParser::_locRootDirParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -404,14 +408,64 @@ int parser::ConfigParser::_locRootDirParser(size_t index, Location &loc)
 	if (tokens.size() == 2)
 	{
 		loc.setRootDir(tokens[1]);
-		_checked_primitives[ROOT_OP] = true;
 	}
 	else
-	{
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
-	}
-	return index + 1;
 }
+
+
+void parser::ConfigParser::_locAutoIndexParser(size_t index, Location &loc)
+{
+	std::string line = _fileLines[index];
+
+	_semicolonChecker(line);
+
+	std::vector<std::string> tokens = _split(line);
+	if (tokens.size() == 2)
+	{
+		if (tokens[1].compare("on") && tokens[1].compare("off"))
+			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+		loc.setAutoIndex((tokens[1] == "on"));
+	}
+	else
+		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+}
+
+void parser::ConfigParser::_locIndexParser(size_t index, Location &loc)
+{
+	std::string line = _fileLines[index];
+
+	_semicolonChecker(line);
+
+	std::vector<std::string> tokens = _split(line);
+	if (tokens.size() < 2)
+	{
+		tokens.erase(tokens.begin());
+		loc.setDefaultFiles(tokens);
+	}
+	else
+		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+}
+
+
+
+void parser::ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
+{
+	std::string line = _fileLines[index];
+
+	_semicolonChecker(line);
+
+	std::vector<std::string> tokens = _split(line);
+	if (tokens.size() < 2)
+	{
+		
+	}
+	else
+		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+}
+
+
+
 
 int parser::ConfigParser::_locationParser(size_t index, Server &sv)
 {

@@ -38,6 +38,7 @@ public:
 
 	void makeResponse();
 	void setRequest(Request);
+	void clear();
 
 	unsigned int getStatus() const;
 	const std::string &getName() const;
@@ -62,6 +63,11 @@ public:
 	};
 
 	class Forbidden : public std::exception
+	{
+		virtual const char *what() const throw();
+	};
+
+	class ServerError : public std::exception
 	{
 		virtual const char *what() const throw();
 	};

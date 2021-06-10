@@ -32,6 +32,17 @@ const char *Response::Forbidden::what() const throw()
 	return "Forbidden";
 }
 
+const char *Response::ServerError::what() const throw()
+{
+	return "ServerError";
+}
+
+void	Response::clear()
+{
+	// this->_request.clear();
+	this->_resp.clear();
+}
+
 std::string getFileNameFromUri(std::string uri)
 {
 	if (uri.find("?") != std::string::npos)
@@ -110,17 +121,24 @@ std::string getFileNameFromDisp(std::string disp)
 void Response::uploadFile()
 {
 	// check if file already exists = > should upload or not
-	for (size_t i = 0; i < _request.getLenArguments(); i++)
-	{
-		Request::Argument arg = _request.getArgument(i);
-		if (_request.getArgument(i).ctype != "")
+	try {
+		for (size_t i = 0; i < _request.getLenArguments(); i++)
 		{
-			std::string name = getFileNameFromDisp(arg.disp);
-			std::string dir = getUploadDirectory().append(name);
-			std::ofstream file(dir);
-			file << arg.data;
-			file.close();
+			Request::Argument arg = _request.getArgument(i);
+			if (_request.getArgument(i).ctype.length())
+			{
+				std::string name = getFileNameFromDisp(arg.disp);
+				std::string dir = getUploadDirectory().append(name);
+				std::ofstream file(dir);
+				file << arg.data;
+				file.close();
+			}
 		}
+	} catch (std::exception &e)
+	{
+		log "Exception at uploadFile: " << e.what() line;
+		_status = ST_SERVER_ERROR;
+		throw Response::ServerError();
 	}
 }
 
@@ -177,9 +195,6 @@ else
 	error file
 */
 
-
-
-
 void Response::methodGet()
 {
 	//check cgi
@@ -223,7 +238,7 @@ void Response::makeBody()
 	}
 	catch (std::exception &e)
 	{
-		log "Exception: " << e.what() line;
+		log "Exception at makeBody : " << e.what() line;
 	}
 }
 
@@ -240,11 +255,11 @@ void Response::makeResponse()
 	{
 		_resp.append("Content-Type: ");
 		_resp.append("text/plain\r\n");
-		_resp.append("Content-Length: 10\r\n\n");
+		_resp.append("Content-Length: 11\r\n\n");
 		// read error page
-		_resp.append("Error page\r\n");
+		_resp.append("Error page\n\r\n");
 	}
-	if (_body.length() > 0)
+	else
 	{
 		_resp.append("Content-Type: ");
 		// get content type
@@ -255,8 +270,6 @@ void Response::makeResponse()
 		_resp.append(_body);
 		_resp.append("\r\n");
 	}
-	else
-		_resp.append("\n\r\n");
 	log "response: " << _resp line;
 }
 

@@ -58,7 +58,7 @@ Request::Argument Request::parseArgument(const std::string &content)
 		if (buffer.find("Content-Disposition") != std::string::npos)
 			arg.disp = buffer.substr(buffer.find(":") + 2, buffer.length() - 22);
 		else if (buffer.find("Content-Type") != std::string::npos)
-			arg.ctype = buffer.substr(buffer.find(":") + 2, buffer.length() - 15);
+			arg.ctype = buffer.substr(buffer.find(":") + 2);
 		else if (buffer.length() && buffer[0] != '\r')
 		{
 			if (arg.data.length())
@@ -66,18 +66,14 @@ Request::Argument Request::parseArgument(const std::string &content)
 			arg.data = arg.data.append(buffer);
 		}
 	}
+	arg.data.pop_back();
 	return arg;
 }
 
 void Request::appendToBody(const std::string &content)
 {
-	// log "content: " << content line;
-	// log boundary.length() line;
-	// log isSuffix(boundary, content) line;
-	// log isPreffix(boundary, content) line;
 	if (boundary.length() && isSuffix(boundary, content))
 	{
-		log "New Argument: " << body line;
 		if (!isArg)
 			isArg = true;
 		else
@@ -89,7 +85,6 @@ void Request::appendToBody(const std::string &content)
 	}
 	else if (isPreffix(boundary, content))
 	{
-		log "ended" line;
 		isArg = false;
 		body.pop_back();
 		args.push_back(parseArgument(body));
@@ -102,64 +97,47 @@ void Request::appendToBody(const std::string &content)
 
 void Request::parseRequest()
 {
-	try
-	{
-		int status = 0;
-		std::string buffer;
-		std::istringstream lines(this->data);
+	int status = 0;
+	std::string buffer;
+	std::istringstream lines(this->data);
 
-		isDone = false;
-		while (std::getline(lines, buffer))
-		{
-			log "current line: " << buffer line;
-			if (!clen)
-			{
-				if (!method.length() && buffer.find("HTTP/1.1") != std::string::npos)
-				{
-					method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
-					uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
-					status = 1;
-					isDone = false;
-				}
-				else if (buffer.find("Content-Type") != std::string::npos)
-				{
-					if (!boundary.length())
-					{
-						ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
-						boundary = boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
-					}
-					else
-					{
-						ftype = buffer.substr(buffer.find(":") + 2);
-					}
-				}
-				else if (buffer.find("Content-Disposition") != std::string::npos)
-				{
-					disp = buffer.substr(buffer.find(":") + 2);
-				}
-				else if (buffer.find("Content-Length") != std::string::npos)
-				{
-					clen = std::stoi(buffer.substr(buffer.find(":") + 2));
-				}
-				else if (buffer.find("Connection") != std::string::npos)
-				{
-					connection = buffer.substr(buffer.find(":") + 2);
-				}
-				else
-					appendToBody(buffer);
-				// else if (buffer.find("&") != std::string::npos)
-				// {
-				// 	// add to args if no connection is added
-				// }
-			}
-			else
-				appendToBody(buffer);
-		}
-	}
-	catch (std::exception &e)
+	isDone = false;
+	while (std::getline(lines, buffer))
 	{
-		log "request parse exception" line;
+		// log "current line: " << buffer line;
+		if (!method.length() && buffer.find("HTTP/1.1") != std::string::npos)
+		{
+			method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
+			uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
+			status = 1;
+		}
+		else if (buffer.find("Content-Type") != std::string::npos && !boundary.length())
+		{
+			ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
+			boundary = boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
+		}
+		else if (!clen && !disp.length() && buffer.find("Content-Disposition") != std::string::npos)
+			disp = buffer.substr(buffer.find(":") + 2);
+		else if (!clen && buffer.find("Content-Length") != std::string::npos)
+			clen = std::stoi(buffer.substr(buffer.find(":") + 2));
+		else if (!connection.length() && buffer.find("Connection") != std::string::npos)
+			connection = buffer.substr(buffer.find(":") + 2);
+		else
+			appendToBody(buffer);
+		
+		// else if (buffer.find("&") != std::string::npos)
+		// {
+		// 	// add to args if no connection is added
+		// }
 	}
+	if (!boundary.length())
+		isDone = true;
+		
+	// log "Arguments len: " << args.size() line;
+	// for (int i = 0; i < args.size(); i++)
+	// {
+	// 	log "Data: " << args[i].data line;
+	// }
 }
 
 void Request::clear()
@@ -170,7 +148,6 @@ void Request::clear()
 	this->uri.clear();
 	this->body.clear();
 	this->ctype.clear();
-	this->ftype.clear();
 	this->disp.clear();
 	this->boundary.clear();
 	this->args.clear();

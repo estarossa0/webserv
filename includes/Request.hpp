@@ -17,8 +17,7 @@ private:
 	std::string method;
 	std::string uri;
 	unsigned int clen;
-	std::string ctype; // content-type
-	std::string ftype; // form-type
+	std::string ctype;
 	std::string body;
 	std::string boundary;
 	std::string disp;

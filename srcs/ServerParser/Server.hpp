@@ -10,7 +10,7 @@
 #include <fstream>
 #include <algorithm>
 
-#include "server_primitives.hpp"
+#include "Location.hpp"
 
 namespace parser
 {
@@ -22,40 +22,39 @@ namespace parser
 		std::string _name;
 		int _client_body_size;
 		// error_pages<error code, path of html error page>
-		std::map<std::string, std::string> _error_pages;
+		std::map<int, std::string> _error_pages;
 		std::string _root_dir;
-		location _location;
-		return_location _return_location;
-		cgi_location _cgi_location;
-		upload_location _upload_location;
+		std::vector<Location> _locations;
+
 
 	public:
 		Server();
 		~Server();
+
 		void setPort(int const &);
-		int getPort() const;
+		int const & getPort() const;
+
 		void setHost(std::string const &);
-		std::string getHost() const;
+		std::string const &getHost() const;
+
 		void setName(std::string const &);
-		std::string getName() const;
+		std::string const & getName() const;
+		
 		void setClientBodySize(int const &);
-		int getClientBodySize() const;
+		int const &getClientBodySize() const;
+		
 		void addErrorPage(int const &, std::string const &);
-		std::map<std::string, std::string> getErrorPageMap() const;
+		std::map<int, std::string> const &getErrorPageMap() const;
+		
 		void setRootDir(std::string const &);
-		std::string getRootDir() const;
-		void setLocation(location const &);
-		location getLocation() const;
-		void setReturnLocation(return_location const &);
-		return_location getReturnLocation() const;
-		void setCGILocation(cgi_location const &);
-		cgi_location getCGILocation() const;
-		void setUploadLocation(upload_location const &);
-		upload_location getUploadLocation() const;
+		std::string const &getRootDir() const;
+		
+		void addLocation(Location const &);
+		std::vector<Location> const &getLocation() const;
 
 	};
 
 
 } // namespace parser
 
-#endif // !SERVER_HPP //Config
+#endif // !SERVER_HPP

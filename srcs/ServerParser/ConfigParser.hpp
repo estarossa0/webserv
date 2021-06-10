@@ -27,9 +27,6 @@ namespace parser
 #define ERROR_PAGE_OP "error_page"
 #define ROOT_OP "root"
 #define LOCATION_OP "location"
-#define RETURN_LOCATION_OP "location /return"
-#define CGI_LOCATION_OP "location /cgi"
-#define UPLOAD_LOCATION_OP "location /upload"
 
 // location content fields identifiers
 #define LOC_PATH "loc_path"
@@ -37,18 +34,14 @@ namespace parser
 #define LOC_AUTOINDEX "autoindex"
 #define LOC_INDEX "index"
 #define LOC_ALLOWED_METHODS "allowed_methods"
-
-// return location fields identifiers
-#define RETURN_LOC "return"
-
-// CGI location fields identifiers
-#define CGI_LOC "cgi"
-
-// upload location fields identifiers
+#define LOC_RETURN "return"
+#define LOC_CGI "fastcgi_index"
 #define UPLOAD_LOC_ENABLE "upload_enable"
 #define UPLOAD_LOC_STORE "upload_store"
 
-#define NUMBER_OF_SERVER_PRIMITIVES 10
+
+#define NUMBER_OF_SERVER_PRIMITIVES 7
+#define NUMBER_OF_LOCATION_PRIMITIVES 8
 
 #define OPENNING_BRACE "{"
 #define CLOSING_BRACE "}"
@@ -73,7 +66,7 @@ namespace parser
 #define ERROR_ERRPAGE_CODE_NAN "the value of an error page code must be a non-zero positive number"
 #define ERROR_ALLOWED_METHODS_SYNTAX "bad syntax for allowed methods in line: "
 #define ERROR_DUPLICATED_FIELD "duplicate field in line: "
-#define ERROR_MISSING_LOC_FIELD "missing field in location config"
+#define ERROR_EMPTY_LOCATION_CONFIG "the file configuration has an empty location configuration"
 
 	class ConfigParser
 	{
@@ -95,16 +88,20 @@ namespace parser
 		void _getFileContent();
 		void _indexServers();
 		int _isPrimitive(std::string const &);
+		int _isLocationPrimitive(std::string const &);
 
-		// partial parsers
+
+		// partial server fields parsers
 		int _portParser(size_t, Server &);
 		int _hostParser(size_t, Server &);
 		int _serverNameParser(size_t, Server &);
 		int _clientBodySizeParser(size_t, Server &);
 		int _errorPageParser(size_t, Server &);
 		int _rootDirParser(size_t, Server &);
+		
+		// partial server location fields parsers 
+		int _locRootDirParser(size_t, Location &);
 		int _locationParser(size_t, Server &);
-		int _returnLocationParser(size_t, Server &);
 
 		void _parseContent();
 
@@ -113,9 +110,11 @@ namespace parser
 		std::vector<Server> const &getServers() const;
 		~ConfigParser();
 		static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
+		static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];
 	};
 
 	typedef int (ConfigParser::*ParserFuncPtr)(size_t, Server &);
+	typedef int (ConfigParser::*LocationFieldParserFuncPtr)(size_t, Location &);
 } // namespace parser
 
 #endif // !CONFIG_PARSER_HPP

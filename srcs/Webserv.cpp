@@ -67,13 +67,15 @@ static void	hookPollIn(Webserv &web, size_t i)
 	{
 		web[i].read();
 		web._pollArray[i].events = POLLOUT | POLLIN;
-		web[i].getRequest().clear();
 	}
 }
 
 static void	hookPollOut(Webserv &web, size_t i)
 {
+	if (web[i].getRequest().getData().length())
+		web[i].getRequest().parseRequest();
 	web[i].send();
+	web[i].getRequest().clear();
 	web._pollArray[i].events = POLLIN;
 }
 

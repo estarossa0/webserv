@@ -77,7 +77,7 @@ void parser::Server::addLocation(Location const &loc)
 	_locations.push_back(loc);
 }
 
-std::vector<parser::Location> const &parser::Server::getLocation() const
+std::vector<parser::Location> const &parser::Server::getLocations() const
 {
 	return _locations;
 }

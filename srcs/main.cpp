@@ -18,7 +18,6 @@
 // 	Server sv(PORT);
 // 	std::vector <struct pollfd> poll_set;
 
-
 // 	poll_set.push_back((struct pollfd){sv.get_fd(), POLLIN, 0});int p;
 // 	while (1)
 // 	{
@@ -67,13 +66,16 @@
 // 	return 0;
 // }
 
-
-int main()
+int main(int ac, char **av)
 {
-	std::string str = "Hello World";
-	std::string str1 = str;
+	if (ac == 2)
 
-	std::cout << "[" << str1 << "] [" << str << "]" << std::endl;
-	str1.erase(str1.end() - 1);
-	std::cout << "[" << str1 << "] [" << str << "]" << std::endl;
+		try
+		{
+			parser::ConfigParser parser(av[1]);
+		}
+		catch (const std::exception &e)
+		{
+			std::cout << e.what() << std::endl;
+		}
 }

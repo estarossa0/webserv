@@ -50,7 +50,7 @@ namespace parser
 		std::string const &getRootDir() const;
 		
 		void addLocation(Location const &);
-		std::vector<Location> const &getLocation() const;
+		std::vector<Location> const &getLocations() const;
 
 	};
 

@@ -80,8 +80,6 @@ void Response::checkFilePermission(std::string &path, int mode)
 	}
 }
 
-
-
 void Response::deleteFile(std::string &path)
 {
 	checkFilePermission(path, W_OK);
@@ -117,12 +115,20 @@ void Response::uploadFile()
 		Request::Argument arg = _request.getArgument(i);
 		if (_request.getArgument(i).ctype != "")
 		{
-			std::string dir = getFilePath("/" + getFileNameFromDisp(arg.disp));
+			std::string name = getFileNameFromDisp(arg.disp);
+			std::string dir = getUploadDirectory().append(name);
 			std::ofstream file(dir);
 			file << arg.data;
 			file.close();
 		}
 	}
+}
+
+std::string Response::getUploadDirectory()
+{
+	std::string dir = getCurrentDirectory();
+	dir.append("/public/upload/");
+	return dir;
 }
 
 std::string Response::getFilePath(std::string uri)
@@ -147,6 +153,32 @@ std::string Response::getCurrentDirectory()
 	}
 	return dir;
 }
+/*
+
+=> GET /get/user
+
+search location
+if location is prefix for uri
+	if accepted method
+		if cgi
+			gotocgi
+		else
+			if dir exist
+				if has file ext
+					get file
+				else
+					if autoindex
+						return index file
+					else
+						return error file
+			else
+				error file
+else
+	error file
+*/
+
+
+
 
 void Response::methodGet()
 {
@@ -172,6 +204,7 @@ void Response::methodDelete()
 
 void Response::makeBody()
 {
+	
 	std::string res;
 	try
 	{

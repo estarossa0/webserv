@@ -26,6 +26,7 @@ private:
 	void readFile(std::string &);
 	void uploadFile();
 
+	std::string getUploadDirectory();
 	std::string getFilePath(std::string);
 	std::string getCurrentDirectory();
 	void makeBody();

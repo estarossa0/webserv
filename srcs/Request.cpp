@@ -24,7 +24,7 @@ int Request::getSpaceIndex(const std::string &str, int nbr)
 bool isSuffix(std::string s1, std::string s2)
 {
 	int n1 = s1.length(), n2 = s2.length();
-	if (n1 > n2)
+	if (n1 > n2 || !s1.length() || !s2.length())
 		return false;
 	for (int i = 0; i < n1; i++)
 		if (s1[n1 - i - 1] != s2[n2 - i - 1])
@@ -35,6 +35,8 @@ bool isSuffix(std::string s1, std::string s2)
 bool isPreffix(std::string s1, std::string s2)
 {
 	int n1 = s1.length(), n2 = s2.length();
+	if (!s1.length() || !s2.length())
+		return false;
 	for (int i = 0; i < n1; i++)
 		if (s1[i] != s2[i])
 		{
@@ -69,9 +71,13 @@ Request::Argument Request::parseArgument(const std::string &content)
 
 void Request::appendToBody(const std::string &content)
 {
-	if (isSuffix(boundary, content))
+	// log "content: " << content line;
+	// log boundary.length() line;
+	// log isSuffix(boundary, content) line;
+	// log isPreffix(boundary, content) line;
+	if (boundary.length() && isSuffix(boundary, content))
 	{
-		// log "Appending" line;
+		log "New Argument: " << body line;
 		if (!isArg)
 			isArg = true;
 		else
@@ -83,7 +89,7 @@ void Request::appendToBody(const std::string &content)
 	}
 	else if (isPreffix(boundary, content))
 	{
-		// log "ended" line;
+		log "ended" line;
 		isArg = false;
 		body.pop_back();
 		args.push_back(parseArgument(body));
@@ -99,7 +105,9 @@ void Request::parseRequest(const std::string &data)
 	int status = 0;
 	std::string buffer;
 	std::istringstream lines(data);
-	// log "Data to parse: " << data << "\n---------\n" line;
+
+	log data line;
+	isDone = false;
 	while (std::getline(lines, buffer))
 	{
 		log "current line: " << buffer line;
@@ -146,18 +154,28 @@ void Request::parseRequest(const std::string &data)
 		else
 			appendToBody(buffer);
 	}
-	// log "Arguments: " << args.size() line;
-	// for (size_t i = 0; i < args.size(); i++)
-	// {
-	// 	log args[i].data line;
-	// }
+	log "Arguments: " << args.size() line;
+	for (size_t i = 0; i < args.size(); i++)
+	{
+		log args[i].data line;
+	}
 }
 
 void Request::clear()
 {
-	// log "Clearing request" line;
-	this->body = "";
-	this->boundary = "";
+	log "Clearing request" line;
+	this->method.clear();
+	this->uri.clear();
+	this->body.clear();
+	this->ctype.clear();
+	this->ftype.clear();
+	this->disp.clear();
+	this->boundary.clear();
+	this->args.clear();
+	this->connection.clear();
+	this->clen = 0;
+	isDone = false;
+	isArg = false;
 }
 
 const std::string &Request::getMethod() const

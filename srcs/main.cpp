@@ -3,7 +3,7 @@
 #define PORT 80
 int main()
 {
-	char buffer[30000] = {0};
+	char buffer[1024] = {0};
 	Server sv(PORT);
 	Request request;
 	Response response;
@@ -12,7 +12,7 @@ int main()
 	int p;
 	while (1)
 	{
-		bzero(buffer, 30000);
+		bzero(buffer, 1024);
 		p = poll(&poll_set[0], poll_set.size(), -1);
 		if (p < 0)
 			break;
@@ -39,6 +39,7 @@ int main()
 					poll_set[i].events = POLLOUT | POLLIN;
 					if (poll_set[i].revents & POLLHUP)
 					{
+						log "end request" line;
 						request.clear();
 						close(poll_set[i].fd);
 						poll_set.erase(poll_set.begin() + i);
@@ -46,9 +47,9 @@ int main()
 					// log "----request: " << buffer line;
 				}
 			}
-			if (poll_set[i].revents & POLLOUT)
+			if (poll_set[i].revents & POLLOUT && request.isDone)
 			{
-				// printf("fd => %d %d %d\n", poll_set[i].fd, poll_set[i].events, poll_set[i].revents);
+				printf("fd => %d %d %d\n", poll_set[i].fd, poll_set[i].events, poll_set[i].revents);
 				response.setRequest(request);
 				response.makeResponse();
 				std::string body = response.getResponse();

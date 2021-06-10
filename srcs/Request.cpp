@@ -1,6 +1,6 @@
 #include "websrv.h"
 
-Request::Request() : isDone(false), clen(0), boundary(""), isArg(false)
+Request::Request() : isDone(false), clen(0), data(""), boundary(""), isArg(false)
 {
 }
 
@@ -100,70 +100,79 @@ void Request::appendToBody(const std::string &content)
 		body.append(content).append("\n");
 }
 
-void Request::parseRequest(const std::string &data)
+void Request::parseRequest()
 {
-	int status = 0;
-	std::string buffer;
-	std::istringstream lines(data);
-
-	log data line;
-	isDone = false;
-	while (std::getline(lines, buffer))
+	try
 	{
-		log "current line: " << buffer line;
-		if (!clen)
+		int status = 0;
+		std::string buffer;
+		std::istringstream lines(this->data);
+
+		isDone = false;
+		while (std::getline(lines, buffer))
 		{
-			if (!method.length() && buffer.find("HTTP/1.1") != std::string::npos)
+			// log "current line: " << buffer line;
+			if (!clen)
 			{
-				method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
-				uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
-				status = 1;
-				isDone = false;
-			}
-			else if (buffer.find("Content-Type") != std::string::npos)
-			{
-				if (!boundary.length())
+				if (!method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 				{
-					ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
-					boundary = boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
+					method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
+					uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
+					status = 1;
+					isDone = false;
+				}
+				else if (buffer.find("Content-Type") != std::string::npos)
+				{
+					if (!boundary.length())
+					{
+						ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
+						boundary = boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
+					}
+					else
+					{
+						ftype = buffer.substr(buffer.find(":") + 2);
+					}
+				}
+				else if (buffer.find("Content-Disposition") != std::string::npos)
+				{
+					disp = buffer.substr(buffer.find(":") + 2);
+				}
+				else if (buffer.find("Content-Length") != std::string::npos)
+				{
+					clen = std::stoi(buffer.substr(buffer.find(":") + 2));
+				}
+				else if (buffer.find("Connection") != std::string::npos)
+				{
+					connection = buffer.substr(buffer.find(":") + 2);
 				}
 				else
-				{
-					ftype = buffer.substr(buffer.find(":") + 2);
-				}
-			}
-			else if (buffer.find("Content-Disposition") != std::string::npos)
-			{
-				disp = buffer.substr(buffer.find(":") + 2);
-			}
-			else if (buffer.find("Content-Length") != std::string::npos)
-			{
-				clen = std::stoi(buffer.substr(buffer.find(":") + 2));
-			}
-			else if (buffer.find("Connection") != std::string::npos)
-			{
-				connection = buffer.substr(buffer.find(":") + 2);
+					appendToBody(buffer);
+				// else if (buffer.find("&") != std::string::npos)
+				// {
+				// 	// add to args if no connection is added
+				// }
 			}
 			else
 				appendToBody(buffer);
-			// else if (buffer.find("&") != std::string::npos)
-			// {
-			// 	// add to args if no connection is added
-			// }
 		}
-		else
-			appendToBody(buffer);
 	}
-	log "Arguments: " << args.size() line;
-	for (size_t i = 0; i < args.size(); i++)
+	catch (std::exception &e)
 	{
-		log args[i].data line;
+		log "request parse exception" line;
 	}
+	log "data:" << clen line;
+	log "data:" << data.length() line;
+	// log "Arguments: " << args.size() line;
+	// for (size_t i = 0; i < args.size(); i++)
+	// {
+	// 	log args[i].data line;
+	// }
 }
 
 void Request::clear()
 {
 	log "Clearing request" line;
+	this->data.clear();
 	this->method.clear();
 	this->uri.clear();
 	this->body.clear();
@@ -201,6 +210,16 @@ const std::string &Request::getContentType() const
 const std::string &Request::getBody() const
 {
 	return this->body;
+}
+
+const std::string &Request::getData() const
+{
+	return this->data;
+}
+
+void Request::appendToData(std::string content)
+{
+	this->data.append(content);
 }
 
 size_t Request::getLenArguments()

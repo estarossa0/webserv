@@ -16,8 +16,8 @@ int Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
-		if (buffer[0])
-			_request.parseRequest(buffer);
+		if (retval > 0)
+			_request.appendToData(buffer);
 		size += retval;
 		if (retval < 1000)
 			break;
@@ -29,7 +29,6 @@ int Connection::send()
 {
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
-	this->_request.clear();
 	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
 }
 

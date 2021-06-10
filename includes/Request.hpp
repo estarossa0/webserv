@@ -13,6 +13,7 @@ public:
 	};
 
 private:
+	std::string data;
 	std::string method;
 	std::string uri;
 	unsigned int clen;
@@ -34,7 +35,7 @@ public:
 	Request();
 	~Request();
 
-	void parseRequest(const std::string &);
+	void parseRequest();
 	void clear();
 
 	const std::string &getMethod() const;
@@ -44,6 +45,9 @@ public:
 	const std::string &getBody() const;
 	const std::string &getBoundary() const;
 	const std::string &getDisposition() const;
+	const std::string &getData() const;
+
+	void	appendToData(std::string);
 
 	size_t getLenArguments();
 	Argument getArgument(int i);

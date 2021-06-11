@@ -17,6 +17,9 @@
 #include "Connection.hpp"
 #include "Server.hpp"
 
+class Location;
+class Data;
+
 #define ST_OK 200
 #define ST_MOVED_PERM 301
 #define ST_BAD_REQUEST 400

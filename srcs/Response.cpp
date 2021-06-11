@@ -1,10 +1,6 @@
 #include "websrv.h"
 
-Response::Response()
-{
-}
-
-Response::Response(Request request) : _request(request)
+Response::Response(Connection *connection) : _connection(connection)
 {
 }
 
@@ -45,12 +41,26 @@ void	Response::clear()
 
 std::string getFileNameFromUri(std::string uri)
 {
+	std::string path;
 	if (uri.find("?") != std::string::npos)
-		return uri.substr(0, uri.find("?"));
-	return uri;
+		path = uri.substr(0, uri.find("?"));
+	else
+		path = uri;
+	// if (path.compare(this->_location.getPath()) == 0 && this->_location.getAutoIndex())
+	// {
+	// 	for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
+	// 	{
+	// 		if (checkFileExists(*it))
+	// 		{
+	// 			// check if location has / at the end
+	// 			path.append("/"); 
+	// 			path.append(*it);
+	// 			break ;
+	// 		}
+	// 	}
+	// }
+	return path;
 }
-
-
 
 std::string Response::getCodeStatus()
 {
@@ -134,6 +144,7 @@ void Response::uploadFile()
 				file.close();
 			}
 		}
+		_body = "File Uploaded";
 	} catch (std::exception &e)
 	{
 		log "Exception at uploadFile: " << e.what() line;
@@ -145,18 +156,22 @@ void Response::uploadFile()
 std::string Response::getUploadDirectory()
 {
 	std::string dir = getCurrentDirectory();
-	dir.append("/public/upload/");
+	// dir.append(_location.getUploadLocation());
+	// dir.append("/");
+	dir.append("/upload/"); // temporary
 	return dir;
 }
 
 std::string Response::getFilePath(std::string uri)
 {
 	std::string dir = getCurrentDirectory();
-	dir.append("/public");
+
+	dir.append("/public"); // temporary root dir
 	dir.append(uri);
 	return dir;
 }
 
+//must reset error to be thrown
 std::string Response::getCurrentDirectory()
 {
 	char buffer[2000];
@@ -167,10 +182,55 @@ std::string Response::getCurrentDirectory()
 	else
 	{
 		dir = buffer;
+		// if (_location.getRootDir())
+		// dir.append(_location.getRootDir())
+		// else
+		// dir.append(getServerData().getRootDir());
+		// dir.append("/");
 		return dir;
 	}
 	return dir;
 }
+
+
+void Response::methodGet()
+{
+	//check cgi
+	// if (this->_location.isCgi())
+		// go to cgi
+	// else
+	// {
+	
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	readFile(file);
+	// }
+}
+
+void Response::methodPost()
+{
+	//check cgi
+	//check location with uri
+	// if (_location.isCgi())
+		// go to cgi
+	// else
+	// {
+		// if (_location.getUploadEnabled())
+			uploadFile();
+	// }
+}
+
+void Response::methodDelete()
+{
+	//check cgi
+	// if (_location.isCgi())
+		// go to cgi
+	// else
+	// {
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	deleteFile(file);
+	// }
+}
+
 /*
 
 => GET /get/user
@@ -195,34 +255,31 @@ else
 	error file
 */
 
-void Response::methodGet()
-{
-	//check cgi
-	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	readFile(file);
-}
-
-void Response::methodPost()
-{
-	//check cgi
-	//check location with uri
-	uploadFile();
-	_body = "File Uploaded";
-}
-
-void Response::methodDelete()
-{
-	//check cgi
-	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	deleteFile(file);
-}
-
 void Response::makeBody()
 {
-	
-	std::string res;
+	// std::vector<Location> locations;
+
+	// for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
+	// {
+	// 	if (_request.getUri().find((*it).getPath()) != std::string::npos)
+	// 	{
+	// 		if (!this->getLocation())
+	// 		{
+	// 			// path found
+	// 			this->setLocation(*it);
+	// 		}
+	// 		else
+	// 		{
+	// 			// compare locations
+	// 			if (this->_location.getPath().length() < (*it).getPath().length())
+	// 				this->setLocation(*it);
+	// 		}
+	// 	}
+	// }
 	try
 	{
+		// if (!this->_location.getAllowedMethods()[_request.getMethod()])
+			// throw Not Implemented
 		if (_request.getMethod().compare("GET") == 0)
 			methodGet();
 		else if (_request.getMethod().compare("POST") == 0)
@@ -282,3 +339,23 @@ void Response::setRequest(Request request)
 {
 	this->_request = request;
 }
+
+Connection	*Response::getConnection()
+{
+	return this->_connection;
+}
+
+// Server *Response::getServerData()
+// {
+// 	return this->connection->getServer()->getData();
+// }
+
+// Location Response::getLocation()
+// {
+// 	return this->_location;
+// }
+
+// void Response::setLocation(Location &location)
+// {
+// 	this->_location = location;
+// }

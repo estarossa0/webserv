@@ -6,6 +6,5 @@ int main()
 
 	web.addServer(80);
 	web.hook();
-
 	return 0;
 }

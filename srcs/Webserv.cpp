@@ -75,7 +75,6 @@ static void	hookPollOut(Webserv &web, size_t i)
 	log web[i].getRequest().getData() line;
 	if (web[i].getRequest().getData().length())
 		web[i].getRequest().parseRequest();
-	// log web[i].getRequest().getData() line;
 	if (web[i].getRequest().isDone) {
 		web[i].send();
 		web[i].getRequest().clear();

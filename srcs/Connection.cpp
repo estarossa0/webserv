@@ -1,10 +1,10 @@
 #include "websrv.h"
 
-Connection::Connection(int fd, Server* sv, bool isserv) : _socketfd(fd), _server(sv), _is_Server(isserv)
+Connection::Connection(int fd, Server* sv, bool isserv) : _socketfd(fd), _server(sv), _is_Server(isserv), _request(this), _response(this)
 {};
 
 Connection::Connection(const Connection &other) :
-_socketfd(other._socketfd), _server(other._server), _is_Server(other._is_Server)
+_socketfd(other._socketfd), _server(other._server), _is_Server(other._is_Server), _request(this), _response(this)
 {};
 
 int				Connection::read()
@@ -30,6 +30,7 @@ int				Connection::read()
 
 int				Connection::send()
 {
+	this->_request.printRequest();
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
 	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);

@@ -14,6 +14,8 @@ private:
 	std::string _body;
 	std::string _resp;
 	Request _request;
+	Connection *_connection;
+	// Location _location;
 
 	std::string getCodeStatus();
 
@@ -32,8 +34,7 @@ private:
 	void makeBody();
 
 public:
-	Response();
-	Response(Request);
+	Response(Connection *);
 	~Response();
 
 	void makeResponse();
@@ -46,6 +47,11 @@ public:
 	const std::string &getContentLength() const;
 	const std::string &getBody() const;
 	const std::string &getResponse() const;
+	Connection *getConnection();
+	// Data *getServerData();
+	// Location getLocation() const;
+
+	// void	setLocation(Location &);
 
 	class NotFound : public std::exception
 	{

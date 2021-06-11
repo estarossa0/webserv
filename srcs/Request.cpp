@@ -1,6 +1,10 @@
 #include "websrv.h"
 
-Request::Request() : isDone(false), clen(0), data(""), boundary(""), isArg(false)
+Request::Request()
+{
+}
+
+Request::Request(Connection *_connection) : isDone(false), _clen(0), _data(""), _boundary(""), _isArg(false), _connection(_connection)
 {
 }
 
@@ -66,138 +70,242 @@ Request::Argument Request::parseArgument(const std::string &content)
 			arg.data = arg.data.append(buffer);
 		}
 	}
-	arg.data.pop_back();
 	return arg;
 }
 
-void Request::appendToBody(const std::string &content)
+void Request::appendToBody(std::string content)
 {
-	if (boundary.length() && isSuffix(boundary, content))
+	content.pop_back();
+	if (_boundary.length() && isSuffix(_boundary, content))
 	{
-		if (!isArg)
-			isArg = true;
+		if (!_isArg)
+			_isArg = true;
 		else
 		{
-			body.pop_back();
-			args.push_back(parseArgument(body));
-			body = "";
+			_args.push_back(parseArgument(_body));
+			_body.clear();
 		}
 	}
-	else if (isPreffix(boundary, content))
+	else if (isPreffix(_boundary, content))
 	{
-		isArg = false;
-		body.pop_back();
-		args.push_back(parseArgument(body));
-		body = "";
+		_isArg = false;
+		_args.push_back(parseArgument(_body));
+		_body.clear();
 		isDone = true;
 	}
-	else if (isArg)
-		body.append(content).append("\n");
+	else if (_isArg)
+		_body.append(content).append("\n");
+}
+
+int	getPostBodyLength(std::string data, std::string boundary)
+{
+	std::string buffer;
+	std::istringstream lines(data);
+	int len = 0;
+	bool body = false;
+
+	while (std::getline(lines, buffer))
+	{
+		if (!body && buffer.length() == 1)
+			body = true;
+		else if (body)
+		{
+			if (buffer.length())
+				len += buffer.length() + 1;
+		}
+	}
+	if (!boundary.length())
+		len--;
+	return len;
+}
+
+void Request::parseHeaders()
+{
+	
 }
 
 void Request::parseRequest()
 {
-	int status = 0;
 	std::string buffer;
-	std::istringstream lines(this->data);
+	std::istringstream lines(_data);
 
 	isDone = false;
 	while (std::getline(lines, buffer))
 	{
 		// log "current line: " << buffer line;
-		if (!method.length() && buffer.find("HTTP/1.1") != std::string::npos)
+		if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 		{
-			method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
-			uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
-			status = 1;
+			_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
+			_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
+			_protocol = buffer.substr(getSpaceIndex(buffer, 2));
+			_protocol.pop_back();
 		}
-		else if (buffer.find("Content-Type") != std::string::npos && !boundary.length())
+		else if (!_host.length() && buffer.find("Host") != std::string::npos)
 		{
-			ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
-			boundary = boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
+			_host = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
 		}
-		else if (!clen && !disp.length() && buffer.find("Content-Disposition") != std::string::npos)
-			disp = buffer.substr(buffer.find(":") + 2);
-		else if (!clen && buffer.find("Content-Length") != std::string::npos)
-			clen = std::stoi(buffer.substr(buffer.find(":") + 2));
-		else if (!connection.length() && buffer.find("Connection") != std::string::npos)
-			connection = buffer.substr(buffer.find(":") + 2);
+		else if (!_boundary.length() && buffer.find("Content-Type") != std::string::npos)
+		{
+			if (buffer.find("boundary=") != std::string::npos)
+			{
+				_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
+				_boundary = _boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
+				_boundary.pop_back();
+			}
+			else
+				_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.length() - buffer.find_first_of(":") - 3);
+		}
+		else if (!_clen && !_disp.length() && buffer.find("Content-Disposition") != std::string::npos)
+			_disp = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+		else if (!_clen && buffer.find("Content-Length") != std::string::npos)
+			_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
+		else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
+			_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+		else if (_clen && !_boundary.length())
+		{
+			if (_isArg)
+			{
+				_body.append(buffer);
+				if (_body.length() == _clen)
+				{
+					Request::Argument arg = {};
+					arg.data = _body;
+					_args.push_back(arg);
+					_body.clear();
+					_isArg = false;
+				}
+				else
+					_body.append("\n");
+			}
+			else
+				_isArg = true;
+		}
 		else
 			appendToBody(buffer);
-		
-		// else if (buffer.find("&") != std::string::npos)
-		// {
-		// 	// add to args if no connection is added
-		// }
 	}
-	if (!boundary.length())
+	// if (clen / 1024 / 1024 > this->getServerData().getClientBodySize())
+	// 	throw MAX_BODY_SIZE_ERROR;
+	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary)))
 		isDone = true;
-		
-	// log "Arguments len: " << args.size() line;
-	// for (int i = 0; i < args.size(); i++)
-	// {
-	// 	log "Data: " << args[i].data line;
-	// }
+	if (isDone)
+	{
+		int error = 0;
+		// must check errors
+		if (_protocol.compare("HTTP/1.1") != 0)
+			error = 1;
+		if (_method.length() < 3)			
+			error = 1;
+		if (!_uri.length() || _uri[0] != '/')
+			error = 1;
+		if (_method.compare("POST") == 0 && _clen && getPostBodyLength(_data, _boundary) != _clen)
+			error = 1;
+		if (!_host.length())
+			error = 1;
+		if (error)
+			log "Error in request parsing" line;
+	}
+}
+
+void Request::printRequest()
+{
+	log "method: " << _method << "|" line;
+	log "uri: " << _uri << "|" line;
+	log "host: " << _host << "|" line;
+	log "protocol: " << _protocol << "|" line;
+	log "content length: " << _clen << "|" line;
+	log "content type: " << _ctype << "|" line;
+	log "boundary: " << _boundary << "|" line;
+	log "disposition: " << _disp << "|" line;
+	log "connection type: " << _contype << "|" line;
+	log "arguments size: " << _args.size() << "|" line;
+	for (int i = 0; i < _args.size(); i++)
+		log "argument disposition: " << _args[i].disp << "| " << "content type: " << _args[i].ctype << "| " << "data: " << _args[i].data << "|" line;
+	log "" line;
 }
 
 void Request::clear()
 {
 	log "Clearing request" line;
-	this->data.clear();
-	this->method.clear();
-	this->uri.clear();
-	this->body.clear();
-	this->ctype.clear();
-	this->disp.clear();
-	this->boundary.clear();
-	this->args.clear();
-	this->connection.clear();
-	this->clen = 0;
+	this->_data.clear();
+	this->_method.clear();
+	this->_uri.clear();
+	this->_body.clear();
+	this->_ctype.clear();
+	this->_disp.clear();
+	this->_boundary.clear();
+	this->_args.clear();
+	this->_contype.clear();
+	this->_clen = 0;
 	isDone = false;
-	isArg = false;
+	_isArg = false;
 }
 
 const std::string &Request::getMethod() const
 {
-	return this->method;
+	return _method;
 }
 
 const std::string &Request::getUri() const
 {
-	return this->uri;
+	return _uri;
 }
 
 unsigned int Request::getContentLen() const
 {
-	return this->clen;
+	return _clen;
 }
 
 const std::string &Request::getContentType() const
 {
-	return this->ctype;
+	return _ctype;
 }
 
 const std::string &Request::getBody() const
 {
-	return this->body;
+	return _body;
 }
 
 const std::string &Request::getData() const
 {
-	return this->data;
+	return _data;
+}
+
+const std::string &Request::getConnectionType() const
+{
+	return _contype;
 }
 
 void Request::appendToData(std::string content)
 {
-	this->data.append(content);
+	_data.append(content);
 }
 
 size_t Request::getLenArguments()
 {
-	return this->args.size();
+	return _args.size();
+}
+
+std::vector<Request::Argument> Request::getArguments()
+{
+	return _args;
 }
 
 Request::Argument Request::getArgument(int i)
 {
-	return this->args[i];
+	return _args[i];
 }
+
+Connection *Request::getConnection()
+{
+	return _connection;
+}
+
+std::vector<Request::Header> Request::getHeaders()
+{
+	return _headers;
+}
+
+// Data *Request::getServerData()
+// {
+// 	return this->connection->getServer()->getData();
+// }

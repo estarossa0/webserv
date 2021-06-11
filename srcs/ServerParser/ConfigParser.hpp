@@ -11,10 +11,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "Server.hpp"
-
-namespace parser
-{
+#include "ServerData.hpp"
 
 // fields identifiers fields definitions
 
@@ -38,7 +35,6 @@ namespace parser
 #define LOC_CGI "fastcgi_pass"
 #define UPLOAD_LOC_ENABLE "upload_enable"
 #define UPLOAD_LOC_STORE "upload_store"
-
 
 #define NUMBER_OF_SERVER_PRIMITIVES 7
 #define NUMBER_OF_LOCATION_PRIMITIVES 8
@@ -73,61 +69,58 @@ namespace parser
 #define ERROR_CGI_EXTENSION_ERROR "the cgi extension is invalid, it must be in this format: *.extention , e.g. *.php\nError in this line: "
 #define ERROR_CGI_NOT_FOUND "the fastcgi_pass field is not found after setting the cgi extension"
 
-	class ConfigParser
-	{
-	private:
-		// attributes
-		char const *_filename;
-		std::vector<Server> _servers;
-		std::vector<std::string> _fileLines;
-		std::vector<int> _serversIndexing;
-		std::map<std::string, bool> _checked_primitives;
+class ConfigParser
+{
+private:
+	// attributes
+	char const *_filename;
+	std::vector<ServerData> _servers;
+	std::vector<std::string> _fileLines;
+	std::vector<int> _serversIndexing;
+	std::map<std::string, bool> _checked_primitives;
 
-		// methods
-		void _trim(std::string &);
-		std::vector<std::string> _split(std::string const &);
-		std::vector<std::string> _split(std::string const &, char);
-		bool _isSet(std::string const &, int (*func)(int));
-		void _semicolonChecker(std::string &);
-		void _getFileContent();
-		void _indexServers();
-		int _isPrimitive(std::string const &);
-		int _isLocationPrimitive(std::string const &);
+	// methods
+	void _trim(std::string &);
+	std::vector<std::string> _split(std::string const &);
+	std::vector<std::string> _split(std::string const &, char);
+	bool _isSet(std::string const &, int (*func)(int));
+	void _semicolonChecker(std::string &);
+	void _getFileContent();
+	void _indexServers();
+	int _isPrimitive(std::string const &);
+	int _isLocationPrimitive(std::string const &);
 
+	// partial server fields parsers
+	int _portParser(size_t, ServerData &);
+	int _hostParser(size_t, ServerData &);
+	int _serverNameParser(size_t, ServerData &);
+	int _clientBodySizeParser(size_t, ServerData &);
+	int _errorPageParser(size_t, ServerData &);
+	int _rootDirParser(size_t, ServerData &);
 
-		// partial server fields parsers
-		int _portParser(size_t, Server &);
-		int _hostParser(size_t, Server &);
-		int _serverNameParser(size_t, Server &);
-		int _clientBodySizeParser(size_t, Server &);
-		int _errorPageParser(size_t, Server &);
-		int _rootDirParser(size_t, Server &);
-		
-		// partial server location fields parsers 
-		void _locRootDirParser(size_t, Location &);
-		void _locAutoIndexParser(size_t, Location &);
-		void _locIndexParser(size_t, Location &);
-		void _locAllowedMethodsParser(size_t, Location &);
-		void _locRedirectionParser(size_t, Location &);
-		void _locUploadEnableParser(size_t, Location &);
-		void _locUploadLocationParser(size_t, Location &);
-		void _locCGIParser(size_t, Location &);
-		
+	// partial server location fields parsers
+	void _locRootDirParser(size_t, Location &);
+	void _locAutoIndexParser(size_t, Location &);
+	void _locIndexParser(size_t, Location &);
+	void _locAllowedMethodsParser(size_t, Location &);
+	void _locRedirectionParser(size_t, Location &);
+	void _locUploadEnableParser(size_t, Location &);
+	void _locUploadLocationParser(size_t, Location &);
+	void _locCGIParser(size_t, Location &);
 
-		int _locationParser(size_t, Server &);
+	int _locationParser(size_t, ServerData &);
 
-		void _parseContent();
+	void _parseContent();
 
-	public:
-		ConfigParser(char const *inFilename);
-		std::vector<Server> const &getServers() const;
-		~ConfigParser();
-		static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
-		static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];
-	};
+public:
+	ConfigParser(char const *inFilename);
+	std::vector<ServerData> const &getServers() const;
+	~ConfigParser();
+	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
+	static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];
+};
 
-	typedef int (ConfigParser::*ParserFuncPtr)(size_t, Server &);
-	typedef void (ConfigParser::*LocationFieldParserFuncPtr)(size_t, Location &);
-} // namespace parser
+typedef int (ConfigParser::*ParserFuncPtr)(size_t, ServerData &);
+typedef void (ConfigParser::*LocationFieldParserFuncPtr)(size_t, Location &);
 
 #endif // !CONFIG_PARSER_HPP

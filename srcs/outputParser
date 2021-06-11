@@ -2,12 +2,12 @@ server
 {
 listen          80;
 host localhost;
-server_name     example.com;
-client_max_body_size    10m;
+server_name     example.com  ;
+client_max_body_size    10m ;
 error_page 404 /404.html;
 error_page 500 /500.html;
-error_page 502 /502.html;
 root /src;
+error_page 502 /502.html;
 location /
 {
 root /home;
@@ -15,18 +15,38 @@ autoindex on;
 index index.html index.php;
 allow_methods [GET,POST,DELETE];
 }
-location /return
-{
-return 301 _url;
 }
-location *.php
-{
-fastcgi_pass unix:/var/run/php-fpm.sock;
-}
-location /upload
-{
-upload_enable off;
-upload_store /files;
-}
-}
-start = [1], end[30]
+
+
+======================== SERVERS INDEXING ==========================
+
+start = [1], end[17]
+======================== SERVERS PARSING ==========================
+
+==================== ServerData ===================
+port :[80]
+host :[localhost]
+name :[example.com]
+client body size: [10]
+error page: code [404], path [/404.html]
+error page: code [500], path [/500.html]
+error page: code [502], path [/502.html]
+root dir: [/src]
+
+================ Location ===============
+location path : [/]
+location root : [/home]
+location autoindex : [true]
+location indexes : [index.html]  [index.php]  
+location method: [DELETE] = [true]
+location method: [GET] = [true]
+location method: [POST] = [true]
+location is redirection : false
+location return, code : [0], url: []
+location is CGI : false
+location CGI, url: []
+location upload enabled : false
+location Upload store: []
+============== Location End =============
+==================== ServerData End =================
+

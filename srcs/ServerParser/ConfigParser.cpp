@@ -1,6 +1,6 @@
 #include "ConfigParser.hpp"
 
-std::string const parser::ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRIMITIVES] = {
+std::string const ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRIMITIVES] = {
 	PORT_OP,
 	HOST_OP,
 	SERVER_NAME_OP,
@@ -10,7 +10,7 @@ std::string const parser::ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRI
 	LOCATION_OP,
 };
 
-std::string const parser::ConfigParser::location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES] = {
+std::string const ConfigParser::location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES] = {
 	LOC_ROOT,
 	LOC_AUTOINDEX,
 	LOC_INDEX,
@@ -21,7 +21,7 @@ std::string const parser::ConfigParser::location_identifiers[NUMBER_OF_LOCATION_
 	UPLOAD_LOC_STORE,
 };
 
-parser::ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
+ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 {
 	_getFileContent();
 	std::cout << "got file content successfully" << std::endl;
@@ -36,6 +36,12 @@ parser::ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilenam
 	_indexServers();
 	std::cout << "servers has been indexed successfully" << std::endl;
 
+	output << std::endl
+		   << std::endl;
+	output << "======================== SERVERS INDEXING ==========================";
+	output << std::endl
+		   << std::endl;
+
 	for (size_t i = 0; i < _serversIndexing.size(); i += 2)
 	{
 		output << "start = [" << _serversIndexing[i] << "], end[" << _serversIndexing[i + 1] << "]" << std::endl;
@@ -43,21 +49,28 @@ parser::ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilenam
 
 	_parseContent();
 	std::cout << "content has been parsed successfully" << std::endl;
+
+	output << "======================== SERVERS PARSING ==========================" << std::endl;
+
+	for (size_t i = 0; i < _servers.size(); i++)
+	{
+		output << _servers[i] << std::endl;
+	}
 }
 
-parser::ConfigParser::~ConfigParser()
+ConfigParser::~ConfigParser()
 {
 	_servers.clear();
 	_fileLines.clear();
 	_serversIndexing.clear();
 }
 
-std::vector<parser::Server> const &parser::ConfigParser::getServers() const
+std::vector<ServerData> const &ConfigParser::getServers() const
 {
 	return this->_servers;
 }
 
-void parser::ConfigParser::_trim(std::string &str)
+void ConfigParser::_trim(std::string &str)
 {
 	size_t start = 0;
 	size_t end = str.size() > 0 ? str.size() - 1 : 0;
@@ -70,7 +83,7 @@ void parser::ConfigParser::_trim(std::string &str)
 	str = str.substr(start, end - start + 1);
 }
 
-std::vector<std::string> parser::ConfigParser::_split(std::string const &line)
+std::vector<std::string> ConfigParser::_split(std::string const &line)
 {
 	std::vector<std::string> wordsArr;
 	std::stringstream ss(line);
@@ -81,7 +94,7 @@ std::vector<std::string> parser::ConfigParser::_split(std::string const &line)
 	return wordsArr;
 }
 
-std::vector<std::string> parser::ConfigParser::_split(std::string const &line, char c)
+std::vector<std::string> ConfigParser::_split(std::string const &line, char c)
 {
 	std::vector<std::string> wordsArr;
 	std::stringstream ss(line);
@@ -92,7 +105,7 @@ std::vector<std::string> parser::ConfigParser::_split(std::string const &line, c
 	return wordsArr;
 }
 
-void parser::ConfigParser::_getFileContent()
+void ConfigParser::_getFileContent()
 {
 	std::ifstream inFile(_filename);
 	std::string buff;
@@ -114,7 +127,7 @@ void parser::ConfigParser::_getFileContent()
 	inFile.close();
 }
 
-void parser::ConfigParser::_indexServers()
+void ConfigParser::_indexServers()
 {
 	int isBracesValid = 0;
 	bool serverBraceOpen = false;
@@ -166,7 +179,7 @@ void parser::ConfigParser::_indexServers()
 		throw std::runtime_error(ERROR_EMPTY_CONFIGURATION);
 }
 
-void parser::ConfigParser::_parseContent()
+void ConfigParser::_parseContent()
 {
 	size_t start;
 	size_t end;
@@ -193,13 +206,17 @@ void parser::ConfigParser::_parseContent()
 		end = _serversIndexing[i + 1];
 		if (start >= end)
 			throw std::runtime_error(ERROR_EMPTY_SERVER_CONFIGURATION);
-		Server sv;
+		ServerData sv;
 		while (start < end)
 		{
 			if ((parserIndex = _isPrimitive(_fileLines[start])) >= 0)
 			{
-				if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) >= end)
+				if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) == end + 1)
+				{
+					std::cout << "hello" << std::endl;
+
 					throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
+				}
 				start = static_cast<size_t>(doneParsingIndex);
 				continue;
 			}
@@ -210,11 +227,12 @@ void parser::ConfigParser::_parseContent()
 			}
 			start++;
 		}
+		_servers.push_back(sv);
 		i += 2;
 	}
 }
 
-int parser::ConfigParser::_isPrimitive(std::string const &line)
+int ConfigParser::_isPrimitive(std::string const &line)
 {
 	for (size_t i = 0; i < NUMBER_OF_SERVER_PRIMITIVES; i++)
 	{
@@ -226,7 +244,7 @@ int parser::ConfigParser::_isPrimitive(std::string const &line)
 	return -1;
 }
 
-int parser::ConfigParser::_isLocationPrimitive(std::string const &line)
+int ConfigParser::_isLocationPrimitive(std::string const &line)
 {
 	for (size_t i = 0; i < NUMBER_OF_LOCATION_PRIMITIVES; i++)
 	{
@@ -238,7 +256,7 @@ int parser::ConfigParser::_isLocationPrimitive(std::string const &line)
 	return -1;
 }
 
-bool parser::ConfigParser::_isSet(std::string const &arg, int (*func)(int))
+bool ConfigParser::_isSet(std::string const &arg, int (*func)(int))
 {
 	for (size_t i = 0; i < arg.size(); i++)
 	{
@@ -248,16 +266,17 @@ bool parser::ConfigParser::_isSet(std::string const &arg, int (*func)(int))
 	return true;
 }
 
-void parser::ConfigParser::_semicolonChecker(std::string &line)
+void ConfigParser::_semicolonChecker(std::string &line)
 {
 	if (line.back() != ';')
 		throw std::runtime_error(ERROR_MISSING_SEMICOLON + line);
 	if (std::count(line.begin(), line.end(), ';') > 1)
 		throw std::runtime_error(ERROR_DOUBLE_SEMICOLON);
 	line.erase(line.end() - 1);
+	_trim(line);
 }
 
-int parser::ConfigParser::_portParser(size_t index, Server &sv)
+int ConfigParser::_portParser(size_t index, ServerData &sv)
 {
 	std::string line = _fileLines[index];
 
@@ -278,7 +297,7 @@ int parser::ConfigParser::_portParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-int parser::ConfigParser::_hostParser(size_t index, Server &sv)
+int ConfigParser::_hostParser(size_t index, ServerData &sv)
 {
 	std::string line = _fileLines[index];
 
@@ -297,7 +316,7 @@ int parser::ConfigParser::_hostParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-int parser::ConfigParser::_serverNameParser(size_t index, Server &sv)
+int ConfigParser::_serverNameParser(size_t index, ServerData &sv)
 {
 	std::string line = _fileLines[index];
 
@@ -316,7 +335,7 @@ int parser::ConfigParser::_serverNameParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-int parser::ConfigParser::_clientBodySizeParser(size_t index, Server &sv)
+int ConfigParser::_clientBodySizeParser(size_t index, ServerData &sv)
 {
 	std::string line = _fileLines[index];
 
@@ -342,7 +361,7 @@ int parser::ConfigParser::_clientBodySizeParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-int parser::ConfigParser::_errorPageParser(size_t index, Server &sv)
+int ConfigParser::_errorPageParser(size_t index, ServerData &sv)
 {
 	std::string line = _fileLines[index];
 
@@ -363,7 +382,7 @@ int parser::ConfigParser::_errorPageParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-int parser::ConfigParser::_rootDirParser(size_t index, Server &sv)
+int ConfigParser::_rootDirParser(size_t index, ServerData &sv)
 {
 	std::string line = _fileLines[index];
 
@@ -382,7 +401,7 @@ int parser::ConfigParser::_rootDirParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-int parser::ConfigParser::_locationParser(size_t index, Server &sv)
+int ConfigParser::_locationParser(size_t index, ServerData &sv)
 {
 
 	if (_fileLines[index].back() == ';')
@@ -414,14 +433,14 @@ int parser::ConfigParser::_locationParser(size_t index, Server &sv)
 	bool isEmpty = true;
 
 	LocationFieldParserFuncPtr _location_primitive_parser[NUMBER_OF_LOCATION_PRIMITIVES] = {
-		&parser::ConfigParser::_locRootDirParser,
-		&parser::ConfigParser::_locAutoIndexParser,
-		&parser::ConfigParser::_locIndexParser,
-		&parser::ConfigParser::_locAllowedMethodsParser,
-		&parser::ConfigParser::_locRedirectionParser,
-		&parser::ConfigParser::_locCGIParser,
-		&parser::ConfigParser::_locUploadEnableParser,
-		&parser::ConfigParser::_locUploadLocationParser,
+		&ConfigParser::_locRootDirParser,
+		&ConfigParser::_locAutoIndexParser,
+		&ConfigParser::_locIndexParser,
+		&ConfigParser::_locAllowedMethodsParser,
+		&ConfigParser::_locRedirectionParser,
+		&ConfigParser::_locCGIParser,
+		&ConfigParser::_locUploadEnableParser,
+		&ConfigParser::_locUploadLocationParser,
 	};
 
 	index += 2;
@@ -446,7 +465,7 @@ int parser::ConfigParser::_locationParser(size_t index, Server &sv)
 	return index + 1;
 }
 
-void parser::ConfigParser::_locRootDirParser(size_t index, Location &loc)
+void ConfigParser::_locRootDirParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -461,7 +480,7 @@ void parser::ConfigParser::_locRootDirParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 }
 
-void parser::ConfigParser::_locAutoIndexParser(size_t index, Location &loc)
+void ConfigParser::_locAutoIndexParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -478,7 +497,7 @@ void parser::ConfigParser::_locAutoIndexParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 }
 
-void parser::ConfigParser::_locIndexParser(size_t index, Location &loc)
+void ConfigParser::_locIndexParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -491,7 +510,7 @@ void parser::ConfigParser::_locIndexParser(size_t index, Location &loc)
 	loc.setDefaultFiles(tokens);
 }
 
-void parser::ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
+void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -508,6 +527,8 @@ void parser::ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 		tokens[1].front() != OPENNING_BRACKET || tokens[1].back() != CLOSING_BRACKET)
 		throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + _fileLines[index]);
 
+	tokens[1].erase(tokens[1].begin());
+	tokens[1].erase(tokens[1].end() - 1);
 	insideTokens = _split(tokens[1], ',');
 	if (insideTokens.size() < 1 || insideTokens.size() > 3 ||
 		insideTokens.size() != std::count(tokens[1].begin(), tokens[1].end(), ',') + 1)
@@ -516,7 +537,7 @@ void parser::ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 	loc.setAllowedMethods(insideTokens);
 }
 
-void parser::ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
+void ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -533,7 +554,7 @@ void parser::ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 }
 
-void parser::ConfigParser::_locUploadLocationParser(size_t index, Location &loc)
+void ConfigParser::_locUploadLocationParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -548,7 +569,7 @@ void parser::ConfigParser::_locUploadLocationParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 }
 
-void parser::ConfigParser::_locRedirectionParser(size_t index, Location &loc)
+void ConfigParser::_locRedirectionParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 
@@ -566,7 +587,7 @@ void parser::ConfigParser::_locRedirectionParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 }
 
-void parser::ConfigParser::_locCGIParser(size_t index, Location &loc)
+void ConfigParser::_locCGIParser(size_t index, Location &loc)
 {
 	std::string line = _fileLines[index];
 

@@ -72,7 +72,7 @@ int main(int ac, char **av)
 
 		try
 		{
-			parser::ConfigParser parser(av[1]);
+			ConfigParser parser(av[1]);
 		}
 		catch (const std::exception &e)
 		{

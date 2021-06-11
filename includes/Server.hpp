@@ -12,9 +12,10 @@ class	Server
 	struct sockaddr_in			_addr;
 	size_t						_index;
 	Webserv						*_webserv;
+	ServerData const			&_data;
 
 public:
-	Server(int, size_t, Webserv *);
+	Server(ServerData const &, size_t, Webserv *);
 	~Server();
 	Server(Server const &);
 

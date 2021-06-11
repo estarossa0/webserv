@@ -10,9 +10,9 @@ Webserv::~Webserv()
 }
 
 
-void		Webserv::addServer(int port)
+void		Webserv::addServer(ServerData const &data)
 {
-	this->_servers.push_back(Server(port, this->_servers.size(), this));
+	this->_servers.push_back(Server(data, this->_servers.size(), this));
 	this->updateIndexs(-2, 1);
 }
 
@@ -107,5 +107,13 @@ void	Webserv::hook()
 			if (this->_pollArray[i].revents & POLLHUP)
 				(*this)[i].getServer()->erase(i);
 		}
+	}
+}
+
+void	Webserv::init(std::vector<ServerData> const &svsdata)
+{
+	for (size_t index = 0; index < svsdata.size(); index++)
+	{
+		this->addServer(svsdata[index]);
 	}
 }

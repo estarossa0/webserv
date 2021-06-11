@@ -1,12 +1,12 @@
 #include "websrv.h"
 
-Server::Server(int port, size_t index, Webserv *wb) : _index(index), _webserv(wb)
+Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data), _index(index), _webserv(wb)
 {
 	int	opt(1);
 
 	this->_addr.sin_family = AF_INET;
 	this->_addr.sin_addr.s_addr = INADDR_ANY;
-	this->_addr.sin_port = htons(port);
+	this->_addr.sin_port = htons(this->_data.getPort());
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -39,7 +39,7 @@ Server::~Server()
 {}
 
 Server::Server(Server const &other) :
-_socketfd(other._socketfd), _addr(other._addr), _index(other._index), _webserv(other._webserv)
+_data(other._data), _socketfd(other._socketfd), _addr(other._addr), _index(other._index), _webserv(other._webserv)
 {
 	this->_connections = other._connections;
 	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); ++it)

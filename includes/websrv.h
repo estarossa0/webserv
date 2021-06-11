@@ -53,9 +53,10 @@ public:
 
 	void		hook();
 	Server		&serverAt(int);
-	void		addServer(int);
+	void		addServer(ServerData const &);
 	Connection	&operator[](int);
 	void		updateIndexs(int, int);
+	void		init(std::vector<ServerData> const &);
 
 	std::vector <struct pollfd>		_pollArray;
 

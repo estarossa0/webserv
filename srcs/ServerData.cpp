@@ -1,7 +1,14 @@
 #include "websrv.h"
 
-ServerData::ServerData()
+ServerData::ServerData() : _name("default"),
+						   _client_body_size(10)
+
 {
+	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
+	{
+		_necessary_elements[i] = false;
+ 	}
+	
 }
 
 ServerData::~ServerData()
@@ -12,6 +19,7 @@ ServerData::~ServerData()
 void ServerData::setPort(int const &p)
 {
 	_port = p;
+	_necessary_elements[PORT_NECESSITY_NUMBER] = true;
 }
 
 int const &ServerData::getPort() const
@@ -22,6 +30,7 @@ int const &ServerData::getPort() const
 void ServerData::setHost(std::string const &h)
 {
 	_host = h;
+	_necessary_elements[HOST_NECESSITY_NUMBER] = true;
 }
 
 std::string const &ServerData::getHost() const
@@ -64,6 +73,7 @@ std::map<int, std::string> const &ServerData::getErrorPageMap() const
 void ServerData::setRootDir(std::string const &rd)
 {
 	_root_dir = rd;
+	_necessary_elements[ROOT_NECESSITY_NUMBER] = true;
 }
 
 std::string const &ServerData::getRootDir() const
@@ -81,6 +91,17 @@ std::vector<Location> const &ServerData::getLocations() const
 	return _locations;
 }
 
+bool const ServerData::hasNecessaryElements() const
+{
+	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
+	{
+		if (!_necessary_elements[i])
+			return false;
+	}
+	return true;
+}
+
+
 std::ostream &operator<<(std::ostream &out, const ServerData &sv)
 {
 	out << "\n==================== ServerData ===================" << std::endl;
@@ -94,7 +115,7 @@ std::ostream &operator<<(std::ostream &out, const ServerData &sv)
 		out << "error page: code [" << it->first << "], path [" << it->second << "]" << std::endl;
 	}
 	out << "root dir: [" << sv.getRootDir() << "]" << std::endl;
-	std::vector<Location> const & locs = sv.getLocations();
+	std::vector<Location> const &locs = sv.getLocations();
 	for (size_t i = 0; i < locs.size(); i++)
 	{
 		out << locs[i];

@@ -3,6 +3,12 @@
 
 #include "websrv.h"
 
+#define NUMBER_OF_NECESSARY_ELEMENTS 3
+
+#define PORT_NECESSITY_NUMBER 0
+#define HOST_NECESSITY_NUMBER 1
+#define ROOT_NECESSITY_NUMBER 2
+
 class ServerData
 {
 private:
@@ -14,6 +20,7 @@ private:
 	std::map<int, std::string> _error_pages;
 	std::string _root_dir;
 	std::vector<Location> _locations;
+	bool _necessary_elements[NUMBER_OF_NECESSARY_ELEMENTS];
 
 public:
 	ServerData();
@@ -39,6 +46,8 @@ public:
 	
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
+
+	bool const hasNecessaryElements() const;
 
 };
 

@@ -7,7 +7,7 @@ int main(int ac, char **av)
 		if (ac == 2)
 			parser = new ConfigParser(av[1]);
 		else
-			parser = new ConfigParser("default_path");
+			parser = new ConfigParser("webserv.conf");
 		// Webserv web;
 
 		// web.addServer(80);

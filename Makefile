@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: arraji <arraji@student.42.fr>              +#+  +:+       +#+         #
+#    By: obouykou <obouykou@student.1337.ma>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/05/18 16:04:41 by arraji            #+#    #+#              #
-#    Updated: 2020/12/15 18:49:06 by arraji           ###   ########.fr        #
+#    Updated: 2021/06/11 19:59:17 by obouykou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -44,7 +44,7 @@ OBJECT_FILES := $(addprefix $(OBJECT_FOLDER)/, $(OBJECT_FILES))
 
 all: $(NAME)
 
-$(NAME): $(OBJECT_FILES)
+$(NAME): $(OBJECT_FILES) $(HEADER_FOLDER)/*.hpp $(HEADER_FOLDER)/*.h
 	@clang++ -g -I $(HEADER_FOLDER) $(OBJECT_FILES) $(LIBS) -o $@
 	@echo
 	@echo $(NAME)" created $(GREEN)successfully$(RESET)"

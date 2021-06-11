@@ -37,13 +37,15 @@
 
 // error messages
 #define ERROR_FILE "Could not open configuration file"
+#define ERROR_FILE_EXTENSION "Configuration file has not the correct extension [.conf]"
 #define ERROR_BRACES "Curly braces are not written well in the configuration file"
 #define ERROR_DOUBLE_BRACE "Only one curly brace is allowed per line"
-#define ERROR_BRACE_NOT_ALONE "the line which contains a curly brace must not contain something else"
+#define ERROR_BRACE_NOT_ALONE "the line which contains a curly brace must not contain something else.\nError in this line -> "
 #define ERROR_DEFINE_SERVER_INSIDE_SERVER "You can't define a server inside another server"
 #define ERROR_EMPTY_SERVER_CONFIGURATION "A server must not have an empty configuration"
 #define ERROR_INVALID_CONFIGURATION "This configuration file is invalid: ERROR in this line -> "
 #define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
+#define ERROR_MISSING_NECESSARY_ELEMENT "Make sure that all servers in file configuration contains at least these 3 elements: [port, host, root]"
 #define ERROR_MISSING_SEMICOLON "missing a semicolon in this line: "
 #define ERROR_DOUBLE_SEMICOLON "should be only one semicolon at the end of this line: "
 #define ERROR_PORT_NAN "the value of port must be a non-zero positive number"

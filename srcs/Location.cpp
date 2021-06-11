@@ -6,12 +6,13 @@ char const *Location::standard_allowed_methods[3] = {
 	"DELETE",
 };
 
-Location::Location() : _isRedirection(false),
-							   _isCGI(false),
-							   _upload_enable(false)
+Location::Location() : _path("/"),
+					   _isRedirection(false),
+					   _isCGI(false),
+					   _upload_enable(false)
 {
 	for (size_t i = 0; i < 3; i++)
-		_allowed_methods.insert(std::pair<std::string, bool>(standard_allowed_methods[i], false));
+		_allowed_methods.insert(std::pair<std::string, bool>(standard_allowed_methods[i], true));
 }
 
 Location::~Location()
@@ -63,6 +64,8 @@ std::vector<std::string> const &Location::getDefaultFiles() const
 void Location::setAllowedMethods(std::vector<std::string> const &am)
 {
 	size_t i;
+	for (size_t i = 0; i < 3; i++)
+		_allowed_methods[standard_allowed_methods[i]] = false;
 	for (size_t j = 0; j < am.size(); j++)
 	{
 
@@ -158,12 +161,12 @@ std::ostream &operator<<(std::ostream &out, const Location &loc)
 	out << "location path : [" << loc.getPath() << "]" << std::endl;
 	out << "location root : [" << loc.getRootDir() << "]" << std::endl;
 	out << "location autoindex : [" << loc.getAutoIndex() << "]" << std::endl;
-	
+
 	out << "location indexes : ";
 	std::vector<std::string> defaultFiles = loc.getDefaultFiles();
 	for (size_t i = 0; i < defaultFiles.size(); i++)
 	{
-		out <<"[" << defaultFiles[i] << "]  ";	
+		out << "[" << defaultFiles[i] << "]  ";
 	}
 	out << std::endl;
 
@@ -172,7 +175,7 @@ std::ostream &operator<<(std::ostream &out, const Location &loc)
 	{
 		out << "location method: [" << it->first << "] = [" << it->second << "]" << std::endl;
 	}
-	
+
 	out << "location is redirection : " << loc.isRedirection() << std::endl;
 	out << "location return, code : [" << loc.getReturnCode() << "], url: [" << loc.getReturnUrl() << "]" << std::endl;
 	out << "location is CGI : " << loc.isCGI() << std::endl;

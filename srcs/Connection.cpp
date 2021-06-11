@@ -33,6 +33,7 @@ int				Connection::send()
 	this->_request.printRequest();
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
+	log this->_response.getResponse() line;
 	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
 }
 

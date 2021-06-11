@@ -82,7 +82,7 @@ void Location::setDefaultFiles(std::vector<std::string> const &df)
 	_default_files = df;
 }
 
-std::vector<std::string> const &Location::getDefaultFiles() const
+std::vector<std::string> Location::getDefaultFiles() const
 {
 	return _default_files;
 }
@@ -105,7 +105,7 @@ void Location::setAllowedMethods(std::vector<std::string> const &am)
 	}
 }
 
-std::map<std::string, bool> const &Location::getAllowedMethods() const
+std::map<std::string, bool> Location::getAllowedMethods() const
 {
 	return _allowed_methods;
 }

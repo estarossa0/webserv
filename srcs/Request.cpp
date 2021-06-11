@@ -126,6 +126,7 @@ void Request::parseHeaders()
 
 void Request::parseRequest()
 {
+	// parse transfer encoding / chunked data
 	std::string buffer;
 	std::istringstream lines(_data);
 
@@ -305,7 +306,7 @@ std::vector<Request::Header> Request::getHeaders()
 	return _headers;
 }
 
-// Data *Request::getServerData()
-// {
-// 	return this->connection->getServer()->getData();
-// }
+ServerData Request::getServerData()
+{
+	return this->_connection->getServer()->getData();
+}

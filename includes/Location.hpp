@@ -36,10 +36,10 @@ public:
 	bool const & getAutoIndex() const;
 
 	void setDefaultFiles(std::vector<std::string> const &);
-	std::vector<std::string> const & getDefaultFiles() const;
+	std::vector<std::string> getDefaultFiles() const;
 	
 	void setAllowedMethods(std::vector<std::string> const &);
-	std::map<std::string, bool> const & getAllowedMethods() const;
+	std::map<std::string, bool> getAllowedMethods() const;
 	
 	void setReturnCode(int const &);
 	int const & getReturnCode() const;

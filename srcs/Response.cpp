@@ -39,26 +39,38 @@ void	Response::clear()
 	this->_resp.clear();
 }
 
-std::string getFileNameFromUri(std::string uri)
+std::string Response::getFileNameFromDisp(std::string disp)
+{
+	// log disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11) line;
+	return disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11);
+}
+
+bool	Response::checkFileExists(std::string &path)
+{
+	return true;
+}
+
+std::string Response::getFileNameFromUri(std::string uri)
 {
 	std::string path;
 	if (uri.find("?") != std::string::npos)
 		path = uri.substr(0, uri.find("?"));
 	else
 		path = uri;
-	// if (path.compare(this->_location.getPath()) == 0 && this->_location.getAutoIndex())
-	// {
-	// 	for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
-	// 	{
-	// 		if (checkFileExists(*it))
-	// 		{
-	// 			// check if location has / at the end
-	// 			path.append("/"); 
-	// 			path.append(*it);
-	// 			break ;
-	// 		}
-	// 	}
-	// }
+	if (path.compare(this->_location.getPath()) == 0 && this->_location.getAutoIndex())
+	{
+		for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
+		{
+			if (checkFileExists(*it))
+			{
+				// check if location has / at the end
+				path.append("/"); 
+				path.append(*it);
+				break ;
+			}
+		}
+	}
+	// log "uri: " << path line;
 	return path;
 }
 
@@ -67,7 +79,7 @@ std::string Response::getCodeStatus()
 	if (this->_status == ST_OK)
 		return "OK\r\n";
 	else if (this->_status == ST_MOVED_PERM)
-		return "Moved permenantly\r\n";
+		return "Moved Permenantly\r\n";
 	else if (this->_status == ST_BAD_REQUEST)
 		return "Bad Request\r\n";
 	else if (this->_status == ST_FORBIDDEN)
@@ -104,7 +116,10 @@ void Response::checkFilePermission(std::string &path, int mode)
 void Response::deleteFile(std::string &path)
 {
 	checkFilePermission(path, W_OK);
-	_body = "File Deleted";
+	if (std::remove(path.c_str()) != 0)
+		throw Response::ServerError();
+	else
+		_body = "File Deleted";
 }
 
 void Response::readFile(std::string &path)
@@ -118,14 +133,6 @@ void Response::readFile(std::string &path)
 		body.append(buffer).append("\n");
 	fileReader.close();
 	_body = body;
-}
-
-
-
-std::string getFileNameFromDisp(std::string disp)
-{
-	// log disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11) line;
-	return disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11);
 }
 
 void Response::uploadFile()
@@ -156,9 +163,8 @@ void Response::uploadFile()
 std::string Response::getUploadDirectory()
 {
 	std::string dir = getCurrentDirectory();
-	// dir.append(_location.getUploadLocation());
-	// dir.append("/");
-	dir.append("/upload/"); // temporary
+	dir.append(_location.getUploadLocation());
+	dir.append("/");
 	return dir;
 }
 
@@ -166,7 +172,6 @@ std::string Response::getFilePath(std::string uri)
 {
 	std::string dir = getCurrentDirectory();
 
-	dir.append("/public"); // temporary root dir
 	dir.append(uri);
 	return dir;
 }
@@ -182,11 +187,13 @@ std::string Response::getCurrentDirectory()
 	else
 	{
 		dir = buffer;
-		// if (_location.getRootDir())
-		// dir.append(_location.getRootDir())
-		// else
-		// dir.append(getServerData().getRootDir());
-		// dir.append("/");
+		if (_location.getRootDir().length())
+			dir.append(_location.getRootDir());
+		else
+		{
+			dir.append(getServerData().getRootDir());
+			dir.append("/");
+		}
 		return dir;
 	}
 	return dir;
@@ -195,40 +202,25 @@ std::string Response::getCurrentDirectory()
 
 void Response::methodGet()
 {
-	//check cgi
-	// if (this->_location.isCgi())
-		// go to cgi
-	// else
-	// {
-	
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
 	readFile(file);
-	// }
 }
 
 void Response::methodPost()
 {
-	//check cgi
-	//check location with uri
-	// if (_location.isCgi())
-		// go to cgi
-	// else
-	// {
-		// if (_location.getUploadEnabled())
-			uploadFile();
-	// }
+	if (_location.getUploadEnabled())
+		uploadFile();
 }
 
 void Response::methodDelete()
 {
-	//check cgi
-	// if (_location.isCgi())
-		// go to cgi
-	// else
-	// {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
 	deleteFile(file);
-	// }
+}
+
+void Response::responseRedirection()
+{
+	_status = _location.getReturnCode();
 }
 
 /*
@@ -257,46 +249,48 @@ else
 
 void Response::makeBody()
 {
-	// std::vector<Location> locations;
+	std::vector<Location> locations = getServerData().getLocations();
 
-	// for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
-	// {
-	// 	if (_request.getUri().find((*it).getPath()) != std::string::npos)
-	// 	{
-	// 		if (!this->getLocation())
-	// 		{
-	// 			// path found
-	// 			this->setLocation(*it);
-	// 		}
-	// 		else
-	// 		{
-	// 			// compare locations
-	// 			if (this->_location.getPath().length() < (*it).getPath().length())
-	// 				this->setLocation(*it);
-	// 		}
-	// 	}
-	// }
+	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
+	{
+		if (_request.getUri().find((*it).getPath()) != std::string::npos)
+		{
+			if (!getLocation().getPath().length())
+				setLocation(*it);
+			else if (_location.getPath().length() < (*it).getPath().length())
+				setLocation(*it);
+		}
+	}
 	try
 	{
-		// if (!this->_location.getAllowedMethods()[_request.getMethod()])
-			// throw Not Implemented
-		if (_request.getMethod().compare("GET") == 0)
+		if (!_location.getAllowedMethods()[_request.getMethod()])
+		{
+			_status = ST_NOT_IMPLEMENTED;
+			throw Response::NotImplemented();
+		}
+		if (_location.isCGI())
+		{
+			// go to cgi
+		}
+		else if (_location.isRedirection())
+			responseRedirection();
+		else if (_request.getMethod().compare("GET") == 0)
 			methodGet();
 		else if (_request.getMethod().compare("POST") == 0)
 			methodPost();
 		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
-		else
-		{
-			_status = ST_NOT_IMPLEMENTED;
-			throw Response::NotImplemented();
-		}
 		_status = ST_OK;
 	}
 	catch (std::exception &e)
 	{
 		log "Exception at makeBody : " << e.what() line;
 	}
+}
+
+std::string Response::getErrorPage()
+{
+	return "";
 }
 
 void Response::makeResponse()
@@ -307,17 +301,25 @@ void Response::makeResponse()
 	_resp.append(" ");
 	_resp.append(getCodeStatus());
 	// set server name
-	_resp.append("Server: Dial3bar\r\n");
+	if (_status == ST_MOVED_PERM)
+	{
+		_resp.append("Location: ");
+		_resp.append(_location.getReturnUrl());
+		_resp.append("\r\n\r\n");
+	}
 	if (_status != ST_OK)
 	{
+		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");
 		_resp.append("text/plain\r\n");
 		_resp.append("Content-Length: 11\r\n\n");
 		// read error page
-		_resp.append("Error page\n\r\n");
+		// _resp.append
+		_resp.append("\r\n\r\n");
 	}
 	else
 	{
+		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");
 		// get content type
 		_resp.append("text/plain\r\n");
@@ -327,7 +329,6 @@ void Response::makeResponse()
 		_resp.append(_body);
 		_resp.append("\r\n");
 	}
-	log "response: " << _resp line;
 }
 
 const std::string &Response::getResponse() const
@@ -345,17 +346,17 @@ Connection	*Response::getConnection()
 	return this->_connection;
 }
 
-// Server *Response::getServerData()
-// {
-// 	return this->connection->getServer()->getData();
-// }
+ServerData Response::getServerData()
+{
+	return this->_connection->getServer()->getData();
+}
 
-// Location Response::getLocation()
-// {
-// 	return this->_location;
-// }
+Location Response::getLocation() const
+{
+	return this->_location;
+}
 
-// void Response::setLocation(Location &location)
-// {
-// 	this->_location = location;
-// }
+void Response::setLocation(Location &location)
+{
+	this->_location = location;
+}

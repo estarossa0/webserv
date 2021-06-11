@@ -25,4 +25,6 @@ public:
 	Connection		&operator[](int);
 	operator		int();
 	size_t			size();
+
+	ServerData		getData();
 };

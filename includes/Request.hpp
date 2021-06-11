@@ -62,8 +62,8 @@ public:
 	const std::string &getDisposition() const;
 	const std::string &getData() const;
 	const std::string &getConnectionType() const;
-	Connection *getConnection();
-	// Data *getServerData();
+	Connection	*getConnection();
+	ServerData	getServerData();
 
 	void	appendToData(std::string);
 

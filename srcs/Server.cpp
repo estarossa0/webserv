@@ -94,3 +94,8 @@ size_t	Server::size()
 {
 	return this->_connections.size();
 }
+
+ServerData	Server::getData()
+{
+	return this->_data;
+}

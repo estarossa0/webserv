@@ -15,24 +15,28 @@ private:
 	std::string _resp;
 	Request _request;
 	Connection *_connection;
-	// Location _location;
+	Location _location;
 
 	std::string getCodeStatus();
 
 	void methodGet();
 	void methodPost();
 	void methodDelete();
+	void responseRedirection();
 
 	void checkFilePermission(std::string &, int);
 	void deleteFile(std::string &);
 	void readFile(std::string &);
 	void uploadFile();
+	std::string getErrorPage();
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);
 	std::string getCurrentDirectory();
+	std::string getFileNameFromUri(std::string);
+	bool		checkFileExists(std::string &);
+	std::string getFileNameFromDisp(std::string);
 	void makeBody();
-
 public:
 	Response(Connection *);
 	~Response();
@@ -48,10 +52,10 @@ public:
 	const std::string &getBody() const;
 	const std::string &getResponse() const;
 	Connection *getConnection();
-	// Data *getServerData();
-	// Location getLocation() const;
+	ServerData getServerData();
+	Location getLocation() const;
 
-	// void	setLocation(Location &);
+	void	setLocation(Location &);
 
 	class NotFound : public std::exception
 	{

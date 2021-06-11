@@ -11,14 +11,20 @@
 #include <limits.h>
 #include <sstream>
 #include <exception>
+#include <stdexcept>
+#include <cctype>
+#include <map>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 
+#include "Location.hpp"
+#include "ServerData.hpp"
+#include "ConfigParser.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Connection.hpp"
 #include "Server.hpp"
-
-class Location;
-class Data;
 
 #define ST_OK 200
 #define ST_MOVED_PERM 301

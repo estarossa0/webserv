@@ -32,6 +32,9 @@ SRC_FILES = main.cpp \
 			Webserv.cpp \
 			Request.cpp \
 			Response.cpp \
+			ConfigParser.cpp \
+			Location.cpp \
+			ServerData.cpp \
 
 
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)

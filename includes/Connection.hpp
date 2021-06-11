@@ -1,3 +1,5 @@
+#pragma once
+
 #include "websrv.h"
 
 class	Server;

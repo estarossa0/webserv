@@ -1,19 +1,20 @@
 #include "websrv.h"
 
 ServerData::ServerData() : _name("default"),
-						   _client_body_size(10)
+						   _client_body_size(2)
 
 {
 	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
 	{
 		_necessary_elements[i] = false;
- 	}
-	
+	}
+	_error_pages.clear();
 }
 
 ServerData::~ServerData()
 {
 	_error_pages.clear();
+	_locations.clear();
 }
 
 void ServerData::setPort(int const &p)
@@ -61,7 +62,10 @@ int const &ServerData::getClientBodySize() const
 void ServerData::addErrorPage(int const &code, std::string const &path)
 {
 	if (path.empty())
-		throw std::invalid_argument("empty argument");
+		throw std::invalid_argument("empty path for error page");
+	for (std::map<int, std::string>::iterator it = _error_pages.begin(); it != _error_pages.end(); it++)
+		if (it->first == code)
+			throw std::invalid_argument("Error code is not unique for the error page which has the path: " + path);
 	_error_pages.insert(std::pair<int, std::string>(code, path));
 }
 
@@ -100,7 +104,6 @@ bool const ServerData::hasNecessaryElements() const
 	}
 	return true;
 }
-
 
 std::ostream &operator<<(std::ostream &out, const ServerData &sv)
 {

@@ -1,8 +1,9 @@
 #include "websrv.h"
+// #include <iostream>
 
 int main(int ac, char **av)
 {
-	ConfigParser *parser;
+	ConfigParser *parser = nullptr;
 	try {
 		if (ac == 2)
 			parser = new ConfigParser(av[1]);
@@ -16,5 +17,7 @@ int main(int ac, char **av)
 	{
 		log e.what() line;
 	}
+	delete parser;
+
 	return 0;
 }

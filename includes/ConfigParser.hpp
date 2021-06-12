@@ -54,12 +54,15 @@
 #define ERROR_ERRPAGE_CODE_NAN "the value of an error page code must be a non-zero positive number"
 #define ERROR_ALLOWED_METHODS_SYNTAX "bad syntax for allowed methods in line: "
 #define ERROR_ALLOWED_METHOD_METHOD_NOT_FOUND "this method is not one of the webserv allowed methods: [ GET, POST, DELETE ] \nError in this line: "
-#define ERROR_DUPLICATED_FIELD "duplicate field in line: "
+#define ERROR_SERVER_DUPLICATED_FIELD "duplicate server field in line -> "
+#define ERROR_LOCATION_DUPLICATED_FIELD "duplicate location field in line -> "
 #define ERROR_EMPTY_LOCATION_CONFIG "the file configuration has an empty location configuration"
 #define ERROR_LOCATION_WITH_SEMICOLON "location field does not end with a semicolon: error in this line -> "
-#define ERROR_RETURN_CODE_NAN "the value of an redirection code must be a non-zero positive number"
+#define ERROR_RETURN_CODE_NAN "the value of redirection code must be a non-zero positive number"
 #define ERROR_CGI_EXTENSION_ERROR "the cgi extension is invalid, it must be in this format: *.extention , e.g. *.php\nError in this line: "
 #define ERROR_CGI_NOT_FOUND "the fastcgi_pass field is not found after setting the cgi extension"
+#define DID_YOU_MEAN "did you mean "
+#define IN_THIS_LINE " field in this line -> "
 
 class ConfigParser
 {
@@ -70,6 +73,7 @@ private:
 	std::vector<std::string> _fileLines;
 	std::vector<int> _serversIndexing;
 	std::map<std::string, bool> _checked_primitives;
+	std::map<std::string, bool> _checked_location_primitives;
 
 	// methods
 	void _trim(std::string &);
@@ -91,6 +95,7 @@ private:
 	int _rootDirParser(size_t, ServerData &);
 
 	// partial server location fields parsers
+	void _locationPathParser(size_t &, Location &);
 	void _locRootDirParser(size_t, Location &);
 	void _locAutoIndexParser(size_t, Location &);
 	void _locIndexParser(size_t, Location &);

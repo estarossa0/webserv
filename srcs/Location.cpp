@@ -9,10 +9,11 @@ char const *Location::standard_allowed_methods[3] = {
 Location::Location() : _path("/"),
 					   _isRedirection(false),
 					   _isCGI(false),
-					   _upload_enable(false)
+					   _upload_enable(true)
 {
 	for (size_t i = 0; i < 3; i++)
-		_allowed_methods.insert(std::pair<std::string, bool>(standard_allowed_methods[i], true));
+		_allowed_methods.insert(std::pair<std::string, bool>(standard_allowed_methods[i], false));
+	_allowed_methods["GET"] = true;
 }
 
 Location::~Location()
@@ -68,12 +69,9 @@ void Location::setAllowedMethods(std::vector<std::string> const &am)
 		_allowed_methods[standard_allowed_methods[i]] = false;
 	for (size_t j = 0; j < am.size(); j++)
 	{
-
 		for (i = 0; i < 3; i++)
-		{
 			if (am[j] == standard_allowed_methods[i])
 				break;
-		}
 		if (i == 3)
 			throw std::invalid_argument(am[j] + " is not among standard allowed methods which are only GET, POST and DELETE");
 		if (_allowed_methods[am[j]] == true)

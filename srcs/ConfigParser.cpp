@@ -34,9 +34,9 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 		}
 	}
 	_indexServers();
-	output << "servers has been indexed successfully" << std::endl;
 
 	output << std::endl
+		   << "\nservers has been indexed successfully" << std::endl
 		   << std::endl;
 	output << "======================== SERVERS INDEXING ==========================";
 	output << std::endl
@@ -64,6 +64,8 @@ ConfigParser::~ConfigParser()
 	_servers.clear();
 	_fileLines.clear();
 	_serversIndexing.clear();
+	_checked_primitives.clear();
+	_checked_location_primitives.clear();
 }
 
 std::vector<ServerData> const &ConfigParser::getServers() const
@@ -73,15 +75,10 @@ std::vector<ServerData> const &ConfigParser::getServers() const
 
 void ConfigParser::_trim(std::string &str)
 {
-	size_t start = 0;
-	size_t end = str.size() > 0 ? str.size() - 1 : 0;
-
-	while (isspace(str[start]))
-		start++;
-	while (isspace(str[end]))
-		end--;
-
-	str = str.substr(start, end - start + 1);
+	while (!str.empty() && isspace(str.front()))
+		str.erase(0, 1);
+	while (!str.empty() && isspace(str.back()))
+		str.erase(str.size() - 1, 1);
 }
 
 std::vector<std::string> ConfigParser::_split(std::string const &_line)
@@ -147,7 +144,7 @@ void ConfigParser::_indexServers()
 		if (count > 1)
 			throw std::runtime_error(ERROR_DOUBLE_BRACE);
 		else if (count == 1 && _fileLines[i].size() > 1)
-			throw std::runtime_error(ERROR_BRACE_NOT_ALONE + _fileLines[i]); 
+			throw std::runtime_error(ERROR_BRACE_NOT_ALONE + _fileLines[i]);
 
 		if ((pos = _fileLines[i].find(OPENNING_BRACE)) != std::string::npos)
 		{
@@ -201,9 +198,10 @@ void ConfigParser::_parseContent()
 	};
 
 	for (size_t i = 0; i < NUMBER_OF_SERVER_PRIMITIVES; i++)
-	{
 		_checked_primitives.insert(std::pair<std::string, bool>(primitives_openings[i], false));
-	}
+	for (size_t i = 0; i < NUMBER_OF_LOCATION_PRIMITIVES; i++)
+		_checked_primitives.insert(std::pair<std::string, bool>(location_identifiers[i], false));
+
 	size_t i = 0;
 	while (i < _serversIndexing.size())
 	{
@@ -211,21 +209,29 @@ void ConfigParser::_parseContent()
 		end = _serversIndexing[i + 1];
 		if (start >= end)
 			throw std::runtime_error(ERROR_EMPTY_SERVER_CONFIGURATION);
-		ServerData sv;
+
+		ServerData sv = ServerData();
+		for (size_t i = 0; i < NUMBER_OF_SERVER_PRIMITIVES; i++)
+			_checked_primitives[primitives_openings[i]] = false;
+
 		while (start < end)
 		{
 			if ((parserIndex = _isPrimitive(_fileLines[start])) >= 0)
 			{
+				if (primitives_openings[parserIndex] != ERROR_PAGE_OP &&
+					primitives_openings[parserIndex] != LOCATION_OP &&
+					_checked_primitives[primitives_openings[parserIndex]])
+					throw std::runtime_error(ERROR_SERVER_DUPLICATED_FIELD + _fileLines[start]);
+
+				_checked_primitives[primitives_openings[parserIndex]] = true;
+
 				if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) == end + 1)
 					throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
 				start = static_cast<size_t>(doneParsingIndex);
 				continue;
 			}
 			else if (_fileLines[start].compare(OPENNING_BRACE) && _fileLines[start].compare(CLOSING_BRACE))
-			{
-
 				throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
-			}
 			start++;
 		}
 		if (!sv.hasNecessaryElements())
@@ -282,6 +288,11 @@ void ConfigParser::_semicolonChecker(std::string &_line)
 	_trim(_line);
 }
 
+std::string const getStringType(char const *_line)
+{
+	return std::string(_line);
+}
+
 int ConfigParser::_portParser(size_t index, ServerData &sv)
 {
 	std::string _line = _fileLines[index];
@@ -291,10 +302,11 @@ int ConfigParser::_portParser(size_t index, ServerData &sv)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != PORT_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(PORT_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
 		if (!_isSet(tokens[1], &(std::isdigit)))
 			throw std::runtime_error(ERROR_PORT_NAN);
 		sv.setPort(std::atoi(tokens[1].c_str()));
-		_checked_primitives[PORT_OP] = true;
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
@@ -310,8 +322,9 @@ int ConfigParser::_hostParser(size_t index, ServerData &sv)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != HOST_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(HOST_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
 		sv.setHost(tokens[1]);
-		_checked_primitives[HOST_OP] = true;
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
@@ -327,8 +340,9 @@ int ConfigParser::_serverNameParser(size_t index, ServerData &sv)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != SERVER_NAME_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(SERVER_NAME_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
 		sv.setName(tokens[1]);
-		_checked_primitives[SERVER_NAME_OP] = true;
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
@@ -349,10 +363,11 @@ int ConfigParser::_clientBodySizeParser(size_t index, ServerData &sv)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != CLIENT_MAX_SIZE_BODY_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(CLIENT_MAX_SIZE_BODY_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
 		if (!_isSet(tokens[1], &(std::isdigit)))
 			throw std::runtime_error(ERROR_CLIENT_BODY_SIZE_NAN);
 		sv.setClientBodySize(std::atoi(tokens[1].c_str()));
-		_checked_primitives[CLIENT_MAX_SIZE_BODY_OP] = true;
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
@@ -368,10 +383,11 @@ int ConfigParser::_errorPageParser(size_t index, ServerData &sv)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 3)
 	{
+		if (tokens[0] != ERROR_PAGE_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(ERROR_PAGE_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
 		if (!_isSet(tokens[1], &(std::isdigit)))
 			throw std::runtime_error(ERROR_ERRPAGE_CODE_NAN);
 		sv.addErrorPage(std::atoi(tokens[1].c_str()), tokens[2]);
-		_checked_primitives[ERROR_PAGE_OP] = true;
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
@@ -387,8 +403,9 @@ int ConfigParser::_rootDirParser(size_t index, ServerData &sv)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != ROOT_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(ROOT_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
 		sv.setRootDir(tokens[1]);
-		_checked_primitives[ROOT_OP] = true;
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
@@ -397,34 +414,14 @@ int ConfigParser::_rootDirParser(size_t index, ServerData &sv)
 
 int ConfigParser::_locationParser(size_t index, ServerData &sv)
 {
-
 	if (_fileLines[index].back() == ';')
 		throw std::runtime_error(ERROR_LOCATION_WITH_SEMICOLON + _fileLines[index]);
+	Location loc = Location();
 
-	std::string _line = _fileLines[index];
-	Location loc;
-	// _semicolonChecker(_line);
-
-	std::vector<std::string> tokens = _split(_line);
-	std::vector<std::string> insideTokens;
-	if (tokens.size() == 2)
-	{
-		if (tokens[1].front() == '*')
-		{
-			insideTokens = _split(tokens[1], '.');
-			if (insideTokens.size() != 2 || insideTokens[0] != "*" || !_isSet(insideTokens[1], std::isalpha))
-				throw std::runtime_error(ERROR_CGI_EXTENSION_ERROR + _fileLines[index]);
-			loc.setPath(insideTokens[1]);
-			loc.setIsCGI(true);
-		}
-		else
-			loc.setPath(tokens[1]);
-	}
-	else
-		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+	_locationPathParser(index, loc);
 
 	int parserIndex;
-	bool isEmpty = true;
+	bool isEmpty = _fileLines[++index].compare(CLOSING_BRACE) == 0;
 
 	LocationFieldParserFuncPtr _location_primitive_parser[NUMBER_OF_LOCATION_PRIMITIVES] = {
 		&ConfigParser::_locRootDirParser,
@@ -437,15 +434,18 @@ int ConfigParser::_locationParser(size_t index, ServerData &sv)
 		&ConfigParser::_locUploadLocationParser,
 	};
 
-	index += 2;
+	for (size_t i = 0; i < NUMBER_OF_LOCATION_PRIMITIVES; i++)
+		_checked_location_primitives[location_identifiers[i]] = false;
 	while (_fileLines[index].compare(CLOSING_BRACE))
 	{
 		if ((parserIndex = _isLocationPrimitive(_fileLines[index])) >= 0)
 		{
-			isEmpty = false;
+			if (_checked_location_primitives[location_identifiers[parserIndex]])
+				throw std::runtime_error(ERROR_LOCATION_DUPLICATED_FIELD + _fileLines[index]);
 			(this->*_location_primitive_parser[parserIndex])(index, loc);
+			_checked_location_primitives[location_identifiers[parserIndex]] = true;
 		}
-		else if (_fileLines[index].compare(OPENNING_BRACE) && _fileLines[index].compare(CLOSING_BRACE))
+		else
 			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 		index++;
 	}
@@ -459,6 +459,33 @@ int ConfigParser::_locationParser(size_t index, ServerData &sv)
 	return index + 1;
 }
 
+void ConfigParser::_locationPathParser(size_t &index, Location &loc)
+{
+	std::string _line = _fileLines[index];
+
+	std::vector<std::string> tokens = _split(_line);
+	std::vector<std::string> insideTokens;
+	if (tokens.size() == 2)
+	{
+		if (tokens[0] != LOCATION_OP)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOCATION_OP) + IN_THIS_LINE + _fileLines[index] + " ?");
+		if (tokens[1].front() == '*')
+		{
+			insideTokens = _split(tokens[1], '.');
+			if (insideTokens.size() != 2 || insideTokens[0] != "*" || !_isSet(insideTokens[1], std::isalpha))
+				throw std::runtime_error(ERROR_CGI_EXTENSION_ERROR + _fileLines[index]);
+			loc.setPath(insideTokens[1]);
+			loc.setIsCGI(true);
+		}
+		else
+			loc.setPath(tokens[1]);
+	}
+	else
+		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+	if (_fileLines[++index] != OPENNING_BRACE)
+		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+}
+
 void ConfigParser::_locRootDirParser(size_t index, Location &loc)
 {
 	std::string _line = _fileLines[index];
@@ -468,6 +495,8 @@ void ConfigParser::_locRootDirParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != LOC_ROOT)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_ROOT) + IN_THIS_LINE + _fileLines[index] + " ?");
 		loc.setRootDir(tokens[1]);
 	}
 	else
@@ -483,6 +512,8 @@ void ConfigParser::_locAutoIndexParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != LOC_AUTOINDEX)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_AUTOINDEX) + IN_THIS_LINE + _fileLines[index] + " ?");
 		if (tokens[1].compare("on") && tokens[1].compare("off"))
 			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 		loc.setAutoIndex((tokens[1] == "on"));
@@ -499,39 +530,49 @@ void ConfigParser::_locIndexParser(size_t index, Location &loc)
 
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() < 2)
+	{
+		if (tokens[0] != LOC_INDEX)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_INDEX) + IN_THIS_LINE + _fileLines[index] + " ?");
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
+	}
 	tokens.erase(tokens.begin());
 	loc.setDefaultFiles(tokens);
 }
 
 void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 {
-	std::string _line = _fileLines[index];
+	std::stringstream ss(_fileLines[index]);
+	std::string buff;
+	ss >> buff;
+	if (buff != LOC_ALLOWED_METHODS)
+		throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_ALLOWED_METHODS) + IN_THIS_LINE + _fileLines[index] + " ?");
+
+	std::string _line = _fileLines[index].substr(strlen(LOC_ALLOWED_METHODS));
 
 	_semicolonChecker(_line);
 
-	std::vector<std::string> tokens = _split(_line);
-	std::vector<std::string> insideTokens;
-
-	if (tokens.size() != 2)
-		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
-
-	if (std::count(tokens[1].begin(), tokens[1].end(), OPENNING_BRACKET) != 1 ||
-		std::count(tokens[1].begin(), tokens[1].end(), CLOSING_BRACKET) != 1 ||
-		tokens[1].front() != OPENNING_BRACKET || tokens[1].back() != CLOSING_BRACKET)
+	if (_line.empty() || std::count(_line.begin(), _line.end(), OPENNING_BRACKET) != 1 ||
+		std::count(_line.begin(), _line.end(), CLOSING_BRACKET) != 1 ||
+		_line.back() != CLOSING_BRACKET || _line.front() != OPENNING_BRACKET)
 		throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + _fileLines[index]);
 
-	tokens[1].erase(tokens[1].begin());
-	tokens[1].erase(tokens[1].end() - 1);
-	insideTokens = _split(tokens[1], ',');
-	if (insideTokens.size() < 1 || insideTokens.size() > 3 ||
-		insideTokens.size() != std::count(tokens[1].begin(), tokens[1].end(), ',') + 1)
+	// remove the brackets at front and back
+	_line.erase(0, 1);
+	_line.erase(_line.size() - 1, 1);
+	// get the allowed methods by splitting with comma
+	std::vector<std::string> tokens = _split(_line, ',');
+
+	//  1 <= number of methods <= 3 and number of commas + 1 = number of methods
+	if (tokens.size() < 1 || tokens.size() > 3 ||
+		tokens.size() != std::count(_line.begin(), _line.end(), ',') + 1)
 		throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + _fileLines[index]);
-	for (size_t i = 0; i < insideTokens.size(); i++)
+	for (size_t i = 0; i < tokens.size(); i++)
 	{
-		_trim(insideTokens[i]);
+		_trim(tokens[i]);
+		if (tokens[i].empty())
+			throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + _fileLines[index]);
 	}
-	loc.setAllowedMethods(insideTokens);
+	loc.setAllowedMethods(tokens);
 }
 
 void ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
@@ -543,6 +584,8 @@ void ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != UPLOAD_LOC_ENABLE)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(UPLOAD_LOC_ENABLE) + IN_THIS_LINE + _fileLines[index] + " ?");
 		if (tokens[1] != "on" && tokens[1] != "off")
 			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[index]);
 		loc.setUploadEnabled((tokens[1] == "on"));
@@ -560,6 +603,8 @@ void ConfigParser::_locUploadLocationParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != UPLOAD_LOC_STORE)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(UPLOAD_LOC_STORE) + IN_THIS_LINE + _fileLines[index] + " ?");
 		loc.setUploadLocation(tokens[1]);
 	}
 	else
@@ -575,8 +620,10 @@ void ConfigParser::_locRedirectionParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 3)
 	{
+		if (tokens[0] != LOC_RETURN)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_RETURN) + IN_THIS_LINE + _fileLines[index] + " ?");
 		if (!_isSet(tokens[1], &(std::isdigit)))
-			throw std::runtime_error(ERROR_ERRPAGE_CODE_NAN);
+			throw std::runtime_error(ERROR_RETURN_CODE_NAN);
 		loc.setReturnCode(std::atoi(tokens[1].c_str()));
 		loc.setReturnUrl(tokens[2]);
 	}
@@ -593,6 +640,8 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens.size() == 2)
 	{
+		if (tokens[0] != LOC_CGI)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_CGI) + IN_THIS_LINE + _fileLines[index] + " ?");
 		loc.setFastCgiPass(tokens[1]);
 	}
 	else

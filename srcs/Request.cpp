@@ -184,8 +184,10 @@ void Request::parseRequest()
 		else
 			appendToBody(buffer);
 	}
-	// if (clen / 1024 / 1024 > this->getServerData().getClientBodySize())
-	// 	throw MAX_BODY_SIZE_ERROR;
+	if (_clen > this->getServerData().getClientBodySize() * 1024 * 1024)
+	{
+		// throw MAX_BODY_SIZE_ERROR;
+	}
 	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary)))
 		isDone = true;
 	if (isDone)
@@ -226,7 +228,7 @@ void Request::printRequest()
 
 void Request::clear()
 {
-	log "Clearing request" line;
+	// log "Clearing request" line;
 	this->_data.clear();
 	this->_method.clear();
 	this->_uri.clear();

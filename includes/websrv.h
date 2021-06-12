@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <cstdio>
+#include <dirent.h>
 #include <cstdlib>
 
 #include "Location.hpp"

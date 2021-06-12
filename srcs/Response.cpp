@@ -50,6 +50,23 @@ bool	Response::checkFileExists(std::string &path)
 	return true;
 }
 
+/*
+
+	/user/getname
+
+	/user/getname/find/ok
+
+
+*/
+
+bool Response::isDirectory(const std::string &s)
+{
+	if (opendir((getCurrentDirectory() + s).c_str()) == NULL) {
+		return 0;
+    }
+	return 1;
+}
+
 std::string Response::getFileNameFromUri(std::string uri)
 {
 	std::string path;
@@ -57,16 +74,20 @@ std::string Response::getFileNameFromUri(std::string uri)
 		path = uri.substr(0, uri.find("?"));
 	else
 		path = uri;
-	if (path.compare(this->_location.getPath()) == 0 && this->_location.getAutoIndex())
+	if (isDirectory(path))
 	{
-		for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
+		if (isPreffix(_location.getPath(), path) && this->_location.getAutoIndex())
 		{
-			if (checkFileExists(*it))
+			for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
 			{
-				// check if location has / at the end
-				path.append("/"); 
-				path.append(*it);
-				break ;
+				if (checkFileExists(path))
+				{
+					// check if location has / at the end
+					if (path.back() != '/')
+						path.append("/"); 
+					path.append(*it);
+					break ;
+				}
 			}
 		}
 	}
@@ -122,13 +143,18 @@ void Response::deleteFile(std::string &path)
 		_body = "File Deleted";
 }
 
-void Response::readFile(std::string &path)
+void Response::readFile(std::string path)
 {
 	checkFilePermission(path, R_OK);
 	std::string buffer;
 	std::ifstream fileReader(path);
 	std::string body;
 
+	if (!fileReader.good())
+	{
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
+	}
 	while (getline(fileReader, buffer))
 		body.append(buffer).append("\n");
 	fileReader.close();
@@ -164,14 +190,16 @@ std::string Response::getUploadDirectory()
 {
 	std::string dir = getCurrentDirectory();
 	dir.append(_location.getUploadLocation());
-	dir.append("/");
+	if (dir.back() != '/')
+		dir.append("/");
 	return dir;
 }
 
 std::string Response::getFilePath(std::string uri)
 {
 	std::string dir = getCurrentDirectory();
-
+	if (uri.front() != '/')
+		uri = "/" + uri;
 	dir.append(uri);
 	return dir;
 }
@@ -190,10 +218,7 @@ std::string Response::getCurrentDirectory()
 		if (_location.getRootDir().length())
 			dir.append(_location.getRootDir());
 		else
-		{
 			dir.append(getServerData().getRootDir());
-			dir.append("/");
-		}
 		return dir;
 	}
 	return dir;
@@ -203,6 +228,11 @@ std::string Response::getCurrentDirectory()
 void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	if (isDirectory(file))
+	{
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
+	}
 	readFile(file);
 	_status = ST_OK;
 
@@ -219,6 +249,11 @@ void Response::methodPost()
 void Response::methodDelete()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	if (isDirectory(file))
+	{
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
+	}
 	deleteFile(file);
 	_status = ST_OK;
 }
@@ -250,11 +285,22 @@ if location is prefix for uri
 				error file
 else
 	error file
+
+
+	/
+
+	/user
+
+	/user/name
+
+
 */
 
 void Response::makeBody()
 {
+
 	std::vector<Location> locations = getServerData().getLocations();
+	setLocation(locations[0]);
 	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
 	{
 		if (isPreffix((*it).getPath(), _request.getUri()))
@@ -286,6 +332,7 @@ void Response::makeBody()
 			methodPost();
 		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
+		
 	}
 	catch (std::exception &e)
 	{
@@ -293,20 +340,39 @@ void Response::makeBody()
 	}
 }
 
-std::string Response::getErrorPage()
+std::string Response::getDefaultErrorPage(int status)
+{
+	std::string default_page("<!DOCTYPE html>\n\
+		<html lang=\"en\">\n\
+		<head>\n\
+			<meta charset=\"UTF-8\">\n\
+			<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\
+			<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\
+			<title>Http dial 3bar</title>\n\
+		</head>\n\
+		<body>\n\
+			<h1>Not Found - $1</h1>\n\
+		</body>\n\
+		</html>");
+	default_page = default_page.replace(default_page.find("$1"), 2, std::to_string(status));
+	return default_page;
+}
+
+void Response::setErrorPage()
 {
 	std::map<int, std::string> errors = getServerData().getErrorPageMap();
+	
 	if (errors[_status].length())
-	{
-
-	}
-
-	return "";
+		readFile(getFilePath(errors[_status]));
+	else
+		_body = getDefaultErrorPage(_status);
 }
 
 void Response::makeResponse()
 {
 	makeBody();
+	if (_status != ST_OK)
+		setErrorPage();
 	_resp = "HTTP/1.1 ";
 	_resp.append(std::to_string(_status));
 	_resp.append(" ");
@@ -315,16 +381,6 @@ void Response::makeResponse()
 	{
 		_resp.append("Location: ");
 		_resp.append(_location.getReturnUrl());
-		_resp.append("\r\n\r\n");
-	}
-	else if (_status != ST_OK)
-	{
-		_resp.append("Server: Dial3bar\r\n");
-		_resp.append("Content-Type: ");
-		_resp.append("text/html\r\n");
-		// _resp.append("Content-Length: 11\r\n\n");
-		// read error page
-		_resp.append(getErrorPage());
 		_resp.append("\r\n\r\n");
 	}
 	else

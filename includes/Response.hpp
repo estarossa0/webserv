@@ -26,9 +26,11 @@ private:
 
 	void checkFilePermission(std::string &, int);
 	void deleteFile(std::string &);
-	void readFile(std::string &);
+	void readFile(std::string);
 	void uploadFile();
-	std::string getErrorPage();
+	void setErrorPage();
+	bool isDirectory(const std::string &s);
+	std::string getDefaultErrorPage(int status);
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);

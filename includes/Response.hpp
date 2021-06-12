@@ -7,7 +7,7 @@ class Request;
 class Response
 {
 private:
-	unsigned int _status;
+	size_t _status;
 	std::string _name;
 	std::string _ctype;
 	std::string _clen;

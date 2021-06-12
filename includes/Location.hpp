@@ -39,7 +39,7 @@ public:
 	std::vector<std::string> getDefaultFiles() const;
 	
 	void setAllowedMethods(std::vector<std::string> const &);
-	std::map<std::string, bool> getAllowedMethods() const;
+	std::map<std::string, bool> const &getAllowedMethods() const;
 	
 	void setReturnCode(int const &);
 	int const & getReturnCode() const;

@@ -257,7 +257,6 @@ void Response::makeBody()
 	std::vector<Location> locations = getServerData().getLocations();
 	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
 	{
-		// if (_request.getUri().find((*it).getPath()) != std::string::npos)
 		if (isPreffix((*it).getPath(), _request.getUri()))
 		{
 			if (!getLocation().getPath().length())
@@ -268,7 +267,9 @@ void Response::makeBody()
 	}
 	try
 	{
-		if (!_location.getAllowedMethods()[_request.getMethod()])
+		// log "test: " << _location.getAllowedMethods()["GET"] line;
+		std::map<std::string, bool> loc_methods = _location.getAllowedMethods();
+		if (!loc_methods[_request.getMethod()])
 		{
 			_status = ST_NOT_IMPLEMENTED;
 			throw Response::NotImplemented();
@@ -294,6 +295,12 @@ void Response::makeBody()
 
 std::string Response::getErrorPage()
 {
+	std::map<int, std::string> errors = getServerData().getErrorPageMap();
+	if (errors[_status].length())
+	{
+
+	}
+
 	return "";
 }
 
@@ -314,10 +321,10 @@ void Response::makeResponse()
 	{
 		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");
-		_resp.append("text/plain\r\n");
-		_resp.append("Content-Length: 11\r\n\n");
+		_resp.append("text/html\r\n");
+		// _resp.append("Content-Length: 11\r\n\n");
 		// read error page
-		// _resp.append
+		_resp.append(getErrorPage());
 		_resp.append("\r\n\r\n");
 	}
 	else
@@ -325,7 +332,7 @@ void Response::makeResponse()
 		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");
 		// get content type
-		_resp.append("text/plain\r\n");
+		_resp.append("text/html\r\n");
 		_resp.append("Content-Length: ");
 		_resp.append(std::to_string(strlen(_body.c_str())));
 		_resp.append("\r\n\n");

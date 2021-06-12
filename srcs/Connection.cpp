@@ -30,7 +30,7 @@ int				Connection::read()
 
 int				Connection::send()
 {
-	this->_request.printRequest();
+	// this->_request.printRequest();
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
 	log this->_response.getResponse() line;

@@ -105,7 +105,7 @@ void Location::setAllowedMethods(std::vector<std::string> const &am)
 	}
 }
 
-std::map<std::string, bool> Location::getAllowedMethods() const
+std::map<std::string, bool> const &Location::getAllowedMethods() const
 {
 	return _allowed_methods;
 }

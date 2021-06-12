@@ -60,7 +60,7 @@ Request::Argument Request::parseArgument(const std::string &content)
 	while (std::getline(lines, buffer))
 	{
 		if (buffer.find("Content-Disposition") != std::string::npos)
-			arg.disp = buffer.substr(buffer.find(":") + 2, buffer.length() - 22);
+			arg.disp = buffer.substr(buffer.find(":") + 2);
 		else if (buffer.find("Content-Type") != std::string::npos)
 			arg.ctype = buffer.substr(buffer.find(":") + 2);
 		else if (buffer.length() && buffer[0] != '\r')
@@ -184,11 +184,8 @@ void Request::parseRequest()
 		else
 			appendToBody(buffer);
 	}
-	if (_clen > this->getServerData().getClientBodySize() * 1024 * 1024)
-	{
-		// throw MAX_BODY_SIZE_ERROR;
-	}
-	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary)))
+	
+	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary) && _clen != 0))
 		isDone = true;
 	if (isDone)
 	{
@@ -196,7 +193,7 @@ void Request::parseRequest()
 		// must check errors
 		if (_protocol.compare("HTTP/1.1") != 0)
 			error = 1;
-		if (_method.length() < 3)			
+		if (_method.length() < 3)
 			error = 1;
 		if (!_uri.length() || _uri[0] != '/')
 			error = 1;
@@ -207,6 +204,7 @@ void Request::parseRequest()
 		if (error)
 			log "Error in request parsing" line;
 	}
+	// log "Parsed request" line;
 }
 
 void Request::printRequest()
@@ -311,4 +309,9 @@ std::vector<Request::Header> Request::getHeaders()
 ServerData Request::getServerData()
 {
 	return this->_connection->getServer()->getData();
+}
+
+void Request::setUri(std::string const &uri)
+{
+	this->_uri = uri;
 }

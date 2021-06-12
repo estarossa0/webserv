@@ -23,6 +23,7 @@ private:
 	void methodPost();
 	void methodDelete();
 	void httpRedirection();
+	void generateDirectoryListing();
 
 	void checkFilePermission(std::string &, int);
 	void deleteFile(std::string &);
@@ -31,6 +32,8 @@ private:
 	void setErrorPage();
 	bool isDirectory(const std::string &s);
 	std::string getDefaultErrorPage(int status);
+	std::string getResponseContentType();
+
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);
@@ -80,6 +83,11 @@ public:
 	};
 
 	class ServerError : public std::exception
+	{
+		virtual const char *what() const throw();
+	};
+
+	class PayloadLarge : public std::exception
 	{
 		virtual const char *what() const throw();
 	};

@@ -65,6 +65,8 @@ public:
 	Connection	*getConnection();
 	ServerData	getServerData();
 
+	void setUri(std::string const &);
+
 	void	appendToData(std::string);
 
 	size_t getLenArguments();

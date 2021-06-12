@@ -24,6 +24,7 @@ int				Connection::read()
 		size += retval;
 		if (retval < 1000)
 			break ;
+		// if ((buffer[0] == '\r' && buffer[1] == '\n' ))
 	}
 	return size;
 }

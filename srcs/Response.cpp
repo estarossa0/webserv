@@ -33,6 +33,11 @@ const char *Response::ServerError::what() const throw()
 	return "ServerError";
 }
 
+const char *Response::PayloadLarge::what() const throw()
+{
+	return "PayloadTooLarge";
+}
+
 void	Response::clear()
 {
 	// this->_request.clear();
@@ -41,7 +46,6 @@ void	Response::clear()
 
 std::string Response::getFileNameFromDisp(std::string disp)
 {
-	// log disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11) line;
 	return disp.substr(disp.find("filename=\"") + 10, disp.length() - disp.find("filename=\"") - 11);
 }
 
@@ -49,15 +53,6 @@ bool	Response::checkFileExists(std::string &path)
 {
 	return true;
 }
-
-/*
-
-	/user/getname
-
-	/user/getname/find/ok
-
-
-*/
 
 bool Response::isDirectory(const std::string &s)
 {
@@ -76,22 +71,21 @@ std::string Response::getFileNameFromUri(std::string uri)
 		path = uri;
 	if (isDirectory(path))
 	{
-		if (isPreffix(_location.getPath(), path) && this->_location.getAutoIndex())
+		if (isPreffix(_location.getPath(), path) && !this->_location.getAutoIndex())
 		{
 			for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
 			{
 				if (checkFileExists(path))
 				{
-					// check if location has / at the end
 					if (path.back() != '/')
 						path.append("/"); 
 					path.append(*it);
+					_request.setUri(path);
 					break ;
 				}
 			}
 		}
 	}
-	// log "uri: " << path line;
 	return path;
 }
 
@@ -138,9 +132,12 @@ void Response::deleteFile(std::string &path)
 {
 	checkFilePermission(path, W_OK);
 	if (std::remove(path.c_str()) != 0)
+	{
+		_status = ST_SERVER_ERROR;
 		throw Response::ServerError();
-	else
-		_body = "File Deleted";
+	}
+	// else
+		// _body = "File Deleted";
 }
 
 void Response::readFile(std::string path)
@@ -177,7 +174,7 @@ void Response::uploadFile()
 				file.close();
 			}
 		}
-		_body = "File Uploaded";
+		// _body = "File Uploaded";
 	} catch (std::exception &e)
 	{
 		log "Exception at uploadFile: " << e.what() line;
@@ -211,7 +208,10 @@ std::string Response::getCurrentDirectory()
 	std::string dir("");
 
 	if (!getcwd(buffer, sizeof(buffer)))
-		perror("getcwd() error");
+	{
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
+	}
 	else
 	{
 		dir = buffer;
@@ -224,18 +224,60 @@ std::string Response::getCurrentDirectory()
 	return dir;
 }
 
+std::string getHtmlSkeleton()
+{
+	return "<!DOCTYPE html>\
+	<html lang=\"en\">\
+	<head>\
+		<meta charset=\"UTF-8\">\
+		<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\
+		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\
+		<title>Http dial 3bar</title>\
+	</head>\
+	<body>\
+		$1\
+	</body>\
+	</html>";
+}
+
+void Response::generateDirectoryListing()
+{
+	DIR *dir;
+	struct dirent *dp;
+	std::string name;
+	std::string listing;
+	std::string path;
+
+	_body.append(getHtmlSkeleton());
+	listing.append("<h1>Index of: " + _request.getUri() + "</h1>\n<hr />\n<pre>");
+	dir = opendir(getFilePath(_request.getUri()).c_str());
+	while ((dp = readdir (dir)) != NULL) {
+		name = dp->d_name;
+		if (dp->d_type == DT_DIR)
+			name.append("/");
+		listing.append("<p><a href=\""+ name+"\">"+ name +"</a></p>");
+	}
+	listing.append("</pre>");
+	_body.replace(_body.find("$1"), 2, listing);
+}
 
 void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	if (isDirectory(file))
+	// log isDirectory(_request.getUri()) line;
+	if (isDirectory(_request.getUri()))
 	{
-		_status = ST_NOT_FOUND;
-		throw Response::NotFound();
+		if (_location.getAutoIndex())
+			generateDirectoryListing();
+		else
+		{
+			_status = ST_NOT_FOUND;
+			throw Response::NotFound();
+		}
 	}
-	readFile(file);
+	else
+		readFile(file);
 	_status = ST_OK;
-
 }
 
 void Response::methodPost()
@@ -243,7 +285,6 @@ void Response::methodPost()
 	if (_location.getUploadEnabled())
 		uploadFile();
 	_status = ST_OK;
-	
 }
 
 void Response::methodDelete()
@@ -263,42 +304,8 @@ void Response::httpRedirection()
 	_status = _location.getReturnCode();
 }
 
-/*
-
-=> GET /get/user
-
-search location
-if location is prefix for uri
-	if accepted method
-		if cgi
-			gotocgi
-		else
-			if dir exist
-				if has file ext
-					get file
-				else
-					if autoindex
-						return index file
-					else
-						return error file
-			else
-				error file
-else
-	error file
-
-
-	/
-
-	/user
-
-	/user/name
-
-
-*/
-
 void Response::makeBody()
 {
-
 	std::vector<Location> locations = getServerData().getLocations();
 	setLocation(locations[0]);
 	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
@@ -313,7 +320,12 @@ void Response::makeBody()
 	}
 	try
 	{
-		// log "test: " << _location.getAllowedMethods()["GET"] line;
+		if (_request.getContentLen() > this->getServerData().getClientBodySize() * 1024 * 1024)
+		{
+			// throw MAX_BODY_SIZE_ERROR;
+			_status = ST_PAYLOAD_LARGE;
+			throw Response::PayloadLarge();
+		}
 		std::map<std::string, bool> loc_methods = _location.getAllowedMethods();
 		if (!loc_methods[_request.getMethod()])
 		{
@@ -322,6 +334,7 @@ void Response::makeBody()
 		}
 		if (_location.isCGI())
 		{
+			// parse request headers
 			// go to cgi
 		}
 		else if (_location.isRedirection())
@@ -332,7 +345,6 @@ void Response::makeBody()
 			methodPost();
 		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
-		
 	}
 	catch (std::exception &e)
 	{
@@ -368,6 +380,22 @@ void Response::setErrorPage()
 		_body = getDefaultErrorPage(_status);
 }
 
+std::string Response::getResponseContentType()
+{
+	if (isSuffix( ".html",_request.getUri()) || _location.getAutoIndex())
+		return "text/html";
+	else if (isSuffix( ".css",_request.getUri()))
+		return "text/css";
+	else if (isSuffix( ".json",_request.getUri()))
+		return "application/json";
+	else if (isSuffix( ".xml",_request.getUri()))
+		return "application/xml";
+	else if (isSuffix( ".js",_request.getUri()))
+		return "aplication/javascript";
+	else
+		return "text/plain";
+}
+
 void Response::makeResponse()
 {
 	makeBody();
@@ -387,8 +415,8 @@ void Response::makeResponse()
 	{
 		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");
-		// get content type
-		_resp.append("text/html\r\n");
+		_resp.append(getResponseContentType());
+		_resp.append("\r\n");
 		_resp.append("Content-Length: ");
 		_resp.append(std::to_string(strlen(_body.c_str())));
 		_resp.append("\r\n\n");

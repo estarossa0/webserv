@@ -204,21 +204,26 @@ void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
 	readFile(file);
+	_status = ST_OK;
+
 }
 
 void Response::methodPost()
 {
 	if (_location.getUploadEnabled())
 		uploadFile();
+	_status = ST_OK;
+	
 }
 
 void Response::methodDelete()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
 	deleteFile(file);
+	_status = ST_OK;
 }
 
-void Response::responseRedirection()
+void Response::httpRedirection()
 {
 	_status = _location.getReturnCode();
 }
@@ -250,10 +255,10 @@ else
 void Response::makeBody()
 {
 	std::vector<Location> locations = getServerData().getLocations();
-
 	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
 	{
-		if (_request.getUri().find((*it).getPath()) != std::string::npos)
+		// if (_request.getUri().find((*it).getPath()) != std::string::npos)
+		if (isPreffix((*it).getPath(), _request.getUri()))
 		{
 			if (!getLocation().getPath().length())
 				setLocation(*it);
@@ -273,14 +278,13 @@ void Response::makeBody()
 			// go to cgi
 		}
 		else if (_location.isRedirection())
-			responseRedirection();
+			httpRedirection();
 		else if (_request.getMethod().compare("GET") == 0)
 			methodGet();
 		else if (_request.getMethod().compare("POST") == 0)
 			methodPost();
 		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
-		_status = ST_OK;
 	}
 	catch (std::exception &e)
 	{
@@ -300,14 +304,13 @@ void Response::makeResponse()
 	_resp.append(std::to_string(_status));
 	_resp.append(" ");
 	_resp.append(getCodeStatus());
-	// set server name
 	if (_status == ST_MOVED_PERM)
 	{
 		_resp.append("Location: ");
 		_resp.append(_location.getReturnUrl());
 		_resp.append("\r\n\r\n");
 	}
-	if (_status != ST_OK)
+	else if (_status != ST_OK)
 	{
 		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");

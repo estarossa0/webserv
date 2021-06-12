@@ -22,7 +22,7 @@ private:
 	void methodGet();
 	void methodPost();
 	void methodDelete();
-	void responseRedirection();
+	void httpRedirection();
 
 	void checkFilePermission(std::string &, int);
 	void deleteFile(std::string &);

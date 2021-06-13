@@ -42,6 +42,7 @@ std::string const &ServerData::getHost() const
 void ServerData::setName(std::string const &n)
 {
 	_name = n;
+	_necessary_elements[NAME_NECESSITY_NUMBER] = true;
 }
 
 std::string const &ServerData::getName() const

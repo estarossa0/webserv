@@ -39,13 +39,14 @@
 #define ERROR_FILE "Could not open configuration file"
 #define ERROR_FILE_EXTENSION "Configuration file has not the correct extension [.conf]"
 #define ERROR_BRACES "Curly braces are not written well in the configuration file"
+#define ERROR_OPENING_BRACE_WITHOUT_SERVER_OR_LOC "opening curly brace used without setting server or location identifiers above it."
 #define ERROR_DOUBLE_BRACE "Only one curly brace is allowed per line"
 #define ERROR_BRACE_NOT_ALONE "the line which contains a curly brace must not contain something else.\nError in this line -> "
 #define ERROR_DEFINE_SERVER_INSIDE_SERVER "You can't define a server inside another server"
 #define ERROR_EMPTY_SERVER_CONFIGURATION "A server must not have an empty configuration"
 #define ERROR_INVALID_CONFIGURATION "This configuration file is invalid: ERROR in this line -> "
 #define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
-#define ERROR_MISSING_NECESSARY_ELEMENT "Make sure that all servers in file configuration contains at least these 3 elements: [port, host, root]"
+#define ERROR_MISSING_NECESSARY_ELEMENT "Make sure that all servers in file configuration contains at least these 4 elements: [port, host, name, root]"
 #define ERROR_MISSING_SEMICOLON "missing a semicolon in this line: "
 #define ERROR_DOUBLE_SEMICOLON "should be only one semicolon at the end of this line: "
 #define ERROR_PORT_NAN "the value of port must be a non-zero positive number"
@@ -54,15 +55,17 @@
 #define ERROR_ERRPAGE_CODE_NAN "the value of an error page code must be a non-zero positive number"
 #define ERROR_ALLOWED_METHODS_SYNTAX "bad syntax for allowed methods in line: "
 #define ERROR_ALLOWED_METHOD_METHOD_NOT_FOUND "this method is not one of the webserv allowed methods: [ GET, POST, DELETE ] \nError in this line: "
-#define ERROR_SERVER_DUPLICATED_FIELD "duplicated server field in this line -> "
-#define ERROR_LOCATION_DUPLICATED_FIELD "duplicated location field in this line -> "
+#define ERROR_SERVER_DUPLICATE_FIELD "duplicate server field in this line -> "
+#define ERROR_LOCATION_DUPLICATE_FIELD "duplicate location field in this line -> "
 #define ERROR_EMPTY_LOCATION_CONFIG "the file configuration has an empty location configuration"
 #define ERROR_LOCATION_WITH_SEMICOLON "location field does not end with a semicolon: error in this line -> "
 #define ERROR_RETURN_CODE_NAN "the value of redirection code must be a non-zero positive number"
-#define ERROR_CGI_EXTENSION_ERROR "the cgi extension is invalid, it must be in this format: *.extention , e.g. *.php\nError in this line: "
+#define ERROR_CGI_EXTENSION_ERROR "the cgi extension is invalid, it must be in this format: /path/*.extention , e.g. /*.php or /path/*.extension \nError in this line: "
 #define ERROR_CGI_NOT_FOUND "the fastcgi_pass field is not found after setting the cgi extension"
 #define DID_YOU_MEAN "did you mean "
 #define IN_THIS_LINE " field in this line -> "
+#define ERROR_DUPLICATE_SERVER_NAME "try to use a unique name for each server: duplicate name -> "
+#define ERROR_CGI_LOCATION_PATH "path of cgi location is invalid, error in this line-> "
 
 class ConfigParser
 {
@@ -80,6 +83,7 @@ private:
 	std::vector<std::string> _split(std::string const &);
 	std::vector<std::string> _split(std::string const &, char);
 	bool _isSet(std::string const &, int (*func)(int));
+	std::string const &_removeDuplicateChar(std::string &, char const);
 	void _semicolonChecker(std::string &);
 	void _getFileContent();
 	void _indexServers();
@@ -112,6 +116,7 @@ private:
 public:
 	ConfigParser(char const *inFilename);
 	std::vector<ServerData> const &getServers() const;
+	void addServer(ServerData const &);
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];

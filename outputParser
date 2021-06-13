@@ -8,20 +8,19 @@ client_max_body_size    10m ;
 error_page 404 /404.html;
 error_page 562 /404.html;
 root /src;
-error_page 502 /502.html;
 location /
 {
 root /home;
 autoindex on;
-index: index.html index.php; 
+index index.html index.php; 
 allow_methods    [ POST , DELETE ]     ;
 }
-location /p
+location /po
 {
 upload_enable off;
 return 301 _url;
 }
-location *.php
+location /*.php
 {
 autoindex on;
 root /home;
@@ -30,15 +29,14 @@ fastcgi_pass unix:/var/run/php-fpm.sock;
 location /upload
 {
 upload_enable on;
-upload_enable on;
 upload_store /files;
 }
 }
 server
 {
-listen          88;
+listen          80;
 host localhost;
-server_name     example.com  ;
+server_name     eexample.com  ;
 client_max_body_size    10m ;
 root /src;
 error_page 502 /502.html;
@@ -49,5 +47,108 @@ servers has been indexed successfully
 
 ======================== SERVERS INDEXING ==========================
 
-start = [1], end[34]
-start = [36], end[43]
+start = [1], end[32]
+start = [34], end[41]
+content has been parsed successfully
+======================== SERVERS PARSING ==========================
+
+==================== ServerData ===================
+port :[80]
+host :[localhost]
+name :[example.com]
+client body size: [10]
+error page: code [404], path [/404.html]
+error page: code [562], path [/404.html]
+root dir: [/src]
+
+================ Location ===============
+location path : [/]
+location root : [/home]
+location autoindex : [true]
+location indexes : [index.html]  [index.php]  
+location method: [DELETE] = [true]
+location method: [GET] = [false]
+location method: [POST] = [true]
+location is redirection : false
+location return, code : [226590245], url: []
+location is CGI : false
+location CGI, url: []
+location upload enabled : true
+location Upload store: []
+============== Location End =============
+
+================ Location ===============
+location path : [/po]
+location root : []
+location autoindex : [false]
+location indexes : 
+location method: [DELETE] = [false]
+location method: [GET] = [true]
+location method: [POST] = [false]
+location is redirection : true
+location return, code : [301], url: [_url]
+location is CGI : false
+location CGI, url: []
+location upload enabled : false
+location Upload store: []
+============== Location End =============
+
+================ Location ===============
+location path : [/*.php]
+location root : [/home]
+location autoindex : [true]
+location indexes : 
+location method: [DELETE] = [false]
+location method: [GET] = [true]
+location method: [POST] = [false]
+location is redirection : false
+location return, code : [226590245], url: []
+location is CGI : true
+location CGI, url: [unix:/var/run/php-fpm.sock]
+location upload enabled : true
+location Upload store: []
+============== Location End =============
+
+================ Location ===============
+location path : [/upload]
+location root : []
+location autoindex : [false]
+location indexes : 
+location method: [DELETE] = [false]
+location method: [GET] = [true]
+location method: [POST] = [false]
+location is redirection : false
+location return, code : [226590245], url: []
+location is CGI : false
+location CGI, url: []
+location upload enabled : true
+location Upload store: [/files]
+============== Location End =============
+==================== ServerData End =================
+
+
+==================== ServerData ===================
+port :[80]
+host :[localhost]
+name :[eexample.com]
+client body size: [10]
+error page: code [502], path [/502.html]
+root dir: [/src]
+
+================ Location ===============
+location path : [/]
+location root : []
+location autoindex : [true]
+location indexes : 
+location method: [DELETE] = [false]
+location method: [GET] = [true]
+location method: [POST] = [false]
+location is redirection : false
+location return, code : [-931131392], url: []
+location is CGI : false
+location CGI, url: []
+location upload enabled : true
+location Upload store: []
+============== Location End =============
+==================== ServerData End =================
+

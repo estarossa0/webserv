@@ -3,11 +3,12 @@
 
 #include "websrv.h"
 
-#define NUMBER_OF_NECESSARY_ELEMENTS 3
+#define NUMBER_OF_NECESSARY_ELEMENTS 4
 
 #define PORT_NECESSITY_NUMBER 0
 #define HOST_NECESSITY_NUMBER 1
 #define ROOT_NECESSITY_NUMBER 2
+#define NAME_NECESSITY_NUMBER 3
 
 class ServerData
 {

@@ -91,6 +91,13 @@ void ConfigParser::_trim(std::string &str)
 		str.erase(str.size() - 1, 1);
 }
 
+std::string const getStringType(char const *_line)
+{
+	if (strlen(_line) == 1)
+		return _line;
+	return "(" + std::string(_line) + ")";
+}
+
 std::vector<std::string> ConfigParser::_split(std::string const &_line)
 {
 	std::vector<std::string> wordsArr;
@@ -167,7 +174,7 @@ void ConfigParser::_indexServers()
 		if (count > 1)
 			throw std::runtime_error(ERROR_DOUBLE_BRACE);
 		else if (count == 1 && _fileLines[i].size() > 1)
-			throw std::runtime_error(ERROR_BRACE_NOT_ALONE + _fileLines[i]);
+			throw std::runtime_error(ERROR_BRACE_NOT_ALONE + getStringType("[") + _fileLines[i] + "]");
 
 		if ((pos = _fileLines[i].find(OPENNING_BRACE)) != std::string::npos)
 		{
@@ -246,17 +253,17 @@ void ConfigParser::_parseContent()
 				if (primitives_openings[parserIndex] != ERROR_PAGE_OP &&
 					primitives_openings[parserIndex] != LOCATION_OP &&
 					_checked_primitives[primitives_openings[parserIndex]])
-					throw std::runtime_error(ERROR_SERVER_DUPLICATE_FIELD + _fileLines[start]);
+					throw std::runtime_error(ERROR_SERVER_DUPLICATE_FIELD + getStringType("[") + _fileLines[start] + "]");
 
 				_checked_primitives[primitives_openings[parserIndex]] = true;
 
 				if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) == end + 1)
-					throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
+					throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[start] + "]");
 				start = static_cast<size_t>(doneParsingIndex);
 				continue;
 			}
 			else
-				throw std::runtime_error(ERROR_INVALID_CONFIGURATION + _fileLines[start]);
+				throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[start] + "]");
 			start++;
 		}
 		if (!sv.hasNecessaryElements())
@@ -314,12 +321,6 @@ void ConfigParser::_semicolonChecker(std::string &_line)
 	_trim(_line);
 }
 
-std::string const getStringType(char const *_line)
-{
-	if (strlen(_line) == 1)
-		return _line;
-	return "(" + std::string(_line) + ")";
-}
 
 int ConfigParser::_portParser(size_t index, ServerData &sv)
 {
@@ -484,7 +485,6 @@ int ConfigParser::_locationParser(size_t index, ServerData &sv)
 
 		index++;
 	}
-
 	if (isEmpty)
 		throw std::runtime_error(ERROR_EMPTY_LOCATION_CONFIG);
 	if (loc.isCGI() && loc.getFastCgiPass().empty())
@@ -522,8 +522,9 @@ void ConfigParser::_locationPathParser(size_t &index, Location &loc)
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-	if (_fileLines[++index] != OPENNING_BRACE)
-		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
+	if (_fileLines[index + 1] != OPENNING_BRACE)
+		throw std::runtime_error(ERROR_EMPTY_LOCATION_CONFIG + getStringType("[") + _fileLines[index] + "]");
+	index++;
 }
 
 void ConfigParser::_locRootDirParser(size_t index, Location &loc)

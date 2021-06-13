@@ -119,9 +119,13 @@ int	getPostBodyLength(std::string data, std::string boundary)
 	return len;
 }
 
-void Request::parseHeaders()
+void Request::parseHeader(std::string &data)
 {
-	
+	Request::Header header = {};
+
+	header.name = data.substr(0 , data.find(":"));
+	header.value = data.substr(data.find(":") + 2, data.length() - data.find(":") - 3);
+	_headers.push_back(header);
 }
 
 void Request::parseRequest()
@@ -134,6 +138,8 @@ void Request::parseRequest()
 	while (std::getline(lines, buffer))
 	{
 		// log "current line: " << buffer line;
+		// if (buffer[0] == '\r')
+		// 	log "found it" line;
 		if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 		{
 			_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
@@ -162,6 +168,8 @@ void Request::parseRequest()
 			_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
 		else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
 			_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+		else if (!_clen)
+			parseHeader(buffer);
 		else if (_clen && !_boundary.length())
 		{
 			if (_isArg)
@@ -183,6 +191,8 @@ void Request::parseRequest()
 		}
 		else
 			appendToBody(buffer);
+		// if (buffer[0] == '\r')
+		// 	isDone = true;
 	}
 	
 	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary) && _clen != 0))
@@ -205,6 +215,32 @@ void Request::parseRequest()
 			log "Error in request parsing" line;
 	}
 	// log "Parsed request" line;
+}
+
+bool Request::checkDataDone()
+{
+	std::string buffer;
+	std::istringstream lines(_data);
+	bool _isDone = false;
+	int len = 1;
+
+	while (std::getline(lines, buffer) && !_isDone)
+	{
+		// if (buffer[0] == 5) // EOT
+		// {
+		// 	setConnectionType("close");
+		// 	isDone = true;
+		// }
+		// else 
+		if (buffer.find("Content-Length:") != std::string::npos)
+			len = 2;
+		if (buffer[0] == '\r')
+			len--;
+		if (len == 0)
+			_isDone = true;
+	}
+	log "len: " << len line;
+	return _isDone;
 }
 
 void Request::printRequest()
@@ -314,4 +350,9 @@ ServerData Request::getServerData()
 void Request::setUri(std::string const &uri)
 {
 	this->_uri = uri;
+}
+
+void Request::setConnectionType(std::string const &contype)
+{
+	this->_contype = contype;
 }

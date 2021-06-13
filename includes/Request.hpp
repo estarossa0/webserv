@@ -51,7 +51,9 @@ public:
 	void parseRequest();
 	void clear();
 	void printRequest();
-	void parseHeaders();
+	void parseHeader(std::string &);
+	
+	bool checkDataDone(); 
 
 	const std::string &getMethod() const;
 	const std::string &getUri() const;
@@ -62,8 +64,10 @@ public:
 	const std::string &getDisposition() const;
 	const std::string &getData() const;
 	const std::string &getConnectionType() const;
+	void setConnectionType(std::string const &);
 	Connection	*getConnection();
 	ServerData	getServerData();
+
 
 	void setUri(std::string const &);
 

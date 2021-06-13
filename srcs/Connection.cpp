@@ -19,19 +19,25 @@ int				Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
-		if (retval > 0)
-			_request.appendToData(buffer);
+		// log retval line;
+		// std::string data(buffer);
+		// log data line;
+		// log std::stoi(data) line;
+		// if (retval > 0)
+		_request.appendToData(buffer);
 		size += retval;
-		if (retval < 1000)
-			break ;
+		// if (retval < 1000)
+		// 	break ;
 		// if ((buffer[0] == '\r' && buffer[1] == '\n' ))
+		if (_request.checkDataDone())
+			break ;
 	}
 	return size;
 }
 
 int				Connection::send()
 {
-	// this->_request.printRequest();
+	this->_request.printRequest();
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
 	log this->_response.getResponse() line;

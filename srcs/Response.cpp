@@ -257,7 +257,7 @@ void Response::generateDirectoryListing()
 			name.append("/");
 		listing.append("<p><a href=\""+ name+"\">"+ name +"</a></p>");
 	}
-	listing.append("</pre>");
+	listing.append("</pre><hr />");
 	_body.replace(_body.find("$1"), 2, listing);
 }
 

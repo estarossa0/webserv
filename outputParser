@@ -3,7 +3,7 @@ server
 {
 listen       80;
 host localhost;
-server_nameQ     example.com  ;
+server_name     example.com  ;
 client_max_body_size    10m ;
 error_page 404 /404.html;
 error_page 562 /404.html;
@@ -11,21 +11,25 @@ root /src;
 error_page 502 /502.html;
 location /
 {
-rootyufuyfu /home;
+root /home;
 autoindex on;
 index: index.html index.php; 
-allow_methods    [ sdPOST, DELETE ]     ;
+allow_methods    [ POST , DELETE ]     ;
 }
-location /return
+location /p
 {
+upload_enable off;
 return 301 _url;
 }
 location *.php
 {
+autoindex on;
+root /home;
 fastcgi_pass unix:/var/run/php-fpm.sock;
 }
 location /upload
 {
+upload_enable on;
 upload_enable on;
 upload_store /files;
 }
@@ -45,5 +49,5 @@ servers has been indexed successfully
 
 ======================== SERVERS INDEXING ==========================
 
-start = [1], end[30]
-start = [32], end[39]
+start = [1], end[34]
+start = [36], end[43]

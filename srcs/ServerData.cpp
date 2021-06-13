@@ -87,6 +87,11 @@ std::string const &ServerData::getRootDir() const
 
 void ServerData::addLocation(Location const &loc)
 {
+	for (size_t i = 0; i < _locations.size(); i++)
+	{
+		if (_locations[i].getPath() == loc.getPath())
+			throw std::invalid_argument("Error: duplicated location path: " + loc.getPath());
+	}
 	_locations.push_back(loc);
 }
 

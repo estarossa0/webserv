@@ -66,6 +66,7 @@
 #define IN_THIS_LINE " field in this line -> "
 #define ERROR_DUPLICATE_SERVER_NAME "try to use a unique name for each server: duplicate name -> "
 #define ERROR_CGI_LOCATION_PATH "path of cgi location is invalid, error in this line-> "
+#define ERROR_INVALID_IDENTIFIER "invalid identifier: in this line -> "
 
 class ConfigParser
 {

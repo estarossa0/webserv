@@ -206,6 +206,10 @@ void ConfigParser::_indexServers()
 			else
 				throw std::runtime_error(ERROR_BRACES);
 		}
+		else if (!serverBraceOpen && _fileLines[i].compare(SERVER_OP) &&
+				 _fileLines[i].compare(OPENNING_BRACE) &&
+				 _fileLines[i].compare(CLOSING_BRACE))
+			throw std::runtime_error(ERROR_INVALID_IDENTIFIER + getStringType("[") + _fileLines[i] + "]");
 	}
 	if (serverBraceOpen || isBracesValid)
 		throw std::runtime_error(ERROR_BRACES);
@@ -320,7 +324,6 @@ void ConfigParser::_semicolonChecker(std::string &_line)
 	_line.erase(_line.end() - 1);
 	_trim(_line);
 }
-
 
 int ConfigParser::_portParser(size_t index, ServerData &sv)
 {

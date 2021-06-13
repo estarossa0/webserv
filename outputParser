@@ -10,7 +10,9 @@ error_page 562 /404.html;
 root /src;
 location /
 {
+root /home;
 }
+location
 {
 root /home;
 autoindex on;
@@ -43,3 +45,11 @@ client_max_body_size    10m ;
 root /src;
 error_page 502 /502.html;
 }
+
+
+servers has been indexed successfully
+
+======================== SERVERS INDEXING ==========================
+
+start = [1], end[36]
+start = [38], end[45]

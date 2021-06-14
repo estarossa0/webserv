@@ -1,0 +1,5 @@
+.vscode
+outputParser
+objects
+objects/*
+webserv

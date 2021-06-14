@@ -36,6 +36,7 @@ private:
 	std::vector<Argument> _args;
 	Connection *_connection;
 	bool _isArg;
+	int _error;
 
 	void appendToBody(std::string );
 	int getSpaceIndex(const std::string &, int);
@@ -67,6 +68,7 @@ public:
 	void setConnectionType(std::string const &);
 	Connection	*getConnection();
 	ServerData	getServerData();
+	int getRequestError();
 
 
 	void setUri(std::string const &);

@@ -77,7 +77,7 @@ static void	hookPollOut(Webserv &web, size_t i)
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
 		web[i].send();
-		if (web[i].getRequest().getConnectionType() == "close")
+		if (web[i].getRequest().getConnectionType() == "close" || web[i].getRequest().getRequestError())
 			web[i].getServer()->erase(i);
 		web[i].getRequest().clear();
 		web[i].getResponse().clear();

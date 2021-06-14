@@ -38,6 +38,11 @@ const char *Response::PayloadLarge::what() const throw()
 	return "PayloadTooLarge";
 }
 
+const char *Response::BadRequest::what() const throw()
+{
+	return "BadRequest";
+}
+
 void	Response::clear()
 {
 	// this->_request.clear();
@@ -102,7 +107,7 @@ std::string Response::getCodeStatus()
 	else if (this->_status == ST_NOT_FOUND)
 		return "Not Found\r\n";
 	else if (this->_status == ST_METHOD_NOT_ALLOWED)
-		return "Method Not Allowed\r\n";
+		return "Not Allowed\r\n";
 	else if (this->_status == ST_SERVER_ERROR)
 		return "Internal Server Error\r\n";
 	else if (this->_status == ST_NOT_IMPLEMENTED)
@@ -322,15 +327,19 @@ void Response::makeBody()
 	{
 		if (_request.getContentLen() > this->getServerData().getClientBodySize() * 1024 * 1024)
 		{
-			// throw MAX_BODY_SIZE_ERROR;
 			_status = ST_PAYLOAD_LARGE;
 			throw Response::PayloadLarge();
 		}
 		std::map<std::string, bool> loc_methods = _location.getAllowedMethods();
 		if (!loc_methods[_request.getMethod()])
 		{
-			_status = ST_NOT_IMPLEMENTED;
-			throw Response::NotImplemented();
+			_status = ST_METHOD_NOT_ALLOWED;
+			throw Response::MethodNotAllowed();
+		}
+		if (_request.getRequestError())
+		{
+			_status = ST_BAD_REQUEST;
+			throw Response::BadRequest();
 		}
 		if (_location.isCGI())
 		{
@@ -348,22 +357,19 @@ void Response::makeBody()
 	}
 	catch (std::exception &e)
 	{
-		log "Exception at makeBody : " << e.what() line;
+		// log "Exception at makeBody : " << e.what() line;
 	}
 }
 
 std::string Response::getDefaultErrorPage(int status)
 {
-	std::string default_page("<!DOCTYPE html>\n\
+	std::string default_page("		<!DOCTYPE html>\n\
 		<html lang=\"en\">\n\
 		<head>\n\
-			<meta charset=\"UTF-8\">\n\
-			<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\
-			<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\
-			<title>Http dial 3bar</title>\n\
+		<title>Http dial 3bar</title>\n\
 		</head>\n\
 		<body>\n\
-			<h1>Not Found - $1</h1>\n\
+		<h1>Error page - $1</h1>\n\
 		</body>\n\
 		</html>");
 	default_page = default_page.replace(default_page.find("$1"), 2, std::to_string(status));
@@ -382,7 +388,7 @@ void Response::setErrorPage()
 
 std::string Response::getResponseContentType()
 {
-	if (isSuffix( ".html",_request.getUri()) || _location.getAutoIndex())
+	if (isSuffix( ".html",_request.getUri()) || _location.getAutoIndex() || _status != ST_OK)
 		return "text/html";
 	else if (isSuffix( ".css",_request.getUri()))
 		return "text/css";

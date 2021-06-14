@@ -4,7 +4,7 @@ Request::Request()
 {
 }
 
-Request::Request(Connection *_connection) : isDone(false), _clen(0), _data(""), _boundary(""), _isArg(false), _connection(_connection)
+Request::Request(Connection *_connection) : isDone(false), _clen(0), _data(""), _boundary(""), _isArg(false), _connection(_connection), _error(0)
 {
 }
 
@@ -191,8 +191,6 @@ void Request::parseRequest()
 		}
 		else
 			appendToBody(buffer);
-		// if (buffer[0] == '\r')
-		// 	isDone = true;
 	}
 	
 	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary) && _clen != 0))
@@ -200,7 +198,6 @@ void Request::parseRequest()
 	if (isDone)
 	{
 		int error = 0;
-		// must check errors
 		if (_protocol.compare("HTTP/1.1") != 0)
 			error = 1;
 		if (_method.length() < 3)
@@ -211,10 +208,8 @@ void Request::parseRequest()
 			error = 1;
 		if (!_host.length())
 			error = 1;
-		if (error)
-			log "Error in request parsing" line;
+		_error = error;
 	}
-	// log "Parsed request" line;
 }
 
 bool Request::checkDataDone()
@@ -226,20 +221,18 @@ bool Request::checkDataDone()
 
 	while (std::getline(lines, buffer) && !_isDone)
 	{
-		// if (buffer[0] == 5) // EOT
-		// {
-		// 	setConnectionType("close");
-		// 	isDone = true;
-		// }
-		// else 
-		if (buffer.find("Content-Length:") != std::string::npos)
+		if (buffer[0] == 4) // EOT
+		{
+			setConnectionType("close");
+			isDone = true;
+			len--;
+		} else if (buffer.find("Content-Length:") != std::string::npos)
 			len = 2;
 		if (buffer[0] == '\r')
 			len--;
 		if (len == 0)
 			_isDone = true;
 	}
-	log "len: " << len line;
 	return _isDone;
 }
 
@@ -273,6 +266,7 @@ void Request::clear()
 	this->_args.clear();
 	this->_contype.clear();
 	this->_clen = 0;
+	_error = 0;
 	isDone = false;
 	_isArg = false;
 }
@@ -314,7 +308,8 @@ const std::string &Request::getConnectionType() const
 
 void Request::appendToData(std::string content)
 {
-	_data.append(content);
+	if (content[0] != '\r' || _data.length())
+		_data.append(content);
 }
 
 size_t Request::getLenArguments()
@@ -355,4 +350,9 @@ void Request::setUri(std::string const &uri)
 void Request::setConnectionType(std::string const &contype)
 {
 	this->_contype = contype;
+}
+
+int Request::getRequestError()
+{
+	return this->_error;
 }

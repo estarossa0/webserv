@@ -91,4 +91,9 @@ public:
 	{
 		virtual const char *what() const throw();
 	};
+
+	class BadRequest : public std::exception
+	{
+		virtual const char *what() const throw();
+	};
 };

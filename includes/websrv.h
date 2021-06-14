@@ -41,6 +41,10 @@
 #define ST_NOT_IMPLEMENTED 501
 #define ST_BAD_GATEWAY 502
 
+#ifndef DEBUG
+# define DEBUG 1
+#endif
+
 static void		hookPollIn(Webserv &, size_t);
 static void		hookPollOutn(Webserv &, size_t);
 class Webserv

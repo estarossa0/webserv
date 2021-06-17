@@ -9,7 +9,6 @@ class	Server
 	friend class				Webserv;
 	int							_socketfd;
 	std::vector<Connection>		_connections;
-	struct sockaddr_in			_addr;
 	size_t						_index;
 	Webserv						*_webserv;
 	ServerData const			&_data;

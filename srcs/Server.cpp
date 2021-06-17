@@ -3,10 +3,11 @@
 Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data), _index(index), _webserv(wb)
 {
 	int	opt(1);
+	struct sockaddr_in	addr;
 
-	this->_addr.sin_family = AF_INET;
-	this->_addr.sin_addr.s_addr = INADDR_ANY;
-	this->_addr.sin_port = htons(this->_data.getPort());
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_port = htons(this->_data.getPort());
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -20,7 +21,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data),
 		exit(EXIT_FAILURE);
 	}
 
-	if (bind(this->_socketfd, (struct sockaddr *)&this->_addr, sizeof(this->_addr)) == -1)
+	if (bind(this->_socketfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 	{
 		perror("bind failed");
 		exit(EXIT_FAILURE);
@@ -31,7 +32,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data),
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-	this->_connections.push_back(Connection(this->_socketfd, this, true));
+	this->_connections.push_back(Connection(this->_socketfd, this, true, addr));
 	this->_webserv->_pollArray.push_back((struct pollfd){this->_socketfd, POLLIN, 0});
 }
 
@@ -39,7 +40,7 @@ Server::~Server()
 {}
 
 Server::Server(Server const &other) :
-_data(other._data), _socketfd(other._socketfd), _addr(other._addr), _index(other._index), _webserv(other._webserv)
+_data(other._data), _socketfd(other._socketfd), _index(other._index), _webserv(other._webserv)
 {
 	this->_connections = other._connections;
 	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); ++it)
@@ -48,16 +49,17 @@ _data(other._data), _socketfd(other._socketfd), _addr(other._addr), _index(other
 
 int		Server::connect()
 {
-	int	len(sizeof(_addr));
 	int	newfd;
+	struct sockaddr_in	client_addr;
+	int	len(sizeof(client_addr));
 
-	newfd = accept(this->_socketfd, (struct sockaddr *)&this->_addr, (socklen_t*)&len);
+	newfd = accept(this->_socketfd, (struct sockaddr *)&client_addr, (socklen_t*)&len);
 	if (newfd < 0)
 	{
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
-	this->_connections.push_back(Connection(newfd, this, false));
+	this->_connections.push_back(Connection(newfd, this, false, client_addr));
 	this->_webserv->_pollArray
 	.insert(
 		this->_webserv->_pollArray.begin() + this->_webserv->_indexTable[this->_index] + (this->_connections.size() - 1),

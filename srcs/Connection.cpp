@@ -1,10 +1,10 @@
 #include "websrv.h"
 
-Connection::Connection(int fd, Server* sv, bool isserv) : _socketfd(fd), _server(sv), _is_Server(isserv), _request(this), _response(this)
+Connection::Connection(int fd, Server* sv, bool isserv, struct sockaddr_in	cl_addr) : _socketfd(fd), _server(sv), _is_Server(isserv), _request(this), _response(this), _addr(cl_addr)
 {};
 
 Connection::Connection(const Connection &other) :
-_socketfd(other._socketfd), _server(other._server), _is_Server(other._is_Server), _request(this), _response(this)
+_socketfd(other._socketfd), _server(other._server), _is_Server(other._is_Server), _request(this), _response(this), _addr(other._addr)
 {};
 
 int				Connection::read()
@@ -76,4 +76,14 @@ Server				*Connection::getServer()
 bool			Connection::is_Server()
 {
 	return this->_is_Server;
+}
+
+std::string		Connection::getIp() const
+{
+	return inet_ntoa(this->_addr.sin_addr);
+}
+
+int				Connection::getPort() const
+{
+	return ntohs(this->_addr.sin_port);
 }

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <arpa/inet.h>
 #include <cstdio>
 #include <dirent.h>
 #include <cstdlib>

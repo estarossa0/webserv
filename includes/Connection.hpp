@@ -13,9 +13,10 @@ class	Connection
 	Request			_request;
 	Response		_response;
 	bool			_is_Server;
+	struct sockaddr_in	_addr;
 
 public:
-	Connection(int, Server *, bool);
+	Connection(int, Server *, bool, struct sockaddr_in);
 	Connection(const Connection &);
 
 	int					read();
@@ -28,4 +29,6 @@ public:
 	void				close();
 	bool				is_Server();
 	operator			int();
+	std::string			getIp() const;
+	int					getPort() const;
 };

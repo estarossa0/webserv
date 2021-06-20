@@ -269,7 +269,6 @@ void Response::generateDirectoryListing()
 void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	// log isDirectory(_request.getUri()) line;
 	if (isDirectory(_request.getUri()))
 	{
 		if (_location.getAutoIndex())
@@ -315,7 +314,13 @@ void Response::makeBody()
 	setLocation(locations[0]);
 	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
 	{
-		if (isPreffix((*it).getPath(), _request.getUri()))
+		if (isSuffix((*it).getPath(), _request.getUri()) && (*it).isCGI())
+		{
+			if (DEBUG)
+				log "SET CGI LOCATION" line;
+			setLocation(*it);
+		}
+		else if (isPreffix((*it).getPath(), _request.getUri()))
 		{
 			if (!getLocation().getPath().length())
 				setLocation(*it);
@@ -345,6 +350,7 @@ void Response::makeBody()
 		if (_location.isCGI())
 		{
 			// parse request headers
+			parseCgiResponse("XPoweredBy: PHP\nContent-Type: text/html; charset=UTF-8\n\r\n<html><body><h1>cgi response</h1></body></html>");
 			// go to cgi
 		}
 		else if (_location.isRedirection())
@@ -358,7 +364,8 @@ void Response::makeBody()
 	}
 	catch (std::exception &e)
 	{
-		// log "Exception at makeBody : " << e.what() line;
+		if (DEBUG)
+			log "Exception at makeBody : " << e.what() line;
 	}
 }
 
@@ -389,6 +396,8 @@ void Response::setErrorPage()
 
 std::string Response::getResponseContentType()
 {
+	if (_ctype.length())
+		return _ctype;
 	if (isSuffix( ".html",_request.getUri()) || _location.getAutoIndex() || _status != ST_OK)
 		return "text/html";
 	else if (isSuffix( ".css",_request.getUri()))
@@ -401,6 +410,28 @@ std::string Response::getResponseContentType()
 		return "aplication/javascript";
 	else
 		return "text/plain";
+}
+
+void Response::parseCgiResponse(std::string response)
+{
+	std::string buffer;
+	std::ifstream fileReader(response);
+	std::string body;
+	bool isBody = false;
+
+	while (getline(fileReader, buffer))
+	{
+		if (_ctype.length() && buffer.find("Content-Type") != std::string::npos)
+			_ctype = buffer.substr(buffer.find(":") + 2, buffer.find_first_of(";") - 14);
+		else if (_ctype.length() && buffer.length() == 0)
+		{
+			if (isBody)
+				body.append(buffer).append("\n");
+			else
+				isBody = true;
+		}
+	}
+	log body line;
 }
 
 void Response::makeResponse()

@@ -46,7 +46,10 @@ const char *Response::BadRequest::what() const throw()
 void	Response::clear()
 {
 	// this->_request.clear();
+	this->_body.clear();
 	this->_resp.clear();
+	this->_status = 0;
+	this->_ctype.clear();
 }
 
 std::string Response::getFileNameFromDisp(std::string disp)
@@ -61,7 +64,7 @@ bool	Response::checkFileExists(std::string &path)
 
 bool Response::isDirectory(const std::string &s)
 {
-	if (opendir((getCurrentDirectory() + s).c_str()) == NULL) {
+	if (opendir((getPulicDirectory() + s).c_str()) == NULL) {
 		return 0;
     }
 	return 1;
@@ -190,7 +193,7 @@ void Response::uploadFile()
 
 std::string Response::getUploadDirectory()
 {
-	std::string dir = getCurrentDirectory();
+	std::string dir = getPulicDirectory();
 	dir.append(_location.getUploadLocation());
 	if (dir.back() != '/')
 		dir.append("/");
@@ -199,15 +202,14 @@ std::string Response::getUploadDirectory()
 
 std::string Response::getFilePath(std::string uri)
 {
-	std::string dir = getCurrentDirectory();
+	std::string dir = getPulicDirectory();
 	if (uri.front() != '/')
 		uri = "/" + uri;
 	dir.append(uri);
 	return dir;
 }
 
-//must reset error to be thrown
-std::string Response::getCurrentDirectory()
+std::string Response::getServerDirectory()
 {
 	char buffer[2000];
 	std::string dir("");
@@ -218,14 +220,19 @@ std::string Response::getCurrentDirectory()
 		throw Response::NotFound();
 	}
 	else
-	{
 		dir = buffer;
-		if (_location.getRootDir().length())
-			dir.append(_location.getRootDir());
-		else
-			dir.append(getServerData().getRootDir());
-		return dir;
-	}
+	return dir;
+}
+
+std::string Response::getPulicDirectory()
+{
+	std::string dir("");
+
+	dir = getServerDirectory();
+	if (_location.getRootDir().length())
+		dir.append(_location.getRootDir());
+	else
+		dir.append(getServerData().getRootDir());
 	return dir;
 }
 
@@ -347,11 +354,9 @@ void Response::makeBody()
 			throw Response::MethodNotAllowed();
 		}
 		
-		if (_location.isCGI())
+		if (!_location.isCGI())
 		{
-			// parse request headers
-			parseCgiResponse("XPoweredBy: PHP\nContent-Type: text/html; charset=UTF-8\n\r\n<html><body><h1>cgi response</h1></body></html>");
-			// go to cgi
+			parseCgiResponse("/tmp1.txt");
 		}
 		else if (_location.isRedirection())
 			httpRedirection();
@@ -371,15 +376,15 @@ void Response::makeBody()
 
 std::string Response::getDefaultErrorPage(int status)
 {
-	std::string default_page("		<!DOCTYPE html>\n\
-		<html lang=\"en\">\n\
+	std::string default_page("	<!DOCTYPE html>\n\
+	<html lang=\"en\">\n\
 		<head>\n\
-		<title>Http dial 3bar</title>\n\
+			<title>Http dial 3bar</title>\n\
 		</head>\n\
 		<body>\n\
-		<h1>Error page - $1</h1>\n\
+			<h1>Error page - $1</h1>\n\
 		</body>\n\
-		</html>");
+	</html>");
 	default_page = default_page.replace(default_page.find("$1"), 2, std::to_string(status));
 	return default_page;
 }
@@ -412,18 +417,21 @@ std::string Response::getResponseContentType()
 		return "text/plain";
 }
 
-void Response::parseCgiResponse(std::string response)
+void Response::parseCgiResponse(std::string file)
 {
+	std::string filedir = getServerDirectory().append(file);
 	std::string buffer;
-	std::ifstream fileReader(response);
+	std::ifstream fileReader(filedir);
 	std::string body;
 	bool isBody = false;
 
 	while (getline(fileReader, buffer))
 	{
-		if (_ctype.length() && buffer.find("Content-Type") != std::string::npos)
+		if (!_status && buffer.find("Status") != std::string::npos)
+			_status = std::stoi(buffer.substr(buffer.find(":") + 2, 3));
+		if (!_ctype.length() && buffer.find("Content-type") != std::string::npos)
 			_ctype = buffer.substr(buffer.find(":") + 2, buffer.find_first_of(";") - 14);
-		else if (_ctype.length() && buffer.length() == 0)
+		else if (_ctype.length() != 0)
 		{
 			if (isBody)
 				body.append(buffer).append("\n");
@@ -431,7 +439,9 @@ void Response::parseCgiResponse(std::string response)
 				isBody = true;
 		}
 	}
-	log body line;
+	_body = body;
+	if (!_status)
+		_status = ST_OK;
 }
 
 void Response::makeResponse()

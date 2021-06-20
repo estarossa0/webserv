@@ -37,7 +37,8 @@ private:
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);
-	std::string getCurrentDirectory();
+	std::string getPulicDirectory();
+	std::string getServerDirectory();
 	std::string getFileNameFromUri(std::string);
 	bool		checkFileExists(std::string &);
 	std::string getFileNameFromDisp(std::string);

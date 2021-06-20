@@ -325,6 +325,11 @@ void Response::makeBody()
 	}
 	try
 	{
+		if (_request.getRequestError())
+		{
+			_status = ST_BAD_REQUEST;
+			throw Response::BadRequest();
+		}
 		if (_request.getContentLen() > this->getServerData().getClientBodySize() * 1024 * 1024)
 		{
 			_status = ST_PAYLOAD_LARGE;
@@ -336,11 +341,7 @@ void Response::makeBody()
 			_status = ST_METHOD_NOT_ALLOWED;
 			throw Response::MethodNotAllowed();
 		}
-		if (_request.getRequestError())
-		{
-			_status = ST_BAD_REQUEST;
-			throw Response::BadRequest();
-		}
+		
 		if (_location.isCGI())
 		{
 			// parse request headers

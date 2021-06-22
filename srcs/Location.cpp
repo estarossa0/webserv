@@ -38,6 +38,7 @@ Location const &Location::operator=(Location const &rhs)
 		_upload_enable = rhs._upload_enable;
 		_upload_location = rhs._upload_location;
 	}
+	return *this;
 }
 
 Location::~Location()

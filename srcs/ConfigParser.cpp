@@ -79,6 +79,8 @@ void ConfigParser::addServer(ServerData const &sv)
 	{
 		if (sv.getName() == _servers[i].getName())
 			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
+		if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
+			throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " +  std::to_string(sv.getPort()));
 	}
 	_servers.push_back(sv);
 }
@@ -149,6 +151,7 @@ void ConfigParser::_getFileContent()
 std::string const &ConfigParser::_removeDuplicateChar(std::string &str, char const c)
 {
 	size_t i = 1;
+
 	while (i < str.size())
 	{
 		if (str[i] == c && str[i - 1] == c)

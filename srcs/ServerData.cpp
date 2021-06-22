@@ -32,6 +32,7 @@ ServerData const &ServerData::operator=(ServerData const &rhs)
 			_necessary_elements[i] = rhs._necessary_elements[i];
 		}
 	}
+	return *this;
 }
 
 

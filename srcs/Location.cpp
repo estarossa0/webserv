@@ -16,6 +16,30 @@ Location::Location() : _path("/"),
 	_allowed_methods["GET"] = true;
 }
 
+Location::Location(Location const &rhs)
+{
+	*this = rhs;
+}
+
+Location const &Location::operator=(Location const &rhs)
+{
+	if (this != &rhs)
+	{
+		_path = rhs._path;
+		_root_dir = rhs._root_dir;
+		_autoindex = rhs._autoindex;
+		_default_files = rhs._default_files;
+		_allowed_methods = rhs._allowed_methods;
+		_return_code = rhs._return_code;
+		_return_url = rhs._return_url;
+		_isRedirection = rhs._isRedirection;
+		_fastcgi_pass = rhs._fastcgi_pass;
+		_isCGI = rhs._isCGI;
+		_upload_enable = rhs._upload_enable;
+		_upload_location = rhs._upload_location;
+	}
+}
+
 Location::~Location()
 {
 	_default_files.clear();

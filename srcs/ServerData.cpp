@@ -11,6 +11,30 @@ ServerData::ServerData() : _name("default"),
 	_error_pages.clear();
 }
 
+ServerData::ServerData(ServerData const &rhs)
+{
+	*this = rhs;
+}
+
+ServerData const &ServerData::operator=(ServerData const &rhs)
+{
+	if (this != &rhs)
+	{
+		_port = rhs._port;
+		_host = rhs._host;
+		_name = rhs._name;
+		_client_body_size = rhs._client_body_size;
+		_error_pages = rhs._error_pages;
+		_root_dir = rhs._root_dir;
+		_locations = rhs._locations;
+		for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
+		{
+			_necessary_elements[i] = rhs._necessary_elements[i];
+		}
+	}
+}
+
+
 ServerData::~ServerData()
 {
 	_error_pages.clear();

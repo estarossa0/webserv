@@ -80,7 +80,7 @@ void ConfigParser::addServer(ServerData const &sv)
 		if (sv.getName() == _servers[i].getName())
 			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
 		if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
-			throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " +  std::to_string(sv.getPort()));
+			throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPort()));
 	}
 	_servers.push_back(sv);
 }
@@ -510,21 +510,7 @@ void ConfigParser::_locationPathParser(size_t &index, Location &loc)
 	{
 		if (tokens[0] != LOCATION_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOCATION_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		insideTokens = _split(tokens[1], '/');
-		if (insideTokens.back().front() == '*')
-		{
-			if (insideTokens.size() < 2)
-				throw std::runtime_error(ERROR_CGI_LOCATION_PATH + getStringType("[") + _fileLines[index] + "]");
-			if (!std::isalpha(insideTokens.back().back()))
-				throw std::runtime_error(ERROR_CGI_EXTENSION_ERROR + getStringType("[") + _fileLines[index] + "]");
-			insideTokens = _split(insideTokens.back(), '.');
-			if (insideTokens.size() != 2 || insideTokens[0] != "*" || !_isSet(insideTokens[1], std::isalpha))
-				throw std::runtime_error(ERROR_CGI_EXTENSION_ERROR + getStringType("[") + _fileLines[index] + "]");
-			loc.setPath(_removeDuplicateChar(tokens[1], '/'));
-			loc.setIsCGI(true);
-		}
-		else
-			loc.setPath(_removeDuplicateChar(tokens[1], '/'));
+		loc.setPath(_removeDuplicateChar(tokens[1], '/'));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
@@ -678,6 +664,21 @@ void ConfigParser::_locRedirectionParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
 }
 
+bool ConfigParser::_isCGIsupportedExtension(std::string const &str)
+{
+	std::vector<std::string> supportedExtensions;
+
+	supportedExtensions.push_back(PHP_EXTENTION);
+	supportedExtensions.push_back(PYTHON_EXTENTION);
+
+	for (size_t i = 0; i < supportedExtensions.size(); i++)
+	{
+		if (str == supportedExtensions[i])
+			return true;
+	}
+	return false;
+}
+
 void ConfigParser::_locCGIParser(size_t index, Location &loc)
 {
 	std::string _line = _fileLines[index];
@@ -685,10 +686,18 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 	_semicolonChecker(_line);
 
 	std::vector<std::string> tokens = _split(_line);
+	std::vector<std::string> insideTokens;
 	if (tokens.size() == 2)
 	{
 		if (tokens[0] != LOC_CGI)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_CGI) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
+		insideTokens = _split(loc.getPath(), '.');
+		if (insideTokens.size() != 2 || insideTokens[0] != "*" || !_isSet(insideTokens[1], std::isalpha))
+			throw std::runtime_error(ERROR_CGI_EXTENSION_ERROR + getStringType("[") + LOCATION_OP + " " + loc.getPath() + "]");
+		if (!_isCGIsupportedExtension("." + insideTokens[1]))
+			throw std::runtime_error(CGI_NOT_SUPPORTED + std::string(PHP_EXTENTION) + "  " + PYTHON_EXTENTION);
+		loc.setPath("." + insideTokens[1]);
+		loc.setIsCGI(true);
 		loc.setFastCgiPass(tokens[1]);
 	}
 	else

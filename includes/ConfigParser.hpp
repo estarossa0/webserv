@@ -35,6 +35,11 @@
 #define OPENNING_BRACKET '['
 #define CLOSING_BRACKET ']'
 
+#define PHP_EXTENTION ".php"
+#define PYTHON_EXTENTION ".py"
+
+
+
 // error messages
 #define ERROR_FILE "Could not open configuration file"
 #define ERROR_FILE_EXTENSION "Configuration file has not the correct extension [.conf]"
@@ -60,14 +65,15 @@
 #define ERROR_EMPTY_LOCATION_CONFIG "the file configuration has an empty location configuration for this location-> "
 #define ERROR_LOCATION_WITH_SEMICOLON "location field does not end with a semicolon: error in this line -> "
 #define ERROR_RETURN_CODE_NAN "the value of redirection code must be a non-zero positive number"
-#define ERROR_CGI_EXTENSION_ERROR "the cgi extension is invalid, it must be in this format: /path/*.extention , e.g. /*.php or /path/*.extension \nError in this line: "
+#define ERROR_CGI_EXTENSION_ERROR "the CGI extension is invalid, it must be in this format: *.extention , e.g. *.php, *.py \nError in this line: "
 #define ERROR_CGI_NOT_FOUND "the fastcgi_pass field is not found after setting the cgi extension"
 #define DID_YOU_MEAN "did you mean "
 #define IN_THIS_LINE " field in this line -> "
 #define ERROR_DUPLICATE_SERVER_NAME "try to use a unique name for each server: duplicate name -> "
 #define ERROR_DUPLICATE_SERVER_HOST_AND_PORT "two servers cannot have the same host and port, at least one must differ.\nduplicate host and port: "
-#define ERROR_CGI_LOCATION_PATH "path of cgi location is invalid, error in this line-> "
+// #define ERROR_CGI_LOCATION_PATH "path of cgi location is invalid, error in this line-> "
 #define ERROR_INVALID_IDENTIFIER "invalid identifier: in this line -> "
+#define CGI_NOT_SUPPORTED "only these extensions are supported for CGI: "
 
 class ConfigParser
 {
@@ -109,16 +115,18 @@ private:
 	void _locRedirectionParser(size_t, Location &);
 	void _locUploadEnableParser(size_t, Location &);
 	void _locUploadLocationParser(size_t, Location &);
+	bool _isCGIsupportedExtension(std::string const &);
 	void _locCGIParser(size_t, Location &);
 
 	int _locationParser(size_t, ServerData &);
 
 	void _parseContent();
 
+	void addServer(ServerData const &);
+
 public:
 	ConfigParser(char const *inFilename);
 	std::vector<ServerData> const &getServers() const;
-	void addServer(ServerData const &);
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];

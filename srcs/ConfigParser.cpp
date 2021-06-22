@@ -705,22 +705,3 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
 }
 
-void ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
-{
-	std::string _line = _fileLines[index];
-
-	_semicolonChecker(_line);
-
-	std::vector<std::string> tokens = _split(_line);
-	if (tokens.size() == 2)
-	{
-		if (tokens[0] != UPLOAD_LOC_ENABLE)
-			throw std::runtime_error(DID_YOU_MEAN + getStringType(UPLOAD_LOC_ENABLE) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		if (tokens[1] != "on" && tokens[1] != "off")
-			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-
-		loc.setUploadEnabled((tokens[1] == "on"));
-	}
-	else
-		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-}

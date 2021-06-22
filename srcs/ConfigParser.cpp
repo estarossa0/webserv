@@ -457,8 +457,8 @@ int ConfigParser::_locationParser(size_t index, ServerData &sv)
 {
 	if (_fileLines[index].back() == ';')
 		throw std::runtime_error(ERROR_LOCATION_WITH_SEMICOLON + getStringType("[") + _fileLines[index] + "]");
-	Location loc = Location();
 
+	Location loc = Location();
 	_locationPathParser(index, loc);
 
 	int parserIndex;
@@ -505,7 +505,6 @@ void ConfigParser::_locationPathParser(size_t &index, Location &loc)
 	std::string _line = _fileLines[index];
 
 	std::vector<std::string> tokens = _split(_line);
-	std::vector<std::string> insideTokens;
 	if (tokens.size() == 2)
 	{
 		if (tokens[0] != LOCATION_OP)
@@ -695,10 +694,32 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 		if (insideTokens.size() != 2 || insideTokens[0] != "*" || !_isSet(insideTokens[1], std::isalpha))
 			throw std::runtime_error(ERROR_CGI_EXTENSION_ERROR + getStringType("[") + LOCATION_OP + " " + loc.getPath() + "]");
 		if (!_isCGIsupportedExtension("." + insideTokens[1]))
-			throw std::runtime_error(CGI_NOT_SUPPORTED + std::string(PHP_EXTENTION) + "  " + PYTHON_EXTENTION);
+			throw std::runtime_error(CGI_NOT_SUPPORTED + loc.getPath() + " ]");
 		loc.setPath("." + insideTokens[1]);
 		loc.setIsCGI(true);
-		loc.setFastCgiPass(tokens[1]);
+		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG && tokens[1] != "on" && tokens[1] != "off")
+			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
+		loc.setPath(tokens[1]);
+	}
+	else
+		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
+}
+
+void ConfigParser::_locUploadEnableParser(size_t index, Location &loc)
+{
+	std::string _line = _fileLines[index];
+
+	_semicolonChecker(_line);
+
+	std::vector<std::string> tokens = _split(_line);
+	if (tokens.size() == 2)
+	{
+		if (tokens[0] != UPLOAD_LOC_ENABLE)
+			throw std::runtime_error(DID_YOU_MEAN + getStringType(UPLOAD_LOC_ENABLE) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
+		if (tokens[1] != "on" && tokens[1] != "off")
+			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
+
+		loc.setUploadEnabled((tokens[1] == "on"));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

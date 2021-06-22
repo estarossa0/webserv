@@ -24,7 +24,7 @@ location /po
 upload_enable off;
 return 301 _url;
 }
-location *.phpj
+location *.asm
 {
 fastcgi_pass /path/to/cgi/executable;
 }

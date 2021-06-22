@@ -144,8 +144,6 @@ void Response::deleteFile(std::string &path)
 		_status = ST_SERVER_ERROR;
 		throw Response::ServerError();
 	}
-	// else
-		// _body = "File Deleted";
 }
 
 void Response::readFile(std::string path)
@@ -168,7 +166,6 @@ void Response::readFile(std::string path)
 
 void Response::uploadFile()
 {
-	// check if file already exists = > should upload or not
 	try {
 		for (size_t i = 0; i < _request.getLenArguments(); i++)
 		{
@@ -182,7 +179,6 @@ void Response::uploadFile()
 				file.close();
 			}
 		}
-		// _body = "File Uploaded";
 	} catch (std::exception &e)
 	{
 		log "Exception at uploadFile: " << e.what() line;
@@ -353,8 +349,7 @@ void Response::makeBody()
 			_status = ST_METHOD_NOT_ALLOWED;
 			throw Response::MethodNotAllowed();
 		}
-		
-		if (!_location.isCGI())
+		if (_location.isCGI())
 		{
 			parseCgiResponse("/tmp1.txt");
 		}
@@ -404,7 +399,7 @@ std::string Response::getResponseContentType()
 	if (_ctype.length())
 		return _ctype;
 	if (isSuffix( ".html",_request.getUri()) || _location.getAutoIndex() || _status != ST_OK)
-		return "text/html";
+		return "text/html; charset=UTF-8";
 	else if (isSuffix( ".css",_request.getUri()))
 		return "text/css";
 	else if (isSuffix( ".json",_request.getUri()))

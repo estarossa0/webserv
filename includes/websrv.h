@@ -42,7 +42,7 @@
 #define ST_BAD_GATEWAY 502
 
 #ifndef DEBUG
-# define DEBUG 1
+# define DEBUG 0
 #endif
 
 static void		hookPollIn(Webserv &, size_t);

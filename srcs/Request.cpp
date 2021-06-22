@@ -56,29 +56,75 @@ Request::Argument Request::parseArgument(const std::string &content)
 	std::string buffer;
 	std::istringstream lines(content);
 	Argument arg = {};
+	bool isBody = false;
 
 	while (std::getline(lines, buffer))
 	{
+		if (buffer.find("\r") != std::string::npos)
+			buffer.pop_back();
 		if (buffer.find("Content-Disposition") != std::string::npos)
 			arg.disp = buffer.substr(buffer.find(":") + 2);
 		else if (buffer.find("Content-Type") != std::string::npos)
 			arg.ctype = buffer.substr(buffer.find(":") + 2);
-		else if (buffer.length() && buffer[0] != '\r')
+		else
 		{
-			if (arg.data.length())
+			if (isBody)
+			{
+				arg.data.append(buffer);
 				arg.data.append("\n");
-			arg.data = arg.data.append(buffer);
+			}
+			else
+				isBody = true;
 		}
 	}
+	arg.data.pop_back();
 	return arg;
+}
+
+int	getPostBodyLength(std::string data, std::string boundary)
+{
+	std::string buffer;
+	std::istringstream lines(data);
+	int len = 0;
+	bool body = false;
+
+	while (std::getline(lines, buffer))
+	{
+		if (!body && buffer.length() == 1)
+			body = true;
+		else if (body)
+		{
+			len += buffer.length() + 1;
+		}
+	}
+	if (!boundary.length())
+		len--;
+	log len line;
+	return len;
+}
+
+void Request::parseHeader(std::string &data)
+{
+	Request::Header header = {};
+
+	header.name = data.substr(0 , data.find(":"));
+	header.value = data.substr(data.find(":") + 2, data.length() - data.find(":") - 3);
+	_headers.push_back(header);
+}
+
+bool isBoundary(std::string s1, std::string s2)
+{
+	s2.pop_back();
+	if (s1.compare(s2) == 0)
+		return true;
+	return false;
 }
 
 void Request::appendToBody(std::string content)
 {
-	content.pop_back();
-	if (_boundary.length() && isSuffix(_boundary, content))
+	if (isBoundary(_boundary, content))
 	{
-		if (!_isArg)
+		if (!_isArg) 
 			_isArg = true;
 		else
 		{
@@ -97,37 +143,6 @@ void Request::appendToBody(std::string content)
 		_body.append(content).append("\n");
 }
 
-int	getPostBodyLength(std::string data, std::string boundary)
-{
-	std::string buffer;
-	std::istringstream lines(data);
-	int len = 0;
-	bool body = false;
-
-	while (std::getline(lines, buffer))
-	{
-		if (!body && buffer.length() == 1)
-			body = true;
-		else if (body)
-		{
-			if (buffer.length())
-				len += buffer.length() + 1;
-		}
-	}
-	if (!boundary.length())
-		len--;
-	return len;
-}
-
-void Request::parseHeader(std::string &data)
-{
-	Request::Header header = {};
-
-	header.name = data.substr(0 , data.find(":"));
-	header.value = data.substr(data.find(":") + 2, data.length() - data.find(":") - 3);
-	_headers.push_back(header);
-}
-
 void Request::parseRequest()
 {
 	// parse transfer encoding / chunked data
@@ -138,8 +153,6 @@ void Request::parseRequest()
 	while (std::getline(lines, buffer))
 	{
 		// log "current line: " << buffer line;
-		// if (buffer[0] == '\r')
-		// 	log "found it" line;
 		if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 		{
 			_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
@@ -192,7 +205,6 @@ void Request::parseRequest()
 		else
 			appendToBody(buffer);
 	}
-	
 	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary) && _clen != 0))
 		isDone = true;
 	if (isDone)
@@ -209,6 +221,9 @@ void Request::parseRequest()
 		if (!_host.length())
 			error = 1;
 		_error = error;
+		log "clen: " <<  _clen line;
+		if (_error)
+			log "ERROR in request" line;
 	}
 }
 
@@ -266,9 +281,9 @@ void Request::clear()
 	this->_args.clear();
 	this->_contype.clear();
 	this->_clen = 0;
-	_error = 0;
-	isDone = false;
-	_isArg = false;
+	this->_error = 0;
+	this->isDone = false;
+	this->_isArg = false;
 }
 
 const std::string &Request::getMethod() const

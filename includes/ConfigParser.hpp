@@ -38,7 +38,9 @@
 #define PHP_EXTENTION ".php"
 #define PYTHON_EXTENTION ".py"
 
+#ifndef GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
 #define GHANDIRO_LPATH_DYAL_CGI_FLCONFIG true
+#endif // !GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
 
 // error messages
 #define ERROR_FILE "Could not open configuration file"

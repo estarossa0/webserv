@@ -362,7 +362,10 @@ int ConfigParser::_hostParser(size_t index, ServerData &sv)
 	{
 		if (tokens[0] != HOST_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(HOST_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		sv.setHost(tokens[1]);
+		if (tokens[1] == "localhost")
+			sv.setHost(LOCALHOST);
+		else
+			sv.setHost(tokens[1]);
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

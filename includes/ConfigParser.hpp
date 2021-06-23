@@ -42,6 +42,8 @@
 #define GHANDIRO_LPATH_DYAL_CGI_FLCONFIG false
 #endif // !GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
 
+#define LOCALHOST "127.0.0.1"
+
 // error messages
 #define ERROR_FILE "Could not open configuration file"
 #define ERROR_FILE_EXTENSION "Configuration file has not the correct extension [.conf]"

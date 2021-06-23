@@ -6,7 +6,7 @@
 #    By: obouykou <obouykou@student.1337.ma>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/05/18 16:04:41 by arraji            #+#    #+#              #
-#    Updated: 2021/06/11 19:59:17 by obouykou         ###   ########.fr        #
+#    Updated: 2021/06/23 11:00:05 by obouykou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,7 +40,7 @@ SRC_FILES = main.cpp \
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)
 OBJECT_FILES := $(addprefix $(OBJECT_FOLDER)/, $(OBJECT_FILES))
 
-.PHONY = all clean fclean re credit
+# .PHONY = all clean fclean re credit
 
 all: $(NAME)
 

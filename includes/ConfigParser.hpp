@@ -39,7 +39,7 @@
 #define PYTHON_EXTENTION ".py"
 
 #ifndef GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
-#define GHANDIRO_LPATH_DYAL_CGI_FLCONFIG true
+#define GHANDIRO_LPATH_DYAL_CGI_FLCONFIG false
 #endif // !GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
 
 // error messages
@@ -51,7 +51,7 @@
 #define ERROR_BRACE_NOT_ALONE "The line which contains a curly brace must not contain something else.\nError in this line -> "
 #define ERROR_DEFINE_SERVER_INSIDE_SERVER "You can't define a server inside another server"
 #define ERROR_EMPTY_SERVER_CONFIGURATION "A server must not have an empty configuration"
-#define ERROR_INVALID_CONFIGURATION "This configuration file is invalid: ERROR in this line -> "
+#define ERROR_INVALID_CONFIGURATION "This configuration file is invalid.\nERROR in this line -> "
 #define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
 #define ERROR_MISSING_NECESSARY_ELEMENT "Make sure that all servers in file configuration contains at least these 4 elements: [port, host, name, root]"
 #define ERROR_MISSING_SEMICOLON "Missing a semicolon in this line: "

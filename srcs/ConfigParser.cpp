@@ -150,6 +150,8 @@ void ConfigParser::_getFileContent()
 
 std::string const &ConfigParser::_removeDuplicateChar(std::string &str, char const c)
 {
+	if (str.front() != '/' && str.front() != '*')
+		throw std::runtime_error("Invalid path: " + str + "\nMake sure you start the path with / ");
 	size_t i = 1;
 
 	while (i < str.size())
@@ -701,7 +703,10 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
 		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
 			loc.setIsCGI(tokens[1] == "on");
-		loc.setPath(tokens[1]);
+		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
+			loc.setFastCgiPass(tokens[1]);
+		else
+			loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

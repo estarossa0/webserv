@@ -81,26 +81,14 @@ Request::Argument Request::parseArgument(const std::string &content)
 	return arg;
 }
 
-int	getPostBodyLength(std::string data, std::string boundary)
+int	getPostBodyLength(std::string data)
 {
-	std::string buffer;
-	std::istringstream lines(data);
 	int len = 0;
-	bool body = false;
 
-	while (std::getline(lines, buffer))
-	{
-		if (!body && buffer.length() == 1)
-			body = true;
-		else if (body)
-		{
-			len += buffer.length() + 1;
-		}
-	}
-	if (!boundary.length())
-		len--;
-	// log len line;
-	return len;
+	size_t i = data.find("\r\n\r\n");
+	len = std::stoi(data.substr(data.find("Content-Length: ") + 16));
+	std::string tmp = data.substr(i + 4);
+	return tmp.length();
 }
 
 void Request::parseHeader(std::string &data)
@@ -205,8 +193,9 @@ void Request::parseRequest()
 		else
 			appendToBody(buffer);
 	}
-	if (!_boundary.length() || (_clen && _clen == getPostBodyLength(_data, _boundary) && _clen != 0))
+	if (checkDataDone())
 		isDone = true;
+
 	if (isDone)
 	{
 		int error = 0;
@@ -216,14 +205,13 @@ void Request::parseRequest()
 			error = 1;
 		if (!_uri.length() || _uri[0] != '/')
 			error = 1;
-		if (_method.compare("POST") == 0 && _clen && getPostBodyLength(_data, _boundary) != _clen)
+		if (_method.compare("POST") == 0 && _clen && getPostBodyLength(_data) != _clen)
 			error = 1;
 		if (!_host.length())
 			error = 1;
 		_error = error;
-		log "clen: " <<  _clen line;
-		if (_error)
-			log "ERROR in request" line;
+		// if (_error)
+			// log "ERROR in request" line;
 	}
 }
 
@@ -234,18 +222,12 @@ bool Request::checkDataDone()
 	bool _isDone = false;
 	int len = 1;
 
-	while (std::getline(lines, buffer) && !_isDone)
+	size_t i = _data.find("\r\n\r\n");
+	if (i != std::string::npos)
 	{
-		if (buffer[0] == 4) // EOT
-		{
-			setConnectionType("close");
-			isDone = true;
-			len--;
-		} else if (buffer.find("Content-Length:") != std::string::npos)
-			len = 2;
-		if (buffer[0] == '\r')
-			len--;
-		if (len == 0)
+		len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
+		std::string tmp = _data.substr(i + 4);
+		if (tmp.length() == len)
 			_isDone = true;
 	}
 	return _isDone;
@@ -274,12 +256,15 @@ void Request::clear()
 	this->_data.clear();
 	this->_method.clear();
 	this->_uri.clear();
+	this->_protocol.clear();
+	this->_host.clear();
 	this->_body.clear();
 	this->_ctype.clear();
 	this->_disp.clear();
 	this->_boundary.clear();
 	this->_args.clear();
 	this->_contype.clear();
+	this->_headers.clear();
 	this->_clen = 0;
 	this->_error = 0;
 	this->isDone = false;
@@ -375,4 +360,9 @@ int Request::getRequestError()
 const std::string &Request::getProtocol() const
 {
 	return this->_protocol;
+}
+
+const std::string &Request::getHost() const
+{
+	return this->_host;
 }

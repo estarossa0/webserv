@@ -58,19 +58,19 @@ public:
 
 	const std::string &getMethod() const;
 	const std::string &getUri() const;
+	const std::string &getProtocol() const;
+	const std::string &getHost() const;
 	unsigned int getContentLen() const;
 	const std::string &getContentType() const;
 	const std::string &getBody() const;
 	const std::string &getBoundary() const;
 	const std::string &getDisposition() const;
 	const std::string &getData() const;
-	const std::string &getProtocol() const;
 	const std::string &getConnectionType() const;
 	void setConnectionType(std::string const &);
 	Connection	*getConnection();
 	ServerData	getServerData();
 	int getRequestError();
-
 
 	void setUri(std::string const &);
 

@@ -30,11 +30,11 @@ int				Connection::read()
 int				Connection::send()
 {
 	if (DEBUG)
-	this->_request.printRequest();
+		this->_request.printRequest();
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
 	if (DEBUG)
-	log this->_response.getResponse() line;
+		log this->_response.getResponse() line;
 	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
 }
 

@@ -99,7 +99,7 @@ int	getPostBodyLength(std::string data, std::string boundary)
 	}
 	if (!boundary.length())
 		len--;
-	log len line;
+	// log len line;
 	return len;
 }
 
@@ -370,4 +370,9 @@ void Request::setConnectionType(std::string const &contype)
 int Request::getRequestError()
 {
 	return this->_error;
+}
+
+const std::string &Request::getProtocol() const
+{
+	return this->_protocol;
 }

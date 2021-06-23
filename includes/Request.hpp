@@ -64,6 +64,7 @@ public:
 	const std::string &getBoundary() const;
 	const std::string &getDisposition() const;
 	const std::string &getData() const;
+	const std::string &getProtocol() const;
 	const std::string &getConnectionType() const;
 	void setConnectionType(std::string const &);
 	Connection	*getConnection();

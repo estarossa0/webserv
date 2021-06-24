@@ -32,6 +32,7 @@ private:
 	std::string _boundary;
 	std::string _disp;
 	std::string _contype;
+	std::string _cookies;
 	std::vector<Header> _headers;
 	std::vector<Argument> _args;
 	Connection *_connection;
@@ -67,6 +68,7 @@ public:
 	const std::string &getDisposition() const;
 	const std::string &getData() const;
 	const std::string &getConnectionType() const;
+	const std::string &getCookies() const;
 	void setConnectionType(std::string const &);
 	Connection	*getConnection();
 	ServerData	getServerData();

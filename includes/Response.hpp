@@ -13,6 +13,7 @@ private:
 	std::string _clen;
 	std::string _body;
 	std::string _resp;
+	std::string _cookies;
 	Request _request;
 	Connection *_connection;
 	Location _location;
@@ -33,7 +34,7 @@ private:
 	bool isDirectory(const std::string &s);
 	std::string getDefaultErrorPage(int status);
 	std::string getResponseContentType();
-
+	std::string getCookiesSetter();
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);

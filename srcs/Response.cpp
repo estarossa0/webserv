@@ -333,6 +333,7 @@ void Response::makeBody()
 	}
 	try
 	{
+		// _cookies = "abc=a; abe=e";
 		if (_request.getRequestError())
 		{
 			_status = ST_BAD_REQUEST;
@@ -439,6 +440,41 @@ void Response::parseCgiResponse(std::string file)
 		_status = ST_OK;
 }
 
+std::string Response::getCookiesSetter()
+{
+	std::string delimiter = ";";
+	std::string token;
+	std::string str;
+	std::string result;
+	
+	if (_request.getCookies().length())
+	{
+		str = _request.getCookies();
+		size_t pos = 0;
+		while ((pos = str.find(delimiter)) != std::string::npos) {
+			token = str.substr(0, pos);
+			result.append("Set-Cookie: ").append(token).append("\r\n");
+			str.erase(0, pos + delimiter.length() + 1);
+		}
+		if (str.length() && str.find("=") != std::string::npos)
+			result.append("Set-Cookie: ").append(str).append("\r\n");
+	}
+	if (this->_cookies.length())
+	{
+		str = this->_cookies;
+		size_t pos = 0;
+		while ((pos = str.find(delimiter)) != std::string::npos) {
+			token = str.substr(0, pos);
+			log token line;
+			result.append("Set-Cookie: ").append(token).append("\r\n");
+			str.erase(0, pos + delimiter.length() + 1);
+		}
+		if (str.length() && str.find("=") != std::string::npos)
+			result.append("Set-Cookie: ").append(str).append("\r\n");
+	}
+	return result;
+}
+
 void Response::makeResponse()
 {
 	makeBody();
@@ -456,6 +492,7 @@ void Response::makeResponse()
 	}
 	else
 	{
+		_resp.append(getCookiesSetter());
 		_resp.append("Server: Dial3bar\r\n");
 		_resp.append("Content-Type: ");
 		_resp.append(getResponseContentType());

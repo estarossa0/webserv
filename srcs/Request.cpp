@@ -169,6 +169,13 @@ void Request::parseRequest()
 			_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
 		else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
 			_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+		else if (buffer.find("Cookie:") != std::string::npos)
+		{
+			if (_cookies.length())
+				_cookies.append(";");
+			_cookies.append(buffer.substr(buffer.find(":") + 2));
+			_cookies.pop_back();
+		}
 		else if (!_clen)
 			parseHeader(buffer);
 		else if (_clen && !_boundary.length())
@@ -195,7 +202,6 @@ void Request::parseRequest()
 	}
 	if (checkDataDone())
 		isDone = true;
-
 	if (isDone)
 	{
 		int error = 0;
@@ -225,9 +231,14 @@ bool Request::checkDataDone()
 	size_t i = _data.find("\r\n\r\n");
 	if (i != std::string::npos)
 	{
-		len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
-		std::string tmp = _data.substr(i + 4);
-		if (tmp.length() == len)
+		if (_data.find("Content-Length:") != std::string::npos)
+		{
+			len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
+			std::string tmp = _data.substr(i + 4);
+			if (tmp.length() == len)
+				_isDone = true;
+		}
+		else
 			_isDone = true;
 	}
 	return _isDone;
@@ -252,7 +263,6 @@ void Request::printRequest()
 
 void Request::clear()
 {
-	// log "Clearing request" line;
 	this->_data.clear();
 	this->_method.clear();
 	this->_uri.clear();
@@ -265,6 +275,7 @@ void Request::clear()
 	this->_args.clear();
 	this->_contype.clear();
 	this->_headers.clear();
+	this->_cookies.clear();
 	this->_clen = 0;
 	this->_error = 0;
 	this->isDone = false;
@@ -365,4 +376,9 @@ const std::string &Request::getProtocol() const
 const std::string &Request::getHost() const
 {
 	return this->_host;
+}
+
+const std::string &Request::getCookies() const
+{
+	return this->_cookies;
 }

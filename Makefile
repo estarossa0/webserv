@@ -35,6 +35,7 @@ SRC_FILES = main.cpp \
 			ConfigParser.cpp \
 			Location.cpp \
 			ServerData.cpp \
+			cgi.cpp \
 
 
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)

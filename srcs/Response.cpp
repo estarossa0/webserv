@@ -352,7 +352,8 @@ void Response::makeBody()
 		}
 		if (_location.isCGI())
 		{
-			parseCgiResponse("/tmp1.txt");
+			FILE *f = callCGI(_request);
+			// parseCgiResponse("/tmp1.txt");
 		}
 		else if (_location.isRedirection())
 			httpRedirection();
@@ -499,7 +500,7 @@ void Response::makeResponse()
 		_resp.append("\r\n");
 		_resp.append("Content-Length: ");
 		_resp.append(std::to_string(strlen(_body.c_str())));
-		_resp.append("\r\n\n");
+		_resp.append("\r\n\r\n");
 		_resp.append(_body);
 		_resp.append("\r\n");
 	}

@@ -36,6 +36,7 @@ private:
 	std::string getResponseContentType();
 	std::string getCookiesSetter();
 
+	FILE*		callCGI(Request &);
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);
 	std::string getPulicDirectory();

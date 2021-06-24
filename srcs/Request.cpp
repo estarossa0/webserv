@@ -145,6 +145,8 @@ void Request::parseRequest()
 		{
 			_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
 			_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
+			if (_uri.find("?") != std::string::npos)
+				_query = _uri.substr(_uri.find("?") + 1);
 			_protocol = buffer.substr(getSpaceIndex(buffer, 2));
 			_protocol.pop_back();
 		}
@@ -248,6 +250,7 @@ void Request::printRequest()
 {
 	log "method: " << _method << "|" line;
 	log "uri: " << _uri << "|" line;
+	log "query: " << _query << "|" line;
 	log "host: " << _host << "|" line;
 	log "protocol: " << _protocol << "|" line;
 	log "content length: " << _clen << "|" line;
@@ -266,6 +269,7 @@ void Request::clear()
 	this->_data.clear();
 	this->_method.clear();
 	this->_uri.clear();
+	this->_query.clear();
 	this->_protocol.clear();
 	this->_host.clear();
 	this->_body.clear();
@@ -381,4 +385,9 @@ const std::string &Request::getHost() const
 const std::string &Request::getCookies() const
 {
 	return this->_cookies;
+}
+
+const std::string &Request::getQuery() const
+{
+	return this->_query;
 }

@@ -24,6 +24,7 @@ private:
 	std::string _data;
 	std::string _method;
 	std::string _uri;
+	std::string _query;
 	std::string _host;
 	std::string _protocol;
 	unsigned int _clen;
@@ -59,6 +60,7 @@ public:
 
 	const std::string &getMethod() const;
 	const std::string &getUri() const;
+	const std::string &getQuery() const;
 	const std::string &getProtocol() const;
 	const std::string &getHost() const;
 	unsigned int getContentLen() const;

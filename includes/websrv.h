@@ -42,6 +42,8 @@
 #define ST_NOT_IMPLEMENTED 501
 #define ST_BAD_GATEWAY 502
 
+extern char **environ;
+
 #ifndef DEBUG
 # define DEBUG 1
 #endif

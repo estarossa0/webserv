@@ -27,6 +27,7 @@
 #define UPLOAD_LOC_STORE "upload_store"
 
 #define NUMBER_OF_SERVER_PRIMITIVES 7
+// #define NUMBER_OF_ONLY_ONE_PRIMITIVES 2
 #define NUMBER_OF_LOCATION_PRIMITIVES 8
 
 #define OPENNING_BRACE "{"
@@ -75,7 +76,6 @@
 #define IN_THIS_LINE " field in this line -> "
 #define ERROR_DUPLICATE_SERVER_NAME "Try to use a unique name for each server: duplicate name -> "
 #define ERROR_DUPLICATE_SERVER_HOST_AND_PORT "Two servers cannot have the same host and port, at least one must differ.\nduplicate host and port: "
-// #define ERROR_CGI_LOCATION_PATH "path of cgi location is invalid, error in this line-> "
 #define ERROR_INVALID_IDENTIFIER "Invalid identifier: in this line -> "
 #define CGI_NOT_SUPPORTED "Only these extensions are supported for CGI: [.php] and [.py]\nError in this line:[ location "
 
@@ -131,6 +131,7 @@ private:
 public:
 	ConfigParser(char const *inFilename);
 	std::vector<ServerData> const &getServers() const;
+	std::map<int, std::vector<ServerData> > const getPortsServerDataMap() const;
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];

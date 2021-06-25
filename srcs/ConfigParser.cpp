@@ -10,6 +10,11 @@ std::string const ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRIMITIVES]
 	LOCATION_OP,
 };
 
+// std::string const ConfigParser::only_one_identifiers[NUMBER_OF_NECESSARY_AND_UNIQ_PRIMITIVES] = {
+// 	HOST_OP,
+// 	ROOT_OP,
+// };
+
 std::string const ConfigParser::location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES] = {
 	LOC_ROOT,
 	LOC_AUTOINDEX,
@@ -73,14 +78,37 @@ std::vector<ServerData> const &ConfigParser::getServers() const
 	return this->_servers;
 }
 
+std::map<int, std::vector<ServerData> > const ConfigParser::getPortsServerDataMap() const
+{
+	std::map<int, std::vector<ServerData> > portsMap;
+	// take all servers ports and put them in a set to keep them unique
+	std::set<int> portsSet;
+	for (size_t i = 0; i < _servers.size(); i++)
+		portsSet.insert(_servers[i].getPorts().begin(), _servers[i].getPorts().end());
+	// insert all the unique ports into a portsMap as its keys
+	std::set<int>::iterator it = portsSet.begin();
+	for (size_t i = 0; it != portsSet.end(); ++it)
+		portsMap.insert(std::pair<int, std::vector<ServerData> >(*it, std::vector<ServerData>()));
+	// push the servers to the vector which is the value of the port (key) that the pushed server has
+	for (std::map<int, std::vector<ServerData> >::iterator it = portsMap.begin(); it != portsMap.end(); it++)
+	{
+		for (size_t i = 0; i < _servers.size(); i++)
+		{
+			if (_servers[i].doesHavePort(it->first))
+				portsMap[it->first].push_back(_servers[i]);
+		}
+	}
+	return portsMap;
+}
+
 void ConfigParser::addServer(ServerData const &sv)
 {
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
 		if (sv.getName() == _servers[i].getName())
 			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
-		if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
-			throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPort()));
+		// if (sv.getHost() == _servers[i].getHost() && sv.getPorts() == _servers[i].getPorts())
+		// 	throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPorts()));
 	}
 	_servers.push_back(sv);
 }
@@ -124,15 +152,16 @@ std::vector<std::string> ConfigParser::_split(std::string const &_line, char c)
 
 void ConfigParser::_getFileContent()
 {
-	std::vector<std::string> fileParts = _split(_filename, '.');
-	if (fileParts.back() != "conf")
-		throw std::invalid_argument(ERROR_FILE_EXTENSION);
-
 	std::ifstream inFile(_filename);
 	std::string buff;
 
 	if (!inFile.is_open())
 		throw std::invalid_argument(ERROR_FILE);
+
+	std::vector<std::string> fileParts = _split(_filename, '.');
+	if (fileParts.back() != "conf")
+		throw std::invalid_argument(ERROR_FILE_EXTENSION);
+
 	size_t hashPos;
 	while (std::getline(inFile, buff))
 	{
@@ -192,7 +221,6 @@ void ConfigParser::_indexServers()
 			if (--isBracesValid < 0)
 				throw std::runtime_error(ERROR_BRACES);
 		}
-
 		if (serverBraceOpen && isBracesValid == 0)
 		{
 			serverBraceOpen = false;
@@ -261,6 +289,7 @@ void ConfigParser::_parseContent()
 			{
 				if (primitives_openings[parserIndex] != ERROR_PAGE_OP &&
 					primitives_openings[parserIndex] != LOCATION_OP &&
+					primitives_openings[parserIndex] != PORT_OP &&
 					_checked_primitives[primitives_openings[parserIndex]])
 					throw std::runtime_error(ERROR_SERVER_DUPLICATE_FIELD + getStringType("[") + _fileLines[start] + "]");
 
@@ -341,9 +370,9 @@ int ConfigParser::_portParser(size_t index, ServerData &sv)
 	{
 		if (tokens[0] != PORT_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(PORT_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		if (!_isSet(tokens[1], &(std::isdigit)))
+		if (!_isSet(tokens[1], std::isdigit))
 			throw std::runtime_error(ERROR_PORT_NAN);
-		sv.setPort(std::atoi(tokens[1].c_str()));
+		sv.addPort(std::atoi(tokens[1].c_str()));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

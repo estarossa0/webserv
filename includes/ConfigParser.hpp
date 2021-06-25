@@ -1,7 +1,7 @@
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
-#include "websrv.h"
+#include "Webserv.hpp"
 
 // fields identifiers fields definitions
 

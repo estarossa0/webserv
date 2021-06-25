@@ -1,4 +1,4 @@
-#include "websrv.h"
+#include "Webserv.hpp"
 
 Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data), _index(index), _webserv(wb)
 {

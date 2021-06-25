@@ -1,7 +1,7 @@
 #ifndef SERVER_DATA_HPP
 #define SERVER_DATA_HPP
 
-#include "websrv.h"
+#include "Webserv.hpp"
 
 #define NUMBER_OF_NECESSARY_ELEMENTS 4
 

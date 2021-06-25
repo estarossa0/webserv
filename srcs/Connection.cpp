@@ -1,4 +1,4 @@
-#include "websrv.h"
+#include "Webserv.hpp"
 
 Connection::Connection(int fd, Server* sv, bool isserv, struct sockaddr_in	cl_addr) : _socketfd(fd), _server(sv), _is_Server(isserv), _request(this), _response(this), _addr(cl_addr)
 {};

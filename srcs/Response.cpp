@@ -1,4 +1,4 @@
-#include "websrv.h"
+#include "Webserv.hpp"
 
 Response::Response(Connection *connection) : _connection(connection)
 {

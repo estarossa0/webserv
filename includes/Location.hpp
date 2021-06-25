@@ -1,7 +1,7 @@
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 
-#include "websrv.h"
+#include "Webserv.hpp"
 
 class Location
 {

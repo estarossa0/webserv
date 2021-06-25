@@ -1,4 +1,4 @@
-#include "websrv.h"
+#include "Webserv.hpp"
 
 Webserv::Webserv() : _conSize(0)
 {}

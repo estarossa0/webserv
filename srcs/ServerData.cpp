@@ -1,4 +1,4 @@
-#include "websrv.h"
+#include "Webserv.hpp"
 
 ServerData::ServerData() : _name("default"),
 						   _client_body_size(2)

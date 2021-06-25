@@ -1,4 +1,4 @@
-#include "websrv.h"
+#include "Webserv.hpp"
 
 std::string const ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRIMITIVES] = {
 	PORT_OP,

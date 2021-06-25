@@ -5,7 +5,8 @@ Server::Server(int port, size_t index, Webserv *wb) : _index(index), _webserv(wb
 	int	opt(1);
 
 	this->_addr.sin_family = AF_INET;
-	this->_addr.sin_addr.s_addr = INADDR_ANY;
+	// this->_addr.sin_addr.s_addr = INADDR_ANY;
+	this->_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	this->_addr.sin_port = htons(port);
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)

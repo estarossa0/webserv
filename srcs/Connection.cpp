@@ -24,6 +24,7 @@ int				Connection::read()
 		if (retval < 1000)
 			break ;
 	}
+	log this->_request line;
 	return size;
 }
 

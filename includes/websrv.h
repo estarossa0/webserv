@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/poll.h>
 #include <fcntl.h>
-
+#include <arpa/inet.h>
 #include "Connection.hpp"
 #include "Server.hpp"
 

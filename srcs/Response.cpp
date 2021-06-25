@@ -428,6 +428,12 @@ void Response::parseCgiResponse(std::string file)
 			_status = std::stoi(buffer.substr(buffer.find(":") + 2, 3));
 		if (!_ctype.length() && buffer.find("Content-type") != std::string::npos)
 			_ctype = buffer.substr(buffer.find(":") + 2, buffer.find_first_of(";") - 14);
+		if (buffer.find("Set-Cookie: ") != std::string::npos)
+		{
+			if (_cookies.length())
+				_cookies.append("; ");
+			_cookies.append(buffer.substr(buffer.find(":") + 2));
+		}
 		else if (_ctype.length() != 0)
 		{
 			if (isBody)

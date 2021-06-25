@@ -212,7 +212,7 @@ void Request::parseRequest()
 	if (checkDataDone())
 		isDone = true;
 	// check errors for header empyy, . :
-	if (isDone)
+	if (isDone && !_error)
 	{
 		int error = 0;
 		if (_protocol.compare("HTTP/1.1") != 0)
@@ -239,7 +239,7 @@ void Request::parseRequest()
 
 bool is_hex_notation(std::string &s)
 {
-  return s.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
+	return s.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
 }
 
 std::string parseChunked(std::string &content)
@@ -259,10 +259,10 @@ std::string parseChunked(std::string &content)
 		}
 		else
 		{
+			if (!is_hex_notation(buffer))
+				throw std::invalid_argument("not received a hex value");
 			try
 			{
-				// if (!is_hex_notation(buffer))
-					// throw "Not a hex format!";
 				len = std::stoi(buffer);
 			}
 			catch (std::exception &e) {}

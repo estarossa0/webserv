@@ -191,6 +191,7 @@ void Request::parseRequest()
 		{
 			if (_isArg)
 			{
+				buffer.pop_back();
 				_body.append(buffer);
 				if (_body.length() == _clen)
 				{
@@ -252,20 +253,15 @@ std::string parseChunked(std::string &content)
 	while (std::getline(lines, buffer))
 	{
 		buffer.pop_back();
-		if (len)
-		{
+		if (len) {
 			data.append(buffer.substr(0, len));
 			len = 0;
-		}
-		else
-		{
+		} else {
 			if (!is_hex_notation(buffer))
 				throw std::invalid_argument("not received a hex value");
-			try
-			{
+			try {
 				len = std::stoi(buffer);
-			}
-			catch (std::exception &e) {}
+			} catch (std::exception &e) {}
 		}
 	}
 	return data;
@@ -290,8 +286,7 @@ bool Request::checkDataDone()
 		if (_data.find("Transfer-Encoding: chunked") != std::string::npos)
 		{
 			std::string tmp = _data.substr(i + 4);
-			if (tmp.find("0\r\n\r\n") != std::string::npos)
-			{
+			if (tmp.find("0\r\n\r\n") != std::string::npos) {
 				try {
 					chunked = parseChunked(tmp);
 					_data = _data.substr(0, i);
@@ -299,8 +294,13 @@ bool Request::checkDataDone()
 					_data.append("Content-Length: ").append(std::to_string(chunked.length())).append("\r\n\r\n");
 					_data.append(chunked).append("\r\n\r\n");
 				} catch (std::exception &e) {
+					if (DEBUG)
+						log "exception at checkDataDone: " << e.what() line;
 					_error = 1;
 				}
+				_isDone = true;
+			} else if (tmp[0] == '\r') {
+				_error = 1;
 				_isDone = true;
 			}
 		}

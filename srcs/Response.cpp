@@ -353,7 +353,8 @@ void Response::makeBody()
 		if (_location.isCGI())
 		{
 			FILE *f = callCGI(_request);
-			// parseCgiResponse("/tmp1.txt");
+			// parse location
+			parseCgiResponse(f);
 		}
 		else if (_location.isRedirection())
 			httpRedirection();
@@ -414,20 +415,29 @@ std::string Response::getResponseContentType()
 		return "text/plain";
 }
 
-void Response::parseCgiResponse(std::string file)
+void Response::parseCgiResponse(FILE *file)
 {
-	std::string filedir = getServerDirectory().append(file);
 	std::string buffer;
-	std::ifstream fileReader(filedir);
 	std::string body;
 	bool isBody = false;
-
+	int fd = fileno(file);
+	char lines[1024];
+	int r;
+	while ((r = read(fd, lines, sizeof(lines))) > 0)
+		lines[r] = '\0';
+	std::istringstream fileReader(lines);
 	while (getline(fileReader, buffer))
 	{
 		if (!_status && buffer.find("Status") != std::string::npos)
 			_status = std::stoi(buffer.substr(buffer.find(":") + 2, 3));
 		if (!_ctype.length() && buffer.find("Content-type") != std::string::npos)
 			_ctype = buffer.substr(buffer.find(":") + 2, buffer.find_first_of(";") - 14);
+		if (buffer.find("Set-Cookie: ") != std::string::npos)
+		{
+			if (_cookies.length())
+				_cookies.append("; ");
+			_cookies.append(buffer.substr(buffer.find(":") + 2));
+		}
 		else if (_ctype.length() != 0)
 		{
 			if (isBody)
@@ -439,6 +449,7 @@ void Response::parseCgiResponse(std::string file)
 	_body = body;
 	if (!_status)
 		_status = ST_OK;
+	
 }
 
 std::string Response::getCookiesSetter()

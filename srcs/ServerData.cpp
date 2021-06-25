@@ -20,7 +20,7 @@ ServerData const &ServerData::operator=(ServerData const &rhs)
 {
 	if (this != &rhs)
 	{
-		_port = rhs._port;
+		_ports = rhs._ports;
 		_host = rhs._host;
 		_name = rhs._name;
 		_client_body_size = rhs._client_body_size;
@@ -35,23 +35,39 @@ ServerData const &ServerData::operator=(ServerData const &rhs)
 	return *this;
 }
 
-
 ServerData::~ServerData()
 {
+	_ports.clear();
 	_error_pages.clear();
 	_locations.clear();
 }
 
-void ServerData::setPort(int const &p)
+void ServerData::addPort(int const &p)
 {
-	_port = p;
+	for (size_t i = 0; i < _ports.size(); i++)
+	{
+		if (_ports[i] == p)
+			throw std::invalid_argument("Error: duplicate port number [" + std::to_string(p) + "]");
+	}
+	_ports.push_back(p);
 	_necessary_elements[PORT_NECESSITY_NUMBER] = true;
 }
 
-int const &ServerData::getPort() const
+std::vector<int> const &ServerData::getPorts() const
 {
-	return _port;
+	return _ports;
 }
+
+bool const ServerData::doesHavePort(int const & port) const
+{
+	for (size_t i = 0; i < _ports.size(); i++)
+	{
+		if (_ports[i] == port)
+			return true;
+	}
+	return false;
+}
+
 
 void ServerData::setHost(std::string const &h)
 {
@@ -139,7 +155,13 @@ bool const ServerData::hasNecessaryElements() const
 std::ostream &operator<<(std::ostream &out, const ServerData &sv)
 {
 	out << "\n==================== ServerData ===================" << std::endl;
-	out << "port :[" << sv.getPort() << "]" << std::endl;
+	std::vector<int> ports = sv.getPorts();
+	out << "ports: ";
+	for (size_t i = 0; i < ports.size(); i++)
+	{
+		out << "[" << ports[i] << "]  ";
+	}
+	out << std::endl;
 	out << "host :[" << sv.getHost() << "]" << std::endl;
 	out << "name :[" << sv.getName() << "]" << std::endl;
 	out << "client body size: [" << sv.getClientBodySize() << "]" << std::endl;

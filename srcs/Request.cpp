@@ -204,6 +204,8 @@ void Request::parseRequest()
 	}
 	if (checkDataDone())
 		isDone = true;
+
+	// check errors for header empyy, . : 
 	if (isDone)
 	{
 		int error = 0;
@@ -231,8 +233,14 @@ bool Request::checkDataDone()
 	int len = 1;
 
 	size_t i = _data.find("\r\n\r\n");
+	if (_data.find(4) != std::string::npos)
+	{
+		setConnectionType("close");
+		_isDone = true;
+	}
 	if (i != std::string::npos)
 	{
+		
 		if (_data.find("Content-Length:") != std::string::npos)
 		{
 			len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));

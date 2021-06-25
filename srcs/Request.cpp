@@ -81,13 +81,18 @@ Request::Argument Request::parseArgument(const std::string &content)
 	return arg;
 }
 
-int	getPostBodyLength(std::string data)
+int getPostBodyLength(std::string data)
 {
 	int len = 0;
 
 	size_t i = data.find("\r\n\r\n");
-	len = std::stoi(data.substr(data.find("Content-Length: ") + 16));
+	try {
+		len = std::stoi(data.substr(data.find("Content-Length: ") + 16));
+	} catch (std::exception &e) {}
 	std::string tmp = data.substr(i + 4);
+	if (tmp.find("\r\n\r\n") != std::string::npos)
+		tmp = tmp.substr(0, tmp.length() - 4);
+	
 	return tmp.length();
 }
 
@@ -95,7 +100,7 @@ void Request::parseHeader(std::string &data)
 {
 	Request::Header header = {};
 
-	header.name = data.substr(0 , data.find(":"));
+	header.name = data.substr(0, data.find(":"));
 	header.value = data.substr(data.find(":") + 2, data.length() - data.find(":") - 3);
 	_headers.push_back(header);
 }
@@ -112,7 +117,7 @@ void Request::appendToBody(std::string content)
 {
 	if (isBoundary(_boundary, content))
 	{
-		if (!_isArg) 
+		if (!_isArg)
 			_isArg = true;
 		else
 		{
@@ -133,7 +138,6 @@ void Request::appendToBody(std::string content)
 
 void Request::parseRequest()
 {
-	// parse transfer encoding / chunked data
 	std::string buffer;
 	std::istringstream lines(_data);
 
@@ -146,7 +150,10 @@ void Request::parseRequest()
 			_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
 			_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
 			if (_uri.find("?") != std::string::npos)
+			{
 				_query = _uri.substr(_uri.find("?") + 1);
+				_uri = _uri.substr(0, _uri.find("?"));
+			}
 			_protocol = buffer.substr(getSpaceIndex(buffer, 2));
 			_protocol.pop_back();
 		}
@@ -184,6 +191,7 @@ void Request::parseRequest()
 		{
 			if (_isArg)
 			{
+				buffer.pop_back();
 				_body.append(buffer);
 				if (_body.length() == _clen)
 				{
@@ -204,9 +212,8 @@ void Request::parseRequest()
 	}
 	if (checkDataDone())
 		isDone = true;
-
-	// check errors for header empyy, . : 
-	if (isDone)
+	// check errors for header empyy, . :
+	if (isDone && !_error)
 	{
 		int error = 0;
 		if (_protocol.compare("HTTP/1.1") != 0)
@@ -215,14 +222,49 @@ void Request::parseRequest()
 			error = 1;
 		if (!_uri.length() || _uri[0] != '/')
 			error = 1;
-		if (_method.compare("POST") == 0 && _clen && getPostBodyLength(_data) != _clen)
-			error = 1;
+
+		if (_method.compare("POST") == 0)
+		{
+			if (_data.find("Content-Length:") == std::string::npos)
+				error = 1;
+			if (_clen && getPostBodyLength(_data) != _clen)
+				error = 1;
+		} 
 		if (!_host.length())
 			error = 1;
 		_error = error;
-		// if (_error)
-			// log "ERROR in request" line;
+		if (_error)
+			log "ERROR in request" line;
 	}
+}
+
+bool is_hex_notation(std::string &s)
+{
+	return s.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
+}
+
+std::string parseChunked(std::string &content)
+{
+	std::string data;
+	std::string buffer;
+	int len;
+
+	std::istringstream lines(content);
+	while (std::getline(lines, buffer))
+	{
+		buffer.pop_back();
+		if (len) {
+			data.append(buffer.substr(0, len));
+			len = 0;
+		} else {
+			if (!is_hex_notation(buffer))
+				throw std::invalid_argument("not received a hex value");
+			try {
+				len = std::stoi(buffer);
+			} catch (std::exception &e) {}
+		}
+	}
+	return data;
 }
 
 bool Request::checkDataDone()
@@ -230,6 +272,7 @@ bool Request::checkDataDone()
 	std::string buffer;
 	std::istringstream lines(_data);
 	bool _isDone = false;
+	std::string chunked;
 	int len = 1;
 
 	size_t i = _data.find("\r\n\r\n");
@@ -240,13 +283,39 @@ bool Request::checkDataDone()
 	}
 	if (i != std::string::npos)
 	{
-		
-		if (_data.find("Content-Length:") != std::string::npos)
+		if (_data.find("Transfer-Encoding: chunked") != std::string::npos)
 		{
-			len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
 			std::string tmp = _data.substr(i + 4);
-			if (tmp.length() == len)
+			if (tmp.find("0\r\n\r\n") != std::string::npos) {
+				try {
+					chunked = parseChunked(tmp);
+					_data = _data.substr(0, i);
+					_data.erase(_data.find("Transfer-Encoding"), 26);
+					_data.append("Content-Length: ").append(std::to_string(chunked.length())).append("\r\n\r\n");
+					_data.append(chunked).append("\r\n\r\n");
+				} catch (std::exception &e) {
+					if (DEBUG)
+						log "exception at checkDataDone: " << e.what() line;
+					_error = 1;
+				}
 				_isDone = true;
+			} else if (tmp[0] == '\r') {
+				_error = 1;
+				_isDone = true;
+			}
+		}
+		else if (_data.find("Content-Length:") != std::string::npos)
+		{
+			try {
+				len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
+				std::string tmp = _data.substr(i + 4);
+				if (tmp.find("\r\n\r\n") != std::string::npos)
+					tmp = tmp.substr(0, tmp.length() - 4);
+				if (tmp.length() == len)
+					_isDone = true;
+			} catch (std::exception &e)
+			{
+			}
 		}
 		else
 			_isDone = true;
@@ -268,7 +337,9 @@ void Request::printRequest()
 	log "connection type: " << _contype << "|" line;
 	log "arguments size: " << _args.size() << "|" line;
 	for (int i = 0; i < _args.size(); i++)
-		log "argument disposition: " << _args[i].disp << "| " << "content type: " << _args[i].ctype << "| " << "data: " << _args[i].data << "|" line;
+		log "argument disposition: " << _args[i].disp << "| "
+									 << "content type: " << _args[i].ctype << "| "
+									 << "data: " << _args[i].data << "|" line;
 	log "" line;
 }
 

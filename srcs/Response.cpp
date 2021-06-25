@@ -353,7 +353,8 @@ void Response::makeBody()
 		if (_location.isCGI())
 		{
 			FILE *f = callCGI(_request);
-			// parseCgiResponse("/tmp1.txt");
+			// parse location
+			parseCgiResponse(f);
 		}
 		else if (_location.isRedirection())
 			httpRedirection();
@@ -414,14 +415,17 @@ std::string Response::getResponseContentType()
 		return "text/plain";
 }
 
-void Response::parseCgiResponse(std::string file)
+void Response::parseCgiResponse(FILE *file)
 {
-	std::string filedir = getServerDirectory().append(file);
 	std::string buffer;
-	std::ifstream fileReader(filedir);
 	std::string body;
 	bool isBody = false;
-
+	int fd = fileno(file);
+	char lines[1024];
+	int r;
+	while ((r = read(fd, lines, sizeof(lines))) > 0)
+		lines[r] = '\0';
+	std::istringstream fileReader(lines);
 	while (getline(fileReader, buffer))
 	{
 		if (!_status && buffer.find("Status") != std::string::npos)
@@ -445,6 +449,7 @@ void Response::parseCgiResponse(std::string file)
 	_body = body;
 	if (!_status)
 		_status = ST_OK;
+	
 }
 
 std::string Response::getCookiesSetter()

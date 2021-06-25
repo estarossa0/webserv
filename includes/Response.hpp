@@ -53,7 +53,7 @@ public:
 	void makeResponse();
 	void setRequest(Request);
 	void clear();
-	void parseCgiResponse(std::string);
+	void parseCgiResponse(FILE *);
 
 	unsigned int getStatus() const;
 	const std::string &getName() const;

@@ -45,12 +45,12 @@ OBJECT_FILES := $(addprefix $(OBJECT_FOLDER)/, $(OBJECT_FILES))
 
 all: $(NAME)
 
-$(NAME): $(OBJECT_FILES) $(HEADER_FOLDER)/*.hpp $(HEADER_FOLDER)/*.h
+$(NAME): $(OBJECT_FILES)
 	@clang++ -g -I $(HEADER_FOLDER) $(OBJECT_FILES) $(LIBS) -o $@
 	@echo
 	@echo $(NAME)" created $(GREEN)successfully$(RESET)"
 
-$(OBJECT_FOLDER)/%.o: $(SRC_FOLDER)/%.cpp $(HEADER_FOLDER)/*.h
+$(OBJECT_FOLDER)/%.o: $(SRC_FOLDER)/%.cpp $(HEADER_FOLDER)/*.hpp
 	@(mkdir $(OBJECT_FOLDER) 2> /dev/null && echo "creating "$(OBJECT_FOLDER)" folder $(GREEN){OK}$(RESET)") || true
 	@clang++ $(FLAGS) -g -I $(HEADER_FOLDER) -o $@ -c $< && echo "creating" $< "object $(GREEN){OK}$(RESET)"
 

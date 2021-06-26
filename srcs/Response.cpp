@@ -333,7 +333,6 @@ void Response::makeBody()
 	}
 	try
 	{
-		// _cookies = "abc=a; abe=e";
 		if (_request.getRequestError())
 		{
 			_status = ST_BAD_REQUEST;
@@ -432,6 +431,11 @@ void Response::parseCgiResponse(FILE *file)
 			_status = std::stoi(buffer.substr(buffer.find(":") + 2, 3));
 		if (!_ctype.length() && buffer.find("Content-type") != std::string::npos)
 			_ctype = buffer.substr(buffer.find(":") + 2, buffer.find_first_of(";") - 14);
+		if (buffer.find("Location") != std::string::npos)
+		{
+			// body.append("Location: ").append(buffer.substr(buffer.find(":") + 2));
+			// body.pop_back();
+		}
 		if (buffer.find("Set-Cookie: ") != std::string::npos)
 		{
 			if (_cookies.length())
@@ -449,7 +453,6 @@ void Response::parseCgiResponse(FILE *file)
 	_body = body;
 	if (!_status)
 		_status = ST_OK;
-	
 }
 
 std::string Response::getCookiesSetter()
@@ -459,25 +462,13 @@ std::string Response::getCookiesSetter()
 	std::string str;
 	std::string result;
 	
-	if (_request.getCookies().length())
-	{
-		str = _request.getCookies();
-		size_t pos = 0;
-		while ((pos = str.find(delimiter)) != std::string::npos) {
-			token = str.substr(0, pos);
-			result.append("Set-Cookie: ").append(token).append("\r\n");
-			str.erase(0, pos + delimiter.length() + 1);
-		}
-		if (str.length() && str.find("=") != std::string::npos)
-			result.append("Set-Cookie: ").append(str).append("\r\n");
-	}
 	if (this->_cookies.length())
 	{
 		str = this->_cookies;
 		size_t pos = 0;
 		while ((pos = str.find(delimiter)) != std::string::npos) {
 			token = str.substr(0, pos);
-			log token line;
+			// log token line;
 			result.append("Set-Cookie: ").append(token).append("\r\n");
 			str.erase(0, pos + delimiter.length() + 1);
 		}

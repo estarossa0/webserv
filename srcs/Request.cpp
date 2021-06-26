@@ -100,6 +100,8 @@ void Request::parseHeader(std::string &data)
 {
 	Request::Header header = {};
 
+	if (data.find(":") == std::string::npos)
+		throw std::invalid_argument("invalid header");
 	header.name = data.substr(0, data.find(":"));
 	header.value = data.substr(data.find(":") + 2, data.length() - data.find(":") - 3);
 	_headers.push_back(header);
@@ -142,77 +144,103 @@ void Request::parseRequest()
 	std::istringstream lines(_data);
 
 	isDone = false;
-	while (std::getline(lines, buffer))
-	{
-		// log "current line: " << buffer line;
-		if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
+	try {
+		while (std::getline(lines, buffer))
 		{
-			_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
-			_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
-			if (_uri.find("?") != std::string::npos)
+			// log "current line: " << buffer line;
+			if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 			{
-				_query = _uri.substr(_uri.find("?") + 1);
-				_uri = _uri.substr(0, _uri.find("?"));
-			}
-			_protocol = buffer.substr(getSpaceIndex(buffer, 2));
-			_protocol.pop_back();
-		}
-		else if (!_host.length() && buffer.find("Host") != std::string::npos)
-		{
-			_host = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
-		}
-		else if (!_boundary.length() && buffer.find("Content-Type") != std::string::npos)
-		{
-			if (buffer.find("boundary=") != std::string::npos)
-			{
-				_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
-				_boundary = _boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
-				_boundary.pop_back();
-			}
-			else
-				_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.length() - buffer.find_first_of(":") - 3);
-		}
-		else if (!_clen && !_disp.length() && buffer.find("Content-Disposition") != std::string::npos)
-			_disp = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
-		else if (!_clen && buffer.find("Content-Length") != std::string::npos)
-			_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
-		else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
-			_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
-		else if (buffer.find("Cookie:") != std::string::npos)
-		{
-			if (_cookies.length())
-				_cookies.append(";");
-			_cookies.append(buffer.substr(buffer.find(":") + 2));
-			_cookies.pop_back();
-		}
-		else if (!_clen)
-			parseHeader(buffer);
-		else if (_clen && !_boundary.length())
-		{
-			if (_isArg)
-			{
-				buffer.pop_back();
-				_body.append(buffer);
-				if (_body.length() == _clen)
+				_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
+				_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
+				if (_uri.find("?") != std::string::npos)
 				{
-					Request::Argument arg = {};
-					arg.data = _body;
-					_args.push_back(arg);
-					_body.clear();
-					_isArg = false;
+					_query = _uri.substr(_uri.find("?") + 1);
+					_uri = _uri.substr(0, _uri.find("?"));
+				}
+				_protocol = buffer.substr(getSpaceIndex(buffer, 2));
+				_protocol.pop_back();
+			}
+			else if (!_host.length() && buffer.find("Host") != std::string::npos)
+			{
+				if (buffer.find("Host: ") == std::string::npos)
+					throw std::invalid_argument("invalid header");
+				_host = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+				if (_host.find(":") != std::string::npos) {
+					_host = _host.substr(0, _host.find(":"));
+				}
+			}
+			else if (!_boundary.length() && buffer.find("Content-Type") != std::string::npos)
+			{
+				if (buffer.find("Content-Type: ") == std::string::npos)
+					throw std::invalid_argument("invalid header");
+				if (buffer.find("boundary=") != std::string::npos)
+				{
+					_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
+					_boundary = _boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
+					_boundary.pop_back();
 				}
 				else
-					_body.append("\n");
+					_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.length() - buffer.find_first_of(":") - 3);
+			}
+			else if (!_clen && !_disp.length() && buffer.find("Content-Disposition") != std::string::npos)
+			{
+				if (buffer.find("Content-Disposition: ") == std::string::npos)
+					throw std::invalid_argument("invalid header");
+				_disp = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+			}
+			else if (!_clen && buffer.find("Content-Length") != std::string::npos)
+			{
+				if (buffer.find("Content-Length: ") == std::string::npos)
+					throw std::invalid_argument("invalid header");
+				_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
+			}
+			else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
+			{
+				if (buffer.find("Connection: ") == std::string::npos)
+					throw std::invalid_argument("invalid header");
+				_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
+			}
+			else if (buffer.find("Cookie") != std::string::npos)
+			{
+				if (buffer.find("Cookie: ") == std::string::npos)
+					throw std::invalid_argument("invalid header");
+				// if (_cookies.length())
+				// 	_cookies.append(";");
+				// _cookies.append(buffer.substr(buffer.find(":") + 2));
+				// _cookies.pop_back();
+				parseHeader(buffer);
+			}
+			else if (!_clen)
+				parseHeader(buffer);
+			else if (_clen && !_boundary.length())
+			{
+				if (_isArg)
+				{
+					buffer.pop_back();
+					_body.append(buffer);
+					if (_body.length() == _clen)
+					{
+						Request::Argument arg = {};
+						arg.data = _body;
+						_args.push_back(arg);
+						_body.clear();
+						_isArg = false;
+					}
+					else
+						_body.append("\n");
+				}
+				else
+					_isArg = true;
 			}
 			else
-				_isArg = true;
+				appendToBody(buffer);
 		}
-		else
-			appendToBody(buffer);
+		if (checkDataDone())
+			isDone = true;
+	} catch (std::exception &e)
+	{
+		_error = 1;
 	}
-	if (checkDataDone())
-		isDone = true;
-	// check errors for header empyy, . :
 	if (isDone && !_error)
 	{
 		int error = 0;
@@ -222,19 +250,21 @@ void Request::parseRequest()
 			error = 1;
 		if (!_uri.length() || _uri[0] != '/')
 			error = 1;
-
 		if (_method.compare("POST") == 0)
 		{
 			if (_data.find("Content-Length:") == std::string::npos)
 				error = 1;
 			if (_clen && getPostBodyLength(_data) != _clen)
 				error = 1;
-		} 
+		} else if (_method.compare("DELETE") == 0) {
+			if (_data.find("Content-Length:") != std::string::npos && _clen && getPostBodyLength(_data) != _clen)
+				error = 1;
+		}
 		if (!_host.length())
 			error = 1;
 		_error = error;
-		if (_error)
-			log "ERROR in request" line;
+		// if (_error)
+			// log "ERROR in request" line;
 	}
 }
 
@@ -358,7 +388,6 @@ void Request::clear()
 	this->_args.clear();
 	this->_contype.clear();
 	this->_headers.clear();
-	this->_cookies.clear();
 	this->_clen = 0;
 	this->_error = 0;
 	this->isDone = false;
@@ -459,11 +488,6 @@ const std::string &Request::getProtocol() const
 const std::string &Request::getHost() const
 {
 	return this->_host;
-}
-
-const std::string &Request::getCookies() const
-{
-	return this->_cookies;
 }
 
 const std::string &Request::getQuery() const

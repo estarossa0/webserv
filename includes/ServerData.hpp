@@ -14,6 +14,7 @@ class ServerData
 {
 private:
 	std::vector<int> _ports;
+	int _port;
 	std::string _host;
 	std::string _name;
 	int _client_body_size;
@@ -28,6 +29,9 @@ public:
 	ServerData(ServerData const &);
 	ServerData const &operator=(ServerData const &);
 	~ServerData();
+
+	void setPort(int const &);
+	int const &getPort() const;
 
 	void addPort(int const &);
 	std::vector<int> const &getPorts() const;

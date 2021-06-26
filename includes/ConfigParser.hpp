@@ -27,7 +27,6 @@
 #define UPLOAD_LOC_STORE "upload_store"
 
 #define NUMBER_OF_SERVER_PRIMITIVES 7
-// #define NUMBER_OF_ONLY_ONE_PRIMITIVES 2
 #define NUMBER_OF_LOCATION_PRIMITIVES 8
 
 #define OPENNING_BRACE "{"
@@ -130,7 +129,7 @@ private:
 
 public:
 	ConfigParser(char const *inFilename);
-	std::vector<ServerData> const &getServers() const;
+	std::vector<ServerData> getServers() const;
 	std::map<int, std::vector<ServerData> > const getPortsServerDataMap() const;
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];

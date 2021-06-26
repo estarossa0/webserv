@@ -20,6 +20,7 @@ ServerData const &ServerData::operator=(ServerData const &rhs)
 {
 	if (this != &rhs)
 	{
+		_port = rhs._port;
 		_ports = rhs._ports;
 		_host = rhs._host;
 		_name = rhs._name;
@@ -40,6 +41,16 @@ ServerData::~ServerData()
 	_ports.clear();
 	_error_pages.clear();
 	_locations.clear();
+}
+
+void ServerData::setPort(int const &port)
+{
+	_port = port;
+}
+
+int const &ServerData::getPort() const
+{
+	return _port;
 }
 
 void ServerData::addPort(int const &p)
@@ -155,8 +166,9 @@ bool const ServerData::hasNecessaryElements() const
 std::ostream &operator<<(std::ostream &out, const ServerData &sv)
 {
 	out << "\n==================== ServerData ===================" << std::endl;
+	out << "server port: [" << sv.getPort() << "]" << std::endl;
 	std::vector<int> ports = sv.getPorts();
-	out << "ports: ";
+	out << "all ports: ";
 	for (size_t i = 0; i < ports.size(); i++)
 	{
 		out << "[" << ports[i] << "]  ";

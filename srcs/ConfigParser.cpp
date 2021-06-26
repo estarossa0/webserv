@@ -10,11 +10,6 @@ std::string const ConfigParser::primitives_openings[NUMBER_OF_SERVER_PRIMITIVES]
 	LOCATION_OP,
 };
 
-// std::string const ConfigParser::only_one_identifiers[NUMBER_OF_NECESSARY_AND_UNIQ_PRIMITIVES] = {
-// 	HOST_OP,
-// 	ROOT_OP,
-// };
-
 std::string const ConfigParser::location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES] = {
 	LOC_ROOT,
 	LOC_AUTOINDEX,
@@ -54,7 +49,6 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 
 	_parseContent();
 	output << "content has been parsed successfully" << std::endl;
-	// std::cout << "content has been parsed successfully" << std::endl;
 
 	output << "======================== SERVERS PARSING ==========================" << std::endl;
 
@@ -73,9 +67,21 @@ ConfigParser::~ConfigParser()
 	_checked_location_primitives.clear();
 }
 
-std::vector<ServerData> const &ConfigParser::getServers() const
+std::vector<ServerData> ConfigParser::getServers() const
 {
-	return this->_servers;
+	std::vector<ServerData> splitedServers;
+
+	for (size_t i = 0; i < _servers.size(); i++)
+	{
+		std::vector<int> ports = _servers[i].getPorts();
+		for (size_t j = 0; j < ports.size(); j++)
+		{
+			ServerData server = _servers[i];
+			server.setPort(ports[j]);
+			splitedServers.push_back(server);
+		}
+	}
+	return splitedServers;
 }
 
 std::map<int, std::vector<ServerData> > const ConfigParser::getPortsServerDataMap() const
@@ -107,7 +113,7 @@ void ConfigParser::addServer(ServerData const &sv)
 	{
 		if (sv.getName() == _servers[i].getName())
 			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
-		// if (sv.getHost() == _servers[i].getHost() && sv.getPorts() == _servers[i].getPorts())
+		// if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
 		// 	throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPorts()));
 	}
 	_servers.push_back(sv);

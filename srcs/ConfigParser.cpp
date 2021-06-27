@@ -84,29 +84,6 @@ std::vector<ServerData> ConfigParser::getServers() const
 	return splitedServers;
 }
 
-std::map<int, std::vector<ServerData> > const ConfigParser::getPortsServerDataMap() const
-{
-	std::map<int, std::vector<ServerData> > portsMap;
-	// take all servers ports and put them in a set to keep them unique
-	std::set<int> portsSet;
-	for (size_t i = 0; i < _servers.size(); i++)
-		portsSet.insert(_servers[i].getPorts().begin(), _servers[i].getPorts().end());
-	// insert all the unique ports into a portsMap as its keys
-	std::set<int>::iterator it = portsSet.begin();
-	for (size_t i = 0; it != portsSet.end(); ++it)
-		portsMap.insert(std::pair<int, std::vector<ServerData> >(*it, std::vector<ServerData>()));
-	// push the servers to the vector which is the value of the port (key) that the pushed server has
-	for (std::map<int, std::vector<ServerData> >::iterator it = portsMap.begin(); it != portsMap.end(); it++)
-	{
-		for (size_t i = 0; i < _servers.size(); i++)
-		{
-			if (_servers[i].doesHavePort(it->first))
-				portsMap[it->first].push_back(_servers[i]);
-		}
-	}
-	return portsMap;
-}
-
 void ConfigParser::addServer(ServerData const &sv)
 {
 	_servers.push_back(sv);

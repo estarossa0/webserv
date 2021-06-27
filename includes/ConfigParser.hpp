@@ -126,7 +126,6 @@ private:
 public:
 	ConfigParser(char const *inFilename);
 	std::vector<ServerData> getServers() const;
-	std::map<int, std::vector<ServerData> > const getPortsServerDataMap() const;
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];

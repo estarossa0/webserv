@@ -84,38 +84,8 @@ std::vector<ServerData> ConfigParser::getServers() const
 	return splitedServers;
 }
 
-std::map<int, std::vector<ServerData> > const ConfigParser::getPortsServerDataMap() const
-{
-	std::map<int, std::vector<ServerData> > portsMap;
-	// take all servers ports and put them in a set to keep them unique
-	std::set<int> portsSet;
-	for (size_t i = 0; i < _servers.size(); i++)
-		portsSet.insert(_servers[i].getPorts().begin(), _servers[i].getPorts().end());
-	// insert all the unique ports into a portsMap as its keys
-	std::set<int>::iterator it = portsSet.begin();
-	for (size_t i = 0; it != portsSet.end(); ++it)
-		portsMap.insert(std::pair<int, std::vector<ServerData> >(*it, std::vector<ServerData>()));
-	// push the servers to the vector which is the value of the port (key) that the pushed server has
-	for (std::map<int, std::vector<ServerData> >::iterator it = portsMap.begin(); it != portsMap.end(); it++)
-	{
-		for (size_t i = 0; i < _servers.size(); i++)
-		{
-			if (_servers[i].doesHavePort(it->first))
-				portsMap[it->first].push_back(_servers[i]);
-		}
-	}
-	return portsMap;
-}
-
 void ConfigParser::addServer(ServerData const &sv)
 {
-	for (size_t i = 0; i < _servers.size(); i++)
-	{
-		if (sv.getName() == _servers[i].getName())
-			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
-		// if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
-		// 	throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPorts()));
-	}
 	_servers.push_back(sv);
 }
 
@@ -415,11 +385,12 @@ int ConfigParser::_serverNameParser(size_t index, ServerData &sv)
 	_semicolonChecker(_line);
 
 	std::vector<std::string> tokens = _split(_line);
-	if (tokens.size() == 2)
+	if (tokens.size() >= 2)
 	{
 		if (tokens[0] != SERVER_NAME_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(SERVER_NAME_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		sv.setName(tokens[1]);
+		tokens.erase(tokens.begin());
+		sv.setNames(tokens);
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

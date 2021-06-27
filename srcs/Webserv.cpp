@@ -115,8 +115,20 @@ void	Webserv::hook()
 
 void	Webserv::init(std::vector<ServerData> const &svsdata)
 {
+	std::vector<int> ports;
+
 	for (size_t index = 0; index < svsdata.size(); index++)
 	{
+		for (size_t j = 0; j < ports.size(); j++)
+		{
+			if (svsdata[index].getPort() == ports[j])
+			{
+				this->_servers[j].addData(svsdata[index]);
+				goto MAINLOOP;
+			}
+		}
 		this->addServer(svsdata[index]);
+		ports.push_back(svsdata[index].getPort());
+		MAINLOOP: continue;
 	}
 }

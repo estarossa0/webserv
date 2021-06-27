@@ -737,14 +737,7 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 			throw std::runtime_error(CGI_NOT_SUPPORTED + loc.getPath() + " ]");
 		loc.setPath("." + insideTokens[1]);
 		loc.setIsCGI(true);
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG && tokens[1] != "on" && tokens[1] != "off")
-			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
-			loc.setIsCGI(tokens[1] == "on");
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
-			loc.setFastCgiPass(tokens[1]);
-		else
-			loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
+		loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

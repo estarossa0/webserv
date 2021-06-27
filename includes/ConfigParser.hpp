@@ -38,10 +38,6 @@
 #define PHP_EXTENTION ".php"
 #define PYTHON_EXTENTION ".py"
 
-#ifndef GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
-#define GHANDIRO_LPATH_DYAL_CGI_FLCONFIG false
-#endif // !GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
-
 #define LOCALHOST "127.0.0.1"
 
 // error messages

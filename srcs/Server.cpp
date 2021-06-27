@@ -1,6 +1,6 @@
 #include "Webserv.hpp"
 
-Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data), _index(index), _webserv(wb)
+Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index), _webserv(wb)
 {
 	int	opt(1);
 	struct sockaddr_in	addr;
@@ -32,6 +32,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _data(data),
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
+	this->addData(data);
 	this->_connections.push_back(Connection(this->_socketfd, this, true, addr));
 	this->_webserv->_pollArray.push_back((struct pollfd){this->_socketfd, POLLIN, 0});
 }
@@ -97,7 +98,12 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-ServerData	Server::getData()
+std::vector<ServerData const>	Server::getData() const
 {
 	return this->_data;
+}
+
+void		Server::addData(ServerData const &data)
+{
+	this->_data.push_back(data);
 }

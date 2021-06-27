@@ -11,7 +11,7 @@ class	Server
 	std::vector<Connection>		_connections;
 	size_t						_index;
 	Webserv						*_webserv;
-	ServerData const			&_data;
+	std::vector<ServerData const>	_data;
 
 public:
 	Server(ServerData const &, size_t, Webserv *);
@@ -25,5 +25,6 @@ public:
 	operator		int();
 	size_t			size();
 
-	ServerData		getData();
+	std::vector<ServerData const>	getData() const;
+	void			addData(ServerData const &data);
 };

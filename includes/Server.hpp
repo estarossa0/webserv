@@ -25,6 +25,6 @@ public:
 	operator		int();
 	size_t			size();
 
-	std::vector<ServerData const>	getData() const;
+	std::vector<ServerData const> const &	getData() const;
 	void			addData(ServerData const &data);
 };

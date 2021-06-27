@@ -98,7 +98,7 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-std::vector<ServerData const>	Server::getData() const
+std::vector<ServerData const>const &	Server::getData() const
 {
 	return this->_data;
 }

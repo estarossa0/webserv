@@ -1,8 +1,6 @@
 #include "Webserv.hpp"
 
-ServerData::ServerData() : _name("default"),
-						   _client_body_size(2)
-
+ServerData::ServerData() : _client_body_size(2)
 {
 	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
 	{
@@ -23,7 +21,7 @@ ServerData const &ServerData::operator=(ServerData const &rhs)
 		_port = rhs._port;
 		_ports = rhs._ports;
 		_host = rhs._host;
-		_name = rhs._name;
+		_names = rhs._names;
 		_client_body_size = rhs._client_body_size;
 		_error_pages = rhs._error_pages;
 		_root_dir = rhs._root_dir;
@@ -91,15 +89,21 @@ std::string const &ServerData::getHost() const
 	return _host;
 }
 
-void ServerData::setName(std::string const &n)
+void ServerData::setNames(std::vector<std::string> const &names)
 {
-	_name = n;
-	_necessary_elements[NAME_NECESSITY_NUMBER] = true;
+	std::set<std::string> namesSet;
+	for (size_t i = 0; i < names.size();)
+	{
+		namesSet.insert(names[i++]);
+		if (namesSet.size() != i)
+			throw std::runtime_error("Error: duplicate server name [ " + names[i - 1] + " ]");
+	}
+	_names = names;
 }
 
-std::string const &ServerData::getName() const
+std::vector<std::string> const &ServerData::getNames() const
 {
-	return _name;
+	return _names;
 }
 
 void ServerData::setClientBodySize(int const &cbz)
@@ -175,7 +179,13 @@ std::ostream &operator<<(std::ostream &out, const ServerData &sv)
 	}
 	out << std::endl;
 	out << "host :[" << sv.getHost() << "]" << std::endl;
-	out << "name :[" << sv.getName() << "]" << std::endl;
+	std::vector<std::string> names = sv.getNames();
+	out << "names: ";
+	for (size_t i = 0; i < names.size(); i++)
+	{
+		out << "[ " << names[i] << " ]  ";
+	}
+	out << std::endl;
 	out << "client body size: [" << sv.getClientBodySize() << "]" << std::endl;
 	std::map<int, std::string> map(sv.getErrorPageMap());
 	for (std::map<int, std::string>::iterator it = map.begin(); it != map.end(); it++)

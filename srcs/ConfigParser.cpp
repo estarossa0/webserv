@@ -109,13 +109,6 @@ std::map<int, std::vector<ServerData> > const ConfigParser::getPortsServerDataMa
 
 void ConfigParser::addServer(ServerData const &sv)
 {
-	for (size_t i = 0; i < _servers.size(); i++)
-	{
-		if (sv.getName() == _servers[i].getName())
-			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
-		// if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
-		// 	throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPorts()));
-	}
 	_servers.push_back(sv);
 }
 
@@ -415,11 +408,12 @@ int ConfigParser::_serverNameParser(size_t index, ServerData &sv)
 	_semicolonChecker(_line);
 
 	std::vector<std::string> tokens = _split(_line);
-	if (tokens.size() == 2)
+	if (tokens.size() >= 2)
 	{
 		if (tokens[0] != SERVER_NAME_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(SERVER_NAME_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		sv.setName(tokens[1]);
+		tokens.erase(tokens.begin());
+		sv.setNames(tokens);
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
@@ -737,14 +731,7 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 			throw std::runtime_error(CGI_NOT_SUPPORTED + loc.getPath() + " ]");
 		loc.setPath("." + insideTokens[1]);
 		loc.setIsCGI(true);
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG && tokens[1] != "on" && tokens[1] != "off")
-			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
-			loc.setIsCGI(tokens[1] == "on");
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
-			loc.setFastCgiPass(tokens[1]);
-		else
-			loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
+		loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

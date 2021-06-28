@@ -133,6 +133,8 @@ std::string Response::getCodeStatus()
 		return "Internal Server Error\r\n";
 	else if (this->_status == ST_NOT_IMPLEMENTED)
 		return "Not Implemented\r\n";
+	else if (this->_status == ST_PAYLOAD_LARGE)
+		return "Payload Too Large\r\n";
 	return "";
 }
 

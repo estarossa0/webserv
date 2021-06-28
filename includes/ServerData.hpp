@@ -26,7 +26,7 @@ private:
 public:
 	ServerData();
 	ServerData(ServerData const &);
-	ServerData const &operator=(ServerData const &);
+	ServerData &operator=(ServerData const &);
 	~ServerData();
 
 	void setPort(int const &);

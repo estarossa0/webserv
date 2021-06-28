@@ -22,7 +22,7 @@ private:
 public:
 	Location();
 	Location(Location const &);
-	Location const &operator=(Location const &);
+	Location &operator=(Location const &);
 	~Location();
 
 

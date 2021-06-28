@@ -25,6 +25,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 		throw std::runtime_error(std::string("WARNING server <")
 			+ data.getHost()+ ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 
+	log "Binding on " + data.getHost()+ ":" + std::to_string(_port) line;
 	this->addData(data);
 	this->_connections.push_back(Connection(this->_socketfd, this, true, addr));
 	this->_webserv->_pollArray.push_back((struct pollfd){this->_socketfd, POLLIN, 0});
@@ -54,6 +55,8 @@ int		Server::connect()
 			+ inet_ntoa(client_addr.sin_addr) + ":" + std::to_string(ntohs(client_addr.sin_port))
 			+ "> " + std::string(strerror(errno)));
 	}
+	log "Accepted connection from " + std::string(inet_ntoa(client_addr.sin_addr))
+		+ ":" + std::to_string(ntohs(client_addr.sin_port)) line;
 	this->_connections.push_back(Connection(newfd, this, false, client_addr));
 	this->_webserv->_pollArray
 	.insert(
@@ -75,6 +78,8 @@ int		Server::getPort()
 
 void	Server::erase(int index)
 {
+	log "Closing connection with " + std::string(inet_ntoa(this->_connections[index]._addr.sin_addr))
+		+ ":" + std::to_string(ntohs(this->_connections[index]._addr.sin_port)) line;
 	this->_webserv->_pollArray.erase(this->_webserv->_pollArray.begin() + index);
 	this->_webserv->updateIndexs(this->_index, -1);
 	index -= this->_webserv->_indexTable[this->_index];

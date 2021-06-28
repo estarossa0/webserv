@@ -90,8 +90,6 @@ int getPostBodyLength(std::string data)
 		len = std::stoi(data.substr(data.find("Content-Length: ") + 16));
 	} catch (std::exception &e) {}
 	std::string tmp = data.substr(i + 4);
-	if (tmp.find("\r\n\r\n") != std::string::npos)
-		tmp = tmp.substr(0, tmp.length() - 4);
 	
 	return tmp.length();
 }
@@ -100,8 +98,6 @@ void Request::parseHeader(std::string &data)
 {
 	Request::Header header = {};
 
-	if (DEBUG)
-		log "header: " << data line;
 	if (data.length() > 1 && data.find(":") == std::string::npos)
 		throw std::invalid_argument("invalid header");
 	header.name = data.substr(0, data.find(":"));
@@ -330,7 +326,6 @@ bool Request::checkDataDone()
 	}
 	if (i != std::string::npos)
 	{
-		log _data line;
 		if (_data.find("Transfer-Encoding: chunked") != std::string::npos)
 		{
 			std::string tmp = _data.substr(i + 4);
@@ -357,11 +352,6 @@ bool Request::checkDataDone()
 			try {
 				len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
 				std::string tmp = _data.substr(i + 4);
-				// log "tmp:\n" << tmp line;
-				// if (tmp.find("\r\n\r\n") != std::string::npos)
-					// tmp = tmp.substr(0, tmp.length() - 4);
-				log tmp.length() line;
-				log len line;
 				if (tmp.length() == len)
 					_isDone = true;
 			} catch (std::exception &e)
@@ -454,8 +444,6 @@ void Request::appendToData(std::string content)
 {
 	if (content[0] != '\r' || _data.length())
 	{
-		// if (_data.length())
-		// _data = _data.substr(0, _data.length() - 4);
 		_data.append(content);
 	}
 }

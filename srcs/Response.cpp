@@ -4,9 +4,33 @@ Response::Response(Connection *connection) : _connection(connection)
 {
 }
 
+Response::Response(Response const &rhs)
+{
+	*this = rhs;
+}
+
 Response::~Response()
 {
 }
+
+Response& Response::operator=(Response const &other)
+{
+	this->_status = other._status;
+	this->_name = other._name;
+	this->_ctype = other._ctype;
+	this->_clen = other._clen;
+	this->_body = other._body;
+	this->_resp = other._resp;
+	this->_cookies = other._cookies;
+	this->_request = other._request;
+	this->_connection = other._connection;
+	this->_location = other._location;
+	this->_location = other._location;
+	this->_data = other._data;
+	// this->_servers = other._servers;
+	return *this;
+}
+
 
 const char *Response::NotFound::what() const throw()
 {

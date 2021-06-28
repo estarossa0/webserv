@@ -7,7 +7,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(this->_data.getPort());
+	addr.sin_port = htons(data.getPort());
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -41,7 +41,7 @@ Server::~Server()
 {}
 
 Server::Server(Server const &other) :
-_data(other._data), _socketfd(other._socketfd), _index(other._index), _webserv(other._webserv)
+_data(other._data), _socketfd(other._socketfd), _index(other._index), _webserv(other._webserv), _namesTable(other._namesTable)
 {
 	this->_connections = other._connections;
 	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); ++it)
@@ -98,12 +98,21 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-std::vector<ServerData const>const &	Server::getData() const
+std::vector<ServerData const>const &	Server::getData(std::string &name)
 {
+	std::map<std::string, std::vector<ServerData const> >::const_iterator it;
+
+	it = this->_namesTable.find(name);
+	if (it != this->_namesTable.end())
+		return this->_namesTable[name];
 	return this->_data;
 }
 
 void		Server::addData(ServerData const &data)
 {
 	this->_data.push_back(data);
+	for (std::vector<std::string const>::iterator it = data.getNames().begin(); it != data.getNames().end(); ++it)
+	{
+		this->_namesTable[*it].push_back(data);
+	}
 }

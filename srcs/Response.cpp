@@ -329,11 +329,15 @@ void Response::httpRedirection()
 
 void Response::makeBody()
 {
-	ServerData _curr;
+	_data = _servers[0];
+	// setLocation();
+	_location.setPath("");
 	bool cgi = false;
 	for(int i = 0; i < _servers.size(); i++)
 	{
 		std::vector<Location> locations = _servers[i].getLocations();
+		if (this->_location.getPath().length() == 0)
+			setLocation(locations[0]);
 		for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
 		{
 			if ((*it).isCGI() && isSuffix((*it).getPath(), _request.getUri()))
@@ -341,7 +345,7 @@ void Response::makeBody()
 				if (DEBUG)
 					log "SET CGI LOCATION" line;
 				setLocation(*it);
-				_curr = _servers[i];
+				_data = _servers[i];
 				cgi = true;
 				break ;
 			}
@@ -350,20 +354,18 @@ void Response::makeBody()
 				if (!getLocation().getPath().length())
 				{
 					setLocation(*it);
-					_curr = _servers[i];
+					_data = _servers[i];
 				}
 				else if (_location.getPath().length() < (*it).getPath().length())
 				{
 					setLocation(*it);
-					_curr = _servers[i];
+					_data = _servers[i];
 				}	
 			}
 		}
 		if (cgi)
 			break ;
 	}
-	// remove curr later
-	// _data = _curr;
 	try
 	{
 		if (_request.getRequestError())

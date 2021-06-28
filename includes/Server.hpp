@@ -13,6 +13,7 @@ class	Server
 	Webserv						*_webserv;
 	std::vector<ServerData const>	_data;
 	std::map<std::string, std::vector<ServerData const> >	_namesTable;
+	int							_port;
 
 public:
 	Server(ServerData const &, size_t, Webserv *);
@@ -21,6 +22,7 @@ public:
 
 	int				connect();
 	int				get_fd();
+	int				getPort();
 	void			erase(int);
 	Connection		&operator[](int);
 	operator		int();

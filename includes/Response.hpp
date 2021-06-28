@@ -2,7 +2,7 @@
 
 #include "Webserv.hpp"
 
-FILE* callCGI(Request &);
+FILE* callCGI(Request &req, std::string const &root, std::string const &cgi_path);
 
 class Request;
 
@@ -15,7 +15,7 @@ private:
 	std::string _clen;
 	std::string _body;
 	std::string _resp;
-	std::string _cookies;
+	std::string _cgi;
 	Request _request;
 	Connection *_connection;
 	Location _location;
@@ -38,7 +38,7 @@ private:
 	bool isDirectory(const std::string &s);
 	std::string getDefaultErrorPage(int status);
 	std::string getResponseContentType();
-	std::string getCookiesSetter();
+	// std::string getCookiesSetter();
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);
@@ -48,6 +48,7 @@ private:
 	bool		checkFileExists(std::string &);
 	std::string getFileNameFromDisp(std::string);
 	void makeBody();
+	std::string parseCgiResponse(FILE *);
 public:
 	Response(Connection *);
 	Response(Response const &);
@@ -58,7 +59,6 @@ public:
 	void makeResponse();
 	void setRequest(Request);
 	void clear();
-	void parseCgiResponse(FILE *);
 
 	unsigned int getStatus() const;
 	const std::string &getName() const;

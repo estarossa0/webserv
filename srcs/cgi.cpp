@@ -36,16 +36,11 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	std::vector<std::string>	array;
 	static size_t				size = envSize();
 	char**						env;
-	char**						argv;
+	char				const*	argv[3];
 	int							fd;
 	pid_t						pid;
 
 	tmpf = std::tmpfile();
-
-	argv = (char**) malloc(sizeof(char*) * 3);
-	argv[0] = strdup(cgi_path.c_str());
-	argv[1] = strdup(req.getUri().c_str() + 1);
-	argv[2] = NULL;
 
 	array.push_back("CONTENT_LENGTH=" + std::to_string(req.getContentLen()));
 	array.push_back("CONTENT_TYPE=" + req.getContentType());
@@ -64,13 +59,16 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 
 	if (pid == 0)
 	{
+		argv[0] = cgi_path.c_str();
+		argv[1] = req.getUri().c_str() + 1;
+		argv[2] = NULL;
 		fd = fileno(tmpf);
 		env = (char **)malloc((size + array.size() + 1) * sizeof(char *));
 		copyEnv(array, env);
 		dup2(fd, STDOUT_FILENO);
 
 		chdir(root.c_str());
-		execve(cgi_path.c_str(), argv, env);
+		execve(cgi_path.c_str(), (char *const *)argv, env);
 	}
 	else
 		waitpid(pid, nullptr, 0);

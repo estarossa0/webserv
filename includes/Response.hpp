@@ -2,7 +2,7 @@
 
 #include "Webserv.hpp"
 
-FILE* callCGI(Request &);
+FILE* callCGI(Request &req, std::string const &root, std::string const &cgi_path);
 
 class Request;
 

@@ -386,7 +386,7 @@ void Response::makeBody()
 		if (_location.isCGI())
 		{
 			FILE *f = callCGI(_request, _data.getRootDir(), _location.getFastCgiPass());
-			parseCgiResponse(f);
+			this->_cgi = parseCgiResponse(f);
 		}
 		else if (_location.isRedirection())
 			httpRedirection();
@@ -464,6 +464,16 @@ std::string Response::parseCgiResponse(FILE *file)
 		_status = std::stoi(buffer.substr(i + 8, 3));
 		buffer.erase(i, 13);
 	}
+	i = buffer.find("\r\n\r\n");
+    if (i != std::string::npos) {
+        std::string tmp = buffer.substr(i);
+        std::string len_str("Content-Length: ");
+        len_str.append(std::to_string(tmp.length() - 4));
+        tmp.insert(0, len_str);
+        buffer.erase(i);
+        buffer.append("\r\n");
+        buffer.append(tmp);
+    }
 	if (!_status)
 		_status = ST_OK;
 	return buffer;
@@ -493,12 +503,13 @@ void Response::makeResponse()
 			_resp.append("Content-Type: ");
 			_resp.append(getResponseContentType());
 			_resp.append("\r\n");
+			_resp.append("Content-Length: ");
 			_resp.append(std::to_string(strlen(_body.c_str())));
 			_resp.append("\r\n");
 			_resp.append("\r\n");
 			_resp.append(_body);
-			_resp.append("\r\n");
 		}
+		_resp.append("\r\n");
 	}
 }
 

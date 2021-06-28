@@ -9,7 +9,7 @@ private:
 	std::string _path;
 	std::string _root_dir;
 	bool _autoindex;
-	std::vector<std::string> _default_files;
+	std::string _default_file;
 	std::map<std::string, bool> _allowed_methods;
 	int _return_code;
 	std::string _return_url;
@@ -35,8 +35,8 @@ public:
 	void setAutoIndex(bool const &);
 	bool const & getAutoIndex() const;
 
-	void setDefaultFiles(std::vector<std::string> const &);
-	std::vector<std::string> getDefaultFiles() const;
+	void setDefaultFile(std::string const &);
+	std::string const &getDefaultFile() const;
 	
 	void setAllowedMethods(std::vector<std::string> const &);
 	std::map<std::string, bool> const &getAllowedMethods() const;

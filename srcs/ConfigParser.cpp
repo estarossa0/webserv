@@ -575,10 +575,9 @@ void ConfigParser::_locIndexParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens[0] != LOC_INDEX)
 		throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_INDEX) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-	if (tokens.size() < 2)
+	if (tokens.size() != 2)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-	tokens.erase(tokens.begin());
-	loc.setDefaultFiles(tokens);
+	loc.setDefaultFile(tokens[1]);
 }
 
 void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)

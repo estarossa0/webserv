@@ -100,7 +100,9 @@ void Request::parseHeader(std::string &data)
 {
 	Request::Header header = {};
 
-	if (data.find(":") == std::string::npos)
+	if (DEBUG)
+		log "header: " << data line;
+	if (data.length() > 1 && data.find(":") == std::string::npos)
 		throw std::invalid_argument("invalid header");
 	header.name = data.substr(0, data.find(":"));
 	header.value = data.substr(data.find(":") + 2, data.length() - data.find(":") - 3);
@@ -113,6 +115,16 @@ bool isBoundary(std::string s1, std::string s2)
 	if (s1.compare(s2) == 0)
 		return true;
 	return false;
+}
+
+bool isSet(std::string const &arg, int (*func)(int))
+{
+	for (size_t i = 0; i < arg.size(); i++)
+	{
+		if (!func(arg[i]))
+			return false;
+	}
+	return true;
 }
 
 void Request::appendToBody(std::string content)
@@ -163,7 +175,7 @@ void Request::parseRequest()
 			else if (!_host.length() && buffer.find("Host") != std::string::npos)
 			{
 				if (buffer.find("Host: ") == std::string::npos)
-					throw std::invalid_argument("invalid header");
+					throw std::invalid_argument("invalid host header");
 				_host = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
 				if (_host.find(":") != std::string::npos) {
 					_host = _host.substr(0, _host.find(":"));
@@ -172,7 +184,7 @@ void Request::parseRequest()
 			else if (!_boundary.length() && buffer.find("Content-Type") != std::string::npos)
 			{
 				if (buffer.find("Content-Type: ") == std::string::npos)
-					throw std::invalid_argument("invalid header");
+					throw std::invalid_argument("invalid content_type header");
 				if (buffer.find("boundary=") != std::string::npos)
 				{
 					_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
@@ -185,25 +197,28 @@ void Request::parseRequest()
 			else if (!_clen && !_disp.length() && buffer.find("Content-Disposition") != std::string::npos)
 			{
 				if (buffer.find("Content-Disposition: ") == std::string::npos)
-					throw std::invalid_argument("invalid header");
+					throw std::invalid_argument("invalid content-disposition header");
 				_disp = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
 			}
 			else if (!_clen && buffer.find("Content-Length") != std::string::npos)
 			{
-				if (buffer.find("Content-Length: ") == std::string::npos)
-					throw std::invalid_argument("invalid header");
+				buffer.pop_back();
+				std::string _lenstr =  buffer.substr(buffer.find(":") + 2);
+				if (buffer.find("Content-Length") != 0 || buffer.find("Content-Length: ") == std::string::npos ||
+					 _lenstr.length() == 0 || !isSet(_lenstr, std::isdigit))
+					throw std::invalid_argument("invalid content-length header");
 				_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
 			}
 			else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
 			{
 				if (buffer.find("Connection: ") == std::string::npos)
-					throw std::invalid_argument("invalid header");
+					throw std::invalid_argument("invalid connection header");
 				_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
 			}
 			else if (buffer.find("Cookie") != std::string::npos)
 			{
 				if (buffer.find("Cookie: ") == std::string::npos)
-					throw std::invalid_argument("invalid header");
+					throw std::invalid_argument("invalid cookie header");
 				// if (_cookies.length())
 				// 	_cookies.append(";");
 				// _cookies.append(buffer.substr(buffer.find(":") + 2));
@@ -239,6 +254,8 @@ void Request::parseRequest()
 			isDone = true;
 	} catch (std::exception &e)
 	{
+		log "exception at request parsing: " << e.what() line;
+		isDone = true;
 		_error = 1;
 	}
 	if (isDone && !_error)
@@ -313,6 +330,7 @@ bool Request::checkDataDone()
 	}
 	if (i != std::string::npos)
 	{
+		log _data line;
 		if (_data.find("Transfer-Encoding: chunked") != std::string::npos)
 		{
 			std::string tmp = _data.substr(i + 4);
@@ -339,8 +357,11 @@ bool Request::checkDataDone()
 			try {
 				len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
 				std::string tmp = _data.substr(i + 4);
-				if (tmp.find("\r\n\r\n") != std::string::npos)
-					tmp = tmp.substr(0, tmp.length() - 4);
+				// log "tmp:\n" << tmp line;
+				// if (tmp.find("\r\n\r\n") != std::string::npos)
+					// tmp = tmp.substr(0, tmp.length() - 4);
+				log tmp.length() line;
+				log len line;
 				if (tmp.length() == len)
 					_isDone = true;
 			} catch (std::exception &e)
@@ -432,7 +453,11 @@ const std::string &Request::getConnectionType() const
 void Request::appendToData(std::string content)
 {
 	if (content[0] != '\r' || _data.length())
+	{
+		// if (_data.length())
+		// _data = _data.substr(0, _data.length() - 4);
 		_data.append(content);
+	}
 }
 
 size_t Request::getLenArguments()

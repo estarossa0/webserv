@@ -501,7 +501,6 @@ std::string Response::getCookiesSetter()
 		size_t pos = 0;
 		while ((pos = str.find(delimiter)) != std::string::npos) {
 			token = str.substr(0, pos);
-			// log token line;
 			result.append("Set-Cookie: ").append(token).append("\r\n");
 			str.erase(0, pos + delimiter.length() + 1);
 		}

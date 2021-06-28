@@ -43,7 +43,6 @@ Location const &Location::operator=(Location const &rhs)
 
 Location::~Location()
 {
-	_default_files.clear();
 	_allowed_methods.clear();
 }
 
@@ -77,14 +76,14 @@ bool const &Location::getAutoIndex() const
 	return _autoindex;
 }
 
-void Location::setDefaultFiles(std::vector<std::string> const &df)
+void Location::setDefaultFile(std::string const &df)
 {
-	_default_files = df;
+	_default_file = df;
 }
 
-std::vector<std::string> Location::getDefaultFiles() const
+std::string const & Location::getDefaultFile() const
 {
-	return _default_files;
+	return _default_file;
 }
 
 void Location::setAllowedMethods(std::vector<std::string> const &am)

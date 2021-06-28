@@ -41,7 +41,7 @@ Server::~Server()
 {}
 
 Server::Server(Server const &other) :
-_data(other._data), _socketfd(other._socketfd), _index(other._index), _webserv(other._webserv)
+_data(other._data), _socketfd(other._socketfd), _index(other._index), _webserv(other._webserv), _namesTable(other._namesTable)
 {
 	this->_connections = other._connections;
 	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); ++it)
@@ -98,27 +98,21 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-std::vector<ServerData const>const &	Server::getData(std::string &name) const
+std::vector<ServerData const>const &	Server::getData(std::string &name)
 {
-	std::vector<ServerData const>		new_data;
+	std::map<std::string, std::vector<ServerData const> >::const_iterator it;
 
-	for (std::vector<ServerData const>::iterator data_it = this->_data.begin(); data_it != this->_data.end(); ++data_it)
-	{
-		for (std::vector<const std::string>::iterator it = data_it->getNames().begin(); it != data_it->getNames().end(); ++it)
-		{
-			if (*it == name)
-			{
-				new_data.push_back(*data_it);
-				break;
-			}
-		}
-	}
-	if (new_data.size() == 0)
-		new_data.push_back(_data[0]);
-	return new_data;
+	it = this->_namesTable.find(name);
+	if (it != this->_namesTable.end())
+		return this->_namesTable[name];
+	return this->_data;
 }
 
 void		Server::addData(ServerData const &data)
 {
 	this->_data.push_back(data);
+	for (std::vector<std::string const>::iterator it = data.getNames().begin(); it != data.getNames().end(); ++it)
+	{
+		this->_namesTable[*it].push_back(data);
+	}
 }

@@ -12,6 +12,7 @@ class	Server
 	size_t						_index;
 	Webserv						*_webserv;
 	std::vector<ServerData const>	_data;
+	std::map<std::string, std::vector<ServerData const> >	_namesTable;
 
 public:
 	Server(ServerData const &, size_t, Webserv *);
@@ -25,6 +26,6 @@ public:
 	operator		int();
 	size_t			size();
 
-	std::vector<ServerData const> const &	getData(std::string &) const;
+	std::vector<ServerData const> const &	getData(std::string &) ;
 	void			addData(ServerData const &data);
 };

@@ -43,6 +43,8 @@
 #define ST_NOT_IMPLEMENTED 501
 #define ST_BAD_GATEWAY 502
 
+#define LOGS_FILE "webserv_logs"
+
 extern char **environ;
 
 #ifndef DEBUG
@@ -51,6 +53,9 @@ extern char **environ;
 
 static void		hookPollIn(Webserv &, size_t);
 static void		hookPollOutn(Webserv &, size_t);
+
+void outputLogs(std::string);
+
 class Webserv
 {
 	friend class					Server;

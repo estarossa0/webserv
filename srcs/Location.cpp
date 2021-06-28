@@ -21,7 +21,7 @@ Location::Location(Location const &rhs)
 	*this = rhs;
 }
 
-Location const &Location::operator=(Location const &rhs)
+Location &Location::operator=(Location const &rhs)
 {
 	if (this != &rhs)
 	{

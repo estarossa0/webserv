@@ -14,7 +14,7 @@ ServerData::ServerData(ServerData const &rhs)
 	*this = rhs;
 }
 
-ServerData const &ServerData::operator=(ServerData const &rhs)
+ServerData &ServerData::operator=(ServerData const &rhs)
 {
 	if (this != &rhs)
 	{

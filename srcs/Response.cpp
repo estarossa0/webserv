@@ -385,7 +385,7 @@ void Response::makeBody()
 		}
 		if (_location.isCGI())
 		{
-			FILE *f = callCGI(_request);
+			FILE *f = callCGI(_request, _data.getRootDir(), _location.getFastCgiPass());
 			parseCgiResponse(f);
 		}
 		else if (_location.isRedirection())

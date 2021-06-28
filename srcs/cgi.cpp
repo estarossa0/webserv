@@ -29,7 +29,7 @@ void		copyEnv(std::vector<std::string> &array, char** env)
 	env[index] = NULL;
 }
 
-FILE*	callCGI(Request &req)
+FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path)
 {
 	std::FILE*					tmpf;
 	int							pipefds[2];
@@ -43,24 +43,9 @@ FILE*	callCGI(Request &req)
 	tmpf = std::tmpfile();
 
 	argv = (char**) malloc(sizeof(char*) * 3);
-	argv[0] = strdup("php-cgi");
-	argv[1] = strdup("index.php");
+	argv[0] = strdup(cgi_path.c_str());
+	argv[1] = strdup(req.getUri().c_str() + 1);
 	argv[2] = NULL;
-	// CONT TYPE
-	// CONT LENGHT
-	// GATE INTERFACE
-	// SERVER PROTOCOL
-	// SERVER PORT
-	// REQUEST METHOD
-	// SERVER NAME
-	// SERVER SOFTWARE
-	// REMOTE ADDR
-	// PATH INFO
-	// PATH TRANSLATED
-	// SCRIPT NAME
-
-	// QUERY STRING
-	// HTTP_*
 
 	array.push_back("CONTENT_LENGTH=" + std::to_string(req.getContentLen()));
 	array.push_back("CONTENT_TYPE=" + req.getContentType());
@@ -68,7 +53,7 @@ FILE*	callCGI(Request &req)
 	array.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	array.push_back("SERVER_PORT=" +  std::to_string(req.getConnection()->getPort()));
 	array.push_back("REQUEST_METHOD=" + req.getMethod());
-	array.push_back("SERVER_NAME=SVNAME" ); // + req.getConnection()->getServer()->_data.getHost()
+	array.push_back("SERVER_NAME=" + req.getHost());
 	array.push_back("SERVER_SOFTWARE=webserv");
 	array.push_back("REMOTE_ADDR=" + req.getConnection()->getIp());
 	array.push_back("PATH_INFO=" + req.getUri());
@@ -84,8 +69,8 @@ FILE*	callCGI(Request &req)
 		copyEnv(array, env);
 		dup2(fd, STDOUT_FILENO);
 
-		chdir("/Users/arraji/Desktop/webserv"); //WILL BE CHANGED TO ROOT PATH
-		execve("/Users/arraji/Desktop/webserv/php-cgi", argv, env); //WILL BE CHANGED TO CGI PARSED PATH
+		chdir(root.c_str());
+		execve(cgi_path.c_str(), argv, env);
 	}
 	else
 		waitpid(pid, nullptr, 0);

@@ -103,9 +103,9 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-std::vector<ServerData const>const &	Server::getData(std::string &name)
+std::vector<ServerData>const &	Server::getData(std::string &name)
 {
-	std::map<std::string, std::vector<ServerData const> >::const_iterator it;
+	std::map<std::string, std::vector<ServerData> >::const_iterator it;
 
 	it = this->_namesTable.find(name);
 	if (it != this->_namesTable.end())

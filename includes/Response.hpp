@@ -19,6 +19,8 @@ private:
 	Request _request;
 	Connection *_connection;
 	Location _location;
+	ServerData _data;
+	std::vector<ServerData> _servers;
 
 	std::string getCodeStatus();
 
@@ -48,7 +50,10 @@ private:
 	void makeBody();
 public:
 	Response(Connection *);
+	Response(Response const &);
 	~Response();
+
+	Response& operator=(Response const &);
 
 	void makeResponse();
 	void setRequest(Request);
@@ -62,7 +67,7 @@ public:
 	const std::string &getBody() const;
 	const std::string &getResponse() const;
 	Connection *getConnection();
-	ServerData getServerData();
+	std::vector<ServerData> getServerData(std::string);
 	Location getLocation() const;
 
 	void	setLocation(Location &);

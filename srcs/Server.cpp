@@ -1,13 +1,13 @@
 #include "Webserv.hpp"
 
-Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index), _webserv(wb)
+Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index), _webserv(wb), _port(data.getPort())
 {
 	int	opt(1);
 	struct sockaddr_in	addr;
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(data.getPort());
+	addr.sin_port = htons(_port);
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -74,6 +74,11 @@ int		Server::get_fd()
 	return this->_socketfd;
 }
 
+int		Server::getPort()
+{
+	return this->_port;
+}
+
 void	Server::erase(int index)
 {
 	this->_webserv->_pollArray.erase(this->_webserv->_pollArray.begin() + index);
@@ -98,9 +103,9 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-std::vector<ServerData const>const &	Server::getData(std::string &name)
+std::vector<ServerData>const &	Server::getData(std::string &name)
 {
-	std::map<std::string, std::vector<ServerData const> >::const_iterator it;
+	std::map<std::string, std::vector<ServerData> >::const_iterator it;
 
 	it = this->_namesTable.find(name);
 	if (it != this->_namesTable.end())

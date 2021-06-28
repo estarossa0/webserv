@@ -21,13 +21,13 @@ Response& Response::operator=(Response const &other)
 	this->_clen = other._clen;
 	this->_body = other._body;
 	this->_resp = other._resp;
-	this->_cookies = other._cookies;
+	this->_cgi = other._cgi;
 	this->_request = other._request;
 	this->_connection = other._connection;
 	this->_location = other._location;
 	this->_location = other._location;
 	this->_data = other._data;
-	// this->_servers = other._servers;
+	this->_servers = other._servers;
 	return *this;
 }
 
@@ -69,11 +69,11 @@ const char *Response::BadRequest::what() const throw()
 
 void	Response::clear()
 {
-	// this->_request.clear();
 	this->_body.clear();
 	this->_resp.clear();
 	this->_status = 0;
 	this->_ctype.clear();
+	this->_cgi.clear();
 }
 
 std::string Response::getFileNameFromDisp(std::string disp)
@@ -332,7 +332,6 @@ void Response::httpRedirection()
 void Response::makeBody()
 {
 	_data = _servers[0];
-	// setLocation();
 	_location.setPath("");
 	bool cgi = false;
 	for(int i = 0; i < _servers.size(); i++)
@@ -344,8 +343,6 @@ void Response::makeBody()
 		{
 			if ((*it).isCGI() && isSuffix((*it).getPath(), _request.getUri()))
 			{
-				if (DEBUG)
-					log "SET CGI LOCATION" line;
 				setLocation(*it);
 				_data = _servers[i];
 				cgi = true;
@@ -389,7 +386,6 @@ void Response::makeBody()
 		if (_location.isCGI())
 		{
 			FILE *f = callCGI(_request);
-			// parse location
 			parseCgiResponse(f);
 		}
 		else if (_location.isRedirection())
@@ -451,67 +447,26 @@ std::string Response::getResponseContentType()
 		return "text/plain";
 }
 
-void Response::parseCgiResponse(FILE *file)
+std::string Response::parseCgiResponse(FILE *file)
 {
 	std::string buffer;
-	std::string body;
-	bool isBody = false;
 	int fd = fileno(file);
 	char lines[1024];
 	int r;
+
 	while ((r = read(fd, lines, sizeof(lines))) > 0)
-		lines[r] = '\0';
-	std::istringstream fileReader(lines);
-	while (getline(fileReader, buffer))
 	{
-		if (!_status && buffer.find("Status") != std::string::npos)
-			_status = std::stoi(buffer.substr(buffer.find(":") + 2, 3));
-		if (!_ctype.length() && buffer.find("Content-type") != std::string::npos)
-			_ctype = buffer.substr(buffer.find(":") + 2, buffer.find_first_of(";") - 14);
-		if (buffer.find("Location") != std::string::npos)
-		{
-			// body.append("Location: ").append(buffer.substr(buffer.find(":") + 2));
-			// body.pop_back();
-		}
-		if (buffer.find("Set-Cookie: ") != std::string::npos)
-		{
-			if (_cookies.length())
-				_cookies.append("; ");
-			_cookies.append(buffer.substr(buffer.find(":") + 2));
-		}
-		else if (_ctype.length() != 0)
-		{
-			if (isBody)
-				body.append(buffer).append("\n");
-			else
-				isBody = true;
-		}
+		lines[r] = '\0';
+		buffer.append(lines);
 	}
-	_body = body;
+	int i = buffer.find("Status: ");
+	if (i != std::string::npos) {
+		_status = std::stoi(buffer.substr(i + 8, 3));
+		buffer.erase(i, 13);
+	}
 	if (!_status)
 		_status = ST_OK;
-}
-
-std::string Response::getCookiesSetter()
-{
-	std::string delimiter = ";";
-	std::string token;
-	std::string str;
-	std::string result;
-	
-	if (this->_cookies.length())
-	{
-		str = this->_cookies;
-		size_t pos = 0;
-		while ((pos = str.find(delimiter)) != std::string::npos) {
-			token = str.substr(0, pos);
-			result.append("Set-Cookie: ").append(token).append("\r\n");
-			str.erase(0, pos + delimiter.length() + 1);
-		}
-		if (str.length() && str.find("=") != std::string::npos)
-			result.append("Set-Cookie: ").append(str).append("\r\n");
-	}
-	return result;
+	return buffer;
 }
 
 void Response::makeResponse()
@@ -523,7 +478,7 @@ void Response::makeResponse()
 	_resp.append(std::to_string(_status));
 	_resp.append(" ");
 	_resp.append(getCodeStatus());
-	if (_status == ST_MOVED_PERM)
+	if (_status == ST_MOVED_PERM && _cgi.empty())
 	{
 		_resp.append("Location: ");
 		_resp.append(_location.getReturnUrl());
@@ -531,16 +486,19 @@ void Response::makeResponse()
 	}
 	else
 	{
-		_resp.append(getCookiesSetter());
 		_resp.append("Server: Dial3bar\r\n");
-		_resp.append("Content-Type: ");
-		_resp.append(getResponseContentType());
-		_resp.append("\r\n");
-		_resp.append("Content-Length: ");
-		_resp.append(std::to_string(strlen(_body.c_str())));
-		_resp.append("\r\n\r\n");
-		_resp.append(_body);
-		_resp.append("\r\n");
+		if (_cgi.length())
+			_resp.append(_cgi);
+		else {
+			_resp.append("Content-Type: ");
+			_resp.append(getResponseContentType());
+			_resp.append("\r\n");
+			_resp.append(std::to_string(strlen(_body.c_str())));
+			_resp.append("\r\n");
+			_resp.append("\r\n");
+			_resp.append(_body);
+			_resp.append("\r\n");
+		}
 	}
 }
 

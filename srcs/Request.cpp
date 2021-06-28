@@ -460,7 +460,7 @@ std::vector<Request::Header> Request::getHeaders()
 	return _headers;
 }
 
-std::vector<ServerData const> Request::getServerData(std::string &name)
+std::vector<ServerData> Request::getServerData(std::string &name)
 {
 	return this->_connection->getServer()->getData(name);
 }

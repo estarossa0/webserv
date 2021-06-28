@@ -73,24 +73,18 @@ bool Response::isDirectory(const std::string &s)
 std::string Response::getFileNameFromUri(std::string uri)
 {
 	std::string path;
-	if (uri.find("?") != std::string::npos)
-		path = uri.substr(0, uri.find("?"));
-	else
-		path = uri;
+
+	path = uri;
 	if (isDirectory(path))
 	{
-		if (isPreffix(_location.getPath(), path) && !this->_location.getAutoIndex())
+		if (!this->_location.getAutoIndex() && isPreffix(_location.getPath(), path))
 		{
-			for (std::vector<std::string>::iterator it = _location.getDefaultFiles().begin(); it != _location.getDefaultFiles().end(); ++it)
+			if (checkFileExists(path))
 			{
-				if (checkFileExists(path))
-				{
-					if (path.back() != '/')
-						path.append("/"); 
-					path.append(*it);
-					_request.setUri(path);
-					break ;
-				}
+				if (path.back() != '/')
+					path.append("/"); 
+				path.append(_location.getDefaultFile());
+				_request.setUri(path);
 			}
 		}
 	}
@@ -224,11 +218,9 @@ std::string Response::getPulicDirectory()
 {
 	std::string dir("");
 
-	dir = getServerDirectory();
+	dir = _data.getRootDir();
 	if (_location.getRootDir().length())
 		dir.append(_location.getRootDir());
-	else
-		dir.append(getServerData().getRootDir());
 	return dir;
 }
 
@@ -313,24 +305,41 @@ void Response::httpRedirection()
 
 void Response::makeBody()
 {
-	std::vector<Location> locations = getServerData().getLocations();
-	setLocation(locations[0]);
-	for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
+	ServerData _curr;
+	bool cgi = false;
+	for(int i = 0; i < _servers.size(); i++)
 	{
-		if (isSuffix((*it).getPath(), _request.getUri()) && (*it).isCGI())
+		std::vector<Location> locations = _servers[i].getLocations();
+		for(std::vector<Location>::iterator it = locations.begin(); it != locations.end(); ++it)
 		{
-			if (DEBUG)
-				log "SET CGI LOCATION" line;
-			setLocation(*it);
-		}
-		else if (isPreffix((*it).getPath(), _request.getUri()))
-		{
-			if (!getLocation().getPath().length())
+			if ((*it).isCGI() && isSuffix((*it).getPath(), _request.getUri()))
+			{
+				if (DEBUG)
+					log "SET CGI LOCATION" line;
 				setLocation(*it);
-			else if (_location.getPath().length() < (*it).getPath().length())
-				setLocation(*it);
+				_curr = _servers[i];
+				cgi = true;
+				break ;
+			}
+			else if (isPreffix((*it).getPath(), _request.getUri()))
+			{
+				if (!getLocation().getPath().length())
+				{
+					setLocation(*it);
+					_curr = _servers[i];
+				}
+				else if (_location.getPath().length() < (*it).getPath().length())
+				{
+					setLocation(*it);
+					_curr = _servers[i];
+				}	
+			}
 		}
+		if (cgi)
+			break ;
 	}
+	// remove curr later
+	// _data = _curr;
 	try
 	{
 		if (_request.getRequestError())
@@ -338,7 +347,7 @@ void Response::makeBody()
 			_status = ST_BAD_REQUEST;
 			throw Response::BadRequest();
 		}
-		if (_request.getContentLen() > this->getServerData().getClientBodySize() * 1024 * 1024)
+		if (_request.getContentLen() > this->_data.getClientBodySize() * 1024 * 1024)
 		{
 			_status = ST_PAYLOAD_LARGE;
 			throw Response::PayloadLarge();
@@ -388,7 +397,7 @@ std::string Response::getDefaultErrorPage(int status)
 
 void Response::setErrorPage()
 {
-	std::map<int, std::string> errors = getServerData().getErrorPageMap();
+	std::map<int, std::string> errors = _data.getErrorPageMap();
 	
 	if (errors[_status].length())
 		readFile(getFilePath(errors[_status]));
@@ -516,6 +525,7 @@ const std::string &Response::getResponse() const
 void Response::setRequest(Request request)
 {
 	this->_request = request;
+	this->_servers = getServerData(_request.getHost());
 }
 
 Connection	*Response::getConnection()
@@ -523,7 +533,7 @@ Connection	*Response::getConnection()
 	return this->_connection;
 }
 
-std::vector<ServerData const> Request::getServerData(std::string &name)
+std::vector<ServerData> Response::getServerData(std::string name)
 {
 	return this->_connection->getServer()->getData(name);
 }

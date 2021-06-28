@@ -423,10 +423,14 @@ void Response::setErrorPage()
 {
 	std::map<int, std::string> errors = _data.getErrorPageMap();
 	
-	if (errors[_status].length())
-		readFile(getFilePath(errors[_status]));
-	else
+	try {
+		if (errors[_status].length())
+			readFile(getFilePath(errors[_status]));
+		else
+			throw Response::NotFound();
+	} catch (std::exception &e) {
 		_body = getDefaultErrorPage(_status);
+	}
 }
 
 std::string Response::getResponseContentType()

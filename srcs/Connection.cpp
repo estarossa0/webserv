@@ -9,7 +9,7 @@ _socketfd(other._socketfd), _server(other._server), _is_Server(other._is_Server)
 
 int				Connection::read()
 {
-	char	buffer[1000] = {0};
+	char	buffer[1001] = {0};
 	int		retval;
 	int		size;
 
@@ -19,6 +19,7 @@ int				Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
+		buffer[1000] = '\0';
 		_request.appendToData(buffer);
 		size += retval;
 		if (_request.checkDataDone())

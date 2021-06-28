@@ -179,32 +179,33 @@ std::string const &Location::getUploadLocation() const
 std::ostream &operator<<(std::ostream &out, const Location &loc)
 {
 	out << std::boolalpha;
-	out << "\n================ Location ===============" << std::endl;
-	out << "location path : [" << loc.getPath() << "]" << std::endl;
-	out << "location root : [" << loc.getRootDir() << "]" << std::endl;
-	out << "location autoindex : [" << loc.getAutoIndex() << "]" << std::endl;
-
-	out << "location indexes : ";
-	std::vector<std::string> defaultFiles = loc.getDefaultFiles();
-	for (size_t i = 0; i < defaultFiles.size(); i++)
-	{
-		out << "[" << defaultFiles[i] << "]  ";
-	}
-	out << std::endl;
-
+	out << "\n================ Location [" << loc.getPath() << "]===============" << std::endl;
+	if (!loc.getRootDir().empty())
+		out << " root : [" << loc.getRootDir() << "]" << std::endl;
+	out << " autoindex : [" << loc.getAutoIndex() << "]" << std::endl;
+	if (!loc.getDefaultFile().empty())
+		out << " index : [" << loc.getDefaultFile() << "]" << std::endl;
 	std::map<std::string, bool> map(loc.getAllowedMethods());
+	out << " allowed methods:";
 	for (std::map<std::string, bool>::iterator it = map.begin(); it != map.end(); it++)
 	{
-		out << "location method: [" << it->first << "] = [" << it->second << "]" << std::endl;
+		if (map[it->first])
+			out << " [ " << it->first << " ]  ";
 	}
-
-	out << "location is redirection : " << loc.isRedirection() << std::endl;
-	out << "location return, code : [" << loc.getReturnCode() << "], url: [" << loc.getReturnUrl() << "]" << std::endl;
-	out << "location is CGI : " << loc.isCGI() << std::endl;
-	out << "location CGI, url: [" << loc.getFastCgiPass() << "]" << std::endl;
-	out << "location upload enabled : " << loc.getUploadEnabled() << std::endl;
-	out << "location Upload store: [" << loc.getUploadLocation() << "]" << std::endl;
-
-	out << "============== Location End =============\n";
+	out << std::endl;
+	if (loc.isRedirection())
+	{
+		out << " Is redirection : " << loc.isRedirection() << std::endl;
+		out << " return, code : [" << loc.getReturnCode() << "], url: [" << loc.getReturnUrl() << "]" << std::endl;
+	}
+	if (loc.isCGI())
+	{
+		out << " Is CGI : " << loc.isCGI() << std::endl;
+		out << " CGI path: [" << loc.getFastCgiPass() << "]" << std::endl;
+	}
+	out << " upload enabled : " << loc.getUploadEnabled() << std::endl;
+	if (!loc.getUploadLocation().empty())
+		out << " upload store: [" << loc.getUploadLocation() << "]" << std::endl;
+	out << "============== Location End [" << loc.getPath() << "]===============\n";
 	return out;
 }

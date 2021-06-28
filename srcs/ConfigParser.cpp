@@ -56,6 +56,7 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 	{
 		output << _servers[i] << std::endl;
 	}
+	outputLogs("configuration file has been parsed successfully");
 }
 
 ConfigParser::~ConfigParser()

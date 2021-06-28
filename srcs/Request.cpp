@@ -460,9 +460,9 @@ std::vector<Request::Header> Request::getHeaders()
 	return _headers;
 }
 
-ServerData Request::getServerData()
+std::vector<ServerData const> Request::getServerData(std::string &name)
 {
-	return this->_connection->getServer()->getData();
+	return this->_connection->getServer()->getData(name);
 }
 
 void Request::setUri(std::string const &uri)

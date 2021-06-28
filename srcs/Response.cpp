@@ -523,9 +523,9 @@ Connection	*Response::getConnection()
 	return this->_connection;
 }
 
-ServerData Response::getServerData()
+std::vector<ServerData const> Request::getServerData(std::string &name)
 {
-	return this->_connection->getServer()->getData();
+	return this->_connection->getServer()->getData(name);
 }
 
 Location Response::getLocation() const

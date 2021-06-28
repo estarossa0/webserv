@@ -62,7 +62,7 @@ public:
 	const std::string &getBody() const;
 	const std::string &getResponse() const;
 	Connection *getConnection();
-	ServerData getServerData();
+	std::vector<ServerData const> getServerData(std::string &);
 	Location getLocation() const;
 
 	void	setLocation(Location &);

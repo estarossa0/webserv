@@ -71,7 +71,7 @@ public:
 	const std::string &getConnectionType() const;
 	void setConnectionType(std::string const &);
 	Connection	*getConnection();
-	ServerData	getServerData();
+	std::vector<ServerData const> getServerData(std::string &);
 	int getRequestError();
 
 	void setUri(std::string const &);

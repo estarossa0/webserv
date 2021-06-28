@@ -7,7 +7,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(this->_data.getPort());
+	addr.sin_port = htons(data.getPort());
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -98,9 +98,24 @@ size_t	Server::size()
 	return this->_connections.size();
 }
 
-std::vector<ServerData const>const &	Server::getData() const
+std::vector<ServerData const>const &	Server::getData(std::string &name) const
 {
-	return this->_data;
+	std::vector<ServerData const>		new_data;
+
+	for (std::vector<ServerData const>::iterator data_it = this->_data.begin(); data_it != this->_data.end(); ++data_it)
+	{
+		for (std::vector<const std::string>::iterator it = data_it->getNames().begin(); it != data_it->getNames().end(); ++it)
+		{
+			if (*it == name)
+			{
+				new_data.push_back(*data_it);
+				break;
+			}
+		}
+	}
+	if (new_data.size() == 0)
+		new_data.push_back(_data[0]);
+	return new_data;
 }
 
 void		Server::addData(ServerData const &data)

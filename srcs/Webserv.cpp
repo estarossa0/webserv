@@ -144,7 +144,7 @@ void	Webserv::init(std::vector<ServerData> const &svsdata)
 	}
 	if (this->_servers.size() == 0)
 	{
-		outputLogs("Error: Could not create no server! Webserv stoping...");
+		outputLogs("Error: Could not create any server! Webserv stoping...");
 		exit(1);
 	}
 }

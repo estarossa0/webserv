@@ -366,22 +366,22 @@ bool Request::checkDataDone()
 
 void Request::printRequest()
 {
-	log "method: " << _method << "|" line;
-	log "uri: " << _uri << "|" line;
-	log "query: " << _query << "|" line;
-	log "host: " << _host << "|" line;
-	log "protocol: " << _protocol << "|" line;
-	log "content length: " << _clen << "|" line;
-	log "content type: " << _ctype << "|" line;
-	log "boundary: " << _boundary << "|" line;
-	log "disposition: " << _disp << "|" line;
-	log "connection type: " << _contype << "|" line;
-	log "arguments size: " << _args.size() << "|" line;
+	outputLogs("\n\n[++++]  NEW REQUEST  [++++] \n"+ _data);
+	outputLogs("method: " + _method);
+	outputLogs("uri: " + _uri);
+	outputLogs("host: " + _host);
+	outputLogs("protocol: " + _protocol);
+	outputLogs("content-length: " + std::to_string(_clen));
+	outputLogs("content-type: " + _ctype);
+	outputLogs("disposition: " + _disp);
+	outputLogs("connection type: " + _contype);
+	outputLogs("headers size: " + std::to_string(_headers.size()));
+	for (int i = 0; i < _headers.size(); i++)
+		outputLogs(_headers[i].name + "=" + _headers[i].value);
+	outputLogs("argument size: " + std::to_string(_args.size()));
 	for (int i = 0; i < _args.size(); i++)
-		log "argument disposition: " << _args[i].disp << "| "
-									 << "content type: " << _args[i].ctype << "| "
-									 << "data: " << _args[i].data << "|" line;
-	log "" line;
+		outputLogs("disp: " + _args[i].disp + "| type: " + _args[i].ctype + "| data: " + _args[i].data);
+	outputLogs("[----]  END REQUEST  [----]");
 }
 
 void Request::clear()

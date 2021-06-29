@@ -22,6 +22,7 @@ private:
 	std::string _root_dir;
 	std::vector<Location> _locations;
 	bool _necessary_elements[NUMBER_OF_NECESSARY_ELEMENTS];
+	std::vector<std::string> _necessary_elements_identifiers;
 
 public:
 	ServerData();
@@ -53,7 +54,7 @@ public:
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
 
-	bool const hasNecessaryElements() const;
+	std::vector<std::string> hasNecessaryElements() const;
 	bool const doesHavePort(int const & port) const;
 
 };

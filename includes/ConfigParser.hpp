@@ -51,7 +51,7 @@
 #define ERROR_EMPTY_SERVER_CONFIGURATION "A server must not have an empty configuration"
 #define ERROR_INVALID_CONFIGURATION "This configuration file is invalid.\nERROR in this line -> "
 #define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
-#define ERROR_MISSING_NECESSARY_ELEMENT "Make sure that all servers in file configuration contains at least these 4 elements: [port, host, name, root]"
+#define ERROR_MISSING_ELEMENTS " necessary missing elements: "
 #define ERROR_MISSING_SEMICOLON "Missing a semicolon in this line: "
 #define ERROR_DOUBLE_SEMICOLON "Should be only one semicolon at the end of this line: "
 #define ERROR_PORT_NAN "The value of port must be a non-zero positive number"

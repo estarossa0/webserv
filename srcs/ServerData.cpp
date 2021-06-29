@@ -6,6 +6,9 @@ ServerData::ServerData() : _client_body_size(2)
 	{
 		_necessary_elements[i] = false;
 	}
+	_necessary_elements_identifiers.push_back("listen {port}");
+	_necessary_elements_identifiers.push_back("host");
+	_necessary_elements_identifiers.push_back("root");
 	_error_pages.clear();
 }
 
@@ -157,14 +160,17 @@ std::vector<Location> const &ServerData::getLocations() const
 	return _locations;
 }
 
-bool const ServerData::hasNecessaryElements() const
+std::vector<std::string> ServerData::hasNecessaryElements() const
 {
+	std::vector<std::string> missing_elements;
 	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
 	{
 		if (!_necessary_elements[i])
-			return false;
+		{
+			missing_elements.push_back(_necessary_elements_identifiers[i]);
+		}
 	}
-	return true;
+	return missing_elements;
 }
 
 std::ostream &operator<<(std::ostream &out, const ServerData &sv)

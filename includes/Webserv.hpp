@@ -51,8 +51,8 @@ extern char **environ;
 # define DEBUG 1
 #endif
 
-static void		hookPollIn(Webserv &, size_t);
-static void		hookPollOutn(Webserv &, size_t);
+void		hookPollIn(Webserv &, size_t);
+void		hookPollOut(Webserv &, size_t);
 
 void outputLogs(std::string);
 
@@ -70,7 +70,7 @@ public:
 	void		hook();
 	Server		&serverAt(int);
 	void		addServer(ServerData const &);
-	Connection	&operator[](int);
+	Connection	&operator[](size_t);
 	void		updateIndexs(int, int);
 	void		init(std::vector<ServerData> const &);
 

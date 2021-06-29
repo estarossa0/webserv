@@ -5,7 +5,7 @@ Webserv::Webserv() : _conSize(0)
 
 Webserv::~Webserv()
 {
-	for (size_t index; index < this->_conSize; index++)
+	for (size_t index = 0; index < this->_conSize; index++)
 		(*this)[index].close();
 }
 
@@ -16,7 +16,7 @@ void		Webserv::addServer(ServerData const &data)
 	this->updateIndexs(-2, 1);
 }
 
-Connection &Webserv::operator[](int index)
+Connection &Webserv::operator[](size_t index)
 {
 	if (index > this->_conSize || index < 0)
 		throw std::out_of_range("Out of Webserv range");
@@ -46,7 +46,7 @@ void	Webserv::updateIndexs(int index, int type)
 	}
 	else
 	{
-		while(index < this->_indexTable.size())
+		while(index < (int)this->_indexTable.size())
 		{
 			this->_indexTable[index] += type;
 			index++;
@@ -59,7 +59,7 @@ Server	&Webserv::serverAt(int index)
 	return this->_servers[index];
 }
 
-static void	hookPollIn(Webserv &web, size_t i)
+void	hookPollIn(Webserv &web, size_t i)
 {
 	if (web[i].is_Server())
 	{
@@ -71,12 +71,12 @@ static void	hookPollIn(Webserv &web, size_t i)
 	}
 	else
 	{
-		int l = web[i].read();
+		web[i].read();
 		web._pollArray[i].events = POLLOUT | POLLIN;
 	}
 }
 
-static void	hookPollOut(Webserv &web, size_t i)
+void	hookPollOut(Webserv &web, size_t i)
 {
 	if (web[i].getRequest().getData().length())
 		web[i].getRequest().parseRequest();
@@ -93,7 +93,7 @@ static void	hookPollOut(Webserv &web, size_t i)
 void	Webserv::hook()
 {
 	int		p;
-	int		size;
+	size_t	size;
 
 	while (1)
 	{

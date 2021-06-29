@@ -81,19 +81,6 @@ Request::Argument Request::parseArgument(const std::string &content)
 	return arg;
 }
 
-int getPostBodyLength(std::string data)
-{
-	int len = 0;
-
-	size_t i = data.find("\r\n\r\n");
-	try {
-		len = std::stoi(data.substr(data.find("Content-Length: ") + 16));
-	} catch (std::exception &e) {}
-	std::string tmp = data.substr(i + 4);
-	
-	return tmp.length();
-}
-
 void Request::parseHeader(std::string &data)
 {
 	Request::Header header = {};
@@ -290,10 +277,10 @@ void Request::parseRequest()
 		{
 			if (_data.find("Content-Length:") == std::string::npos)
 				error = 1;
-			if (_clen && getPostBodyLength(_data) != _clen)
+			if (_clen && !validateContentLength())
 				error = 1;
 		} else if (_method.compare("DELETE") == 0) {
-			if (_data.find("Content-Length:") != std::string::npos && _clen && getPostBodyLength(_data) != _clen)
+			if (_data.find("Content-Length:") != std::string::npos && _clen && validateContentLength())
 				error = 1;
 		}
 		if (!_host.length())
@@ -329,6 +316,29 @@ std::string parseChunked(std::string &content)
 		}
 	}
 	return data;
+}
+
+bool Request::validateContentLength()
+{
+	int len;
+	bool _isDone = false;
+	size_t i = _data.find("\r\n\r\n");
+
+	len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
+	std::string tmp = _data.substr(i + 4);
+	if (tmp[0] == '\r')
+		throw std::invalid_argument("bad request");
+	if (!tmp.length())
+		return false;
+	if (isSuffix("\r\n\r\n", tmp)) {
+		tmp.erase(tmp.end() - 4, tmp.end());
+		len += std::count(tmp.begin(), tmp.end(), '\r');
+		_isDone = true;
+		if (len != tmp.length())
+			_error = 1;
+	} else if (tmp.length() == len && tmp.find("\r") == std::string::npos)
+		_isDone = true;
+	return _isDone;
 }
 
 bool Request::checkDataDone()
@@ -370,18 +380,7 @@ bool Request::checkDataDone()
 		else if (_data.find("Content-Length:") != std::string::npos)
 		{
 			try {
-				len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
-				std::string tmp = _data.substr(i + 4);
-				if (tmp[0] == '\r')
-					throw std::invalid_argument("bad request");
-				if (isSuffix("\r\n", tmp) && tmp.length() == len + 2) {
-					_data.erase(_data.length() - 2);
-					_isDone = true;
-				}
-				else if (tmp.length() == len)
-					_isDone = true;
-				else if (tmp.length() > len)
-					throw std::invalid_argument("bad request");
+				_isDone = validateContentLength();
 			} catch (std::exception &e)
 			{
 				_isDone = true;

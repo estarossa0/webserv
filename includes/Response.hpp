@@ -30,7 +30,7 @@ private:
 	void httpRedirection();
 	void generateDirectoryListing();
 
-	void checkFilePermission(std::string &, int);
+	void checkFilePermission(std::string const &, int);
 	void deleteFile(std::string &);
 	void readFile(std::string);
 	void uploadFile();

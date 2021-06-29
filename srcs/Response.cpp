@@ -83,13 +83,28 @@ std::string Response::getFileNameFromDisp(std::string disp)
 
 bool	Response::checkFileExists(std::string &path)
 {
-	return true;
+	std::fstream file(path);
+
+	bool isOpen = file.is_open();
+	if(isOpen)
+		file.close();
+	else
+	{
+		try {
+			checkFilePermission(path, W_OK);
+		} catch (std::exception &e) {
+			if (_status == ST_FORBIDDEN)
+				return true;
+		}
+	}
+	return isOpen;
 }
 
 bool Response::isDirectory(const std::string &s)
 {
 	if (opendir((getPulicDirectory() + s).c_str()) == NULL) {
-		return 0;
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
     }
 	return 1;
 }
@@ -138,7 +153,7 @@ std::string Response::getCodeStatus()
 	return "";
 }
 
-void Response::checkFilePermission(std::string &path, int mode)
+void Response::checkFilePermission(std::string const &path, int mode)
 {
 	int returnval = access(path.c_str(), mode);
 	if (returnval != 0)
@@ -186,24 +201,19 @@ void Response::readFile(std::string path)
 
 void Response::uploadFile()
 {
-	try {
-		for (size_t i = 0; i < _request.getLenArguments(); i++)
-		{
-			Request::Argument arg = _request.getArgument(i);
-			if (_request.getArgument(i).ctype.length())
-			{
-				std::string name = getFileNameFromDisp(arg.disp);
-				std::string dir = getUploadDirectory().append(name);
-				std::ofstream file(dir);
-				file << arg.data;
-				file.close();
-			}
-		}
-	} catch (std::exception &e)
+	for (size_t i = 0; i < _request.getLenArguments(); i++)
 	{
-		log "Exception at uploadFile: " << e.what() line;
-		_status = ST_SERVER_ERROR;
-		throw Response::ServerError();
+		Request::Argument arg = _request.getArgument(i);
+		if (_request.getArgument(i).ctype.length())
+		{
+			std::string name = getFileNameFromDisp(arg.disp);
+			std::string dir = getUploadDirectory().append(name);
+			if (checkFileExists(dir))
+				checkFilePermission(dir, W_OK);
+			std::ofstream file(dir);
+			file << arg.data;
+			file.close();
+		}
 	}
 }
 
@@ -307,8 +317,11 @@ void Response::methodGet()
 
 void Response::methodPost()
 {
-	if (_location.getUploadEnabled())
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	if (_location.getUploadEnabled() && isDirectory(_request.getUri()))
 		uploadFile();
+	else
+		readFile(file);
 	_status = ST_OK;
 }
 
@@ -385,6 +398,8 @@ void Response::makeBody()
 		}
 		if (_location.isCGI())
 		{
+			getFileNameFromUri(_request.getUri());
+			checkFilePermission(_location.getFastCgiPass(), X_OK);
 			FILE *f = callCGI(_request, _data.getRootDir(), _location.getFastCgiPass());
 			this->_cgi = parseCgiResponse(f);
 		}
@@ -397,10 +412,8 @@ void Response::makeBody()
 		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
 	}
-	catch (std::exception &e)
-	{
-		if (DEBUG)
-			log "Exception at makeBody : " << e.what() line;
+	catch (std::exception &e) {
+		outputLogs("exception at makeBody: " + std::string(e.what()));
 	}
 }
 

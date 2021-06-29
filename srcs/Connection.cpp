@@ -35,7 +35,7 @@ int				Connection::send()
 	this->_response.setRequest(this->_request);
 	this->_response.makeResponse();
 	if (DEBUG)
-		log this->_response.getResponse() line;
+		outputLogs("[++++]  RESPONSE  [++++]\n" + this->_response.getResponse() + "[----]  END RESPONSE  [----]");
 	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
 }
 

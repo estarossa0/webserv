@@ -42,6 +42,7 @@ private:
 	void appendToBody(std::string );
 	int getSpaceIndex(const std::string &, int);
 	Argument parseArgument(const std::string &);
+	bool validateContentLength();
 
 public:
 	bool isDone;
@@ -51,6 +52,7 @@ public:
 	~Request();
 
 	void parseRequest();
+	void parseBody();
 	void clear();
 	void printRequest();
 	void parseHeader(std::string &);

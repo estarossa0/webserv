@@ -4,7 +4,7 @@ Request::Request()
 {
 }
 
-Request::Request(Connection *_connection) : isDone(false), _clen(0), _data(""), _boundary(""), _isArg(false), _connection(_connection), _error(0)
+Request::Request(Connection *_connection) : _data(""), _clen(0), _boundary(""), _connection(_connection), _isArg(false), _error(0), isDone(false)
 {
 }
 
@@ -136,7 +136,6 @@ void Request::appendToBody(std::string content)
 void Request::parseBody()
 {
 	std::string buffer;
-	bool boundary = false;
 	std::string tmp = _data.substr(_data.find("\r\n\r\n") + 4);
 	std::istringstream lines(tmp);
 
@@ -320,7 +319,7 @@ std::string parseChunked(std::string &content)
 
 bool Request::validateContentLength()
 {
-	int len;
+	size_t len;
 	bool _isDone = false;
 	size_t i = _data.find("\r\n\r\n");
 
@@ -347,7 +346,6 @@ bool Request::checkDataDone()
 	std::istringstream lines(_data);
 	bool _isDone = false;
 	std::string chunked;
-	int len = 1;
 
 	size_t i = _data.find("\r\n\r\n");
 	if (_data.find(4) != std::string::npos)
@@ -405,10 +403,10 @@ void Request::printRequest()
 	outputLogs("disposition: " + _disp);
 	outputLogs("connection type: " + _contype);
 	outputLogs("headers size: " + std::to_string(_headers.size()));
-	for (int i = 0; i < _headers.size(); i++)
+	for (size_t i = 0; i < _headers.size(); i++)
 		outputLogs(_headers[i].name + "=" + _headers[i].value);
 	outputLogs("argument size: " + std::to_string(_args.size()));
-	for (int i = 0; i < _args.size(); i++)
+	for (size_t i = 0; i < _args.size(); i++)
 		outputLogs("disp: " + _args[i].disp + "| type: " + _args[i].ctype + "| data: " + _args[i].data);
 	outputLogs("[----]  END REQUEST  [----]");
 }
@@ -444,7 +442,7 @@ const std::string &Request::getUri() const
 	return _uri;
 }
 
-unsigned int Request::getContentLen() const
+int Request::getContentLen() const
 {
 	return _clen;
 }

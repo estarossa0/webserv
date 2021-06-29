@@ -64,7 +64,7 @@ public:
 	const std::string &getQuery() const;
 	const std::string &getProtocol() const;
 	const std::string &getHost() const;
-	unsigned int getContentLen() const;
+	int getContentLen() const;
 	const std::string &getContentType() const;
 	const std::string &getBody() const;
 	const std::string &getBoundary() const;

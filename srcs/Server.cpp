@@ -10,28 +10,22 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 	addr.sin_port = htons(_port);
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-	{
-		std::cerr << "ERROR: " << std::strerror(errno) line;
-		exit(EXIT_FAILURE);
-	}
+		throw std::runtime_error(std::string("WARNING server <")
+			+ data.getHost()+ ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 
 	if (setsockopt(this->_socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
-	{
-		std::cerr << "ERROR: " << std::strerror(errno) line;
-		exit(EXIT_FAILURE);
-	}
+		throw std::runtime_error(std::string("WARNING server <")
+			+ data.getHost()+ ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 
 	if (bind(this->_socketfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-	{
-		perror("bind failed");
-		exit(EXIT_FAILURE);
-	}
+		throw std::runtime_error(std::string("WARNING server <")
+			+ data.getHost() + ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 
 	if (listen(this->_socketfd, 3) < 0)
-	{
-		perror("listen");
-		exit(EXIT_FAILURE);
-	}
+		throw std::runtime_error(std::string("WARNING server <")
+			+ data.getHost()+ ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
+
+	log "Binding on " + data.getHost()+ ":" + std::to_string(_port) line;
 	this->addData(data);
 	this->_connections.push_back(Connection(this->_socketfd, this, true, addr));
 	this->_webserv->_pollArray.push_back((struct pollfd){this->_socketfd, POLLIN, 0});
@@ -57,9 +51,12 @@ int		Server::connect()
 	newfd = accept(this->_socketfd, (struct sockaddr *)&client_addr, (socklen_t*)&len);
 	if (newfd < 0)
 	{
-		perror("accept");
-		exit(EXIT_FAILURE);
+		throw std::runtime_error(std::string("Error with client <")
+			+ inet_ntoa(client_addr.sin_addr) + ":" + std::to_string(ntohs(client_addr.sin_port))
+			+ "> " + std::string(strerror(errno)));
 	}
+	log "Accepted connection from " + std::string(inet_ntoa(client_addr.sin_addr))
+		+ ":" + std::to_string(ntohs(client_addr.sin_port)) line;
 	this->_connections.push_back(Connection(newfd, this, false, client_addr));
 	this->_webserv->_pollArray
 	.insert(
@@ -81,6 +78,8 @@ int		Server::getPort()
 
 void	Server::erase(int index)
 {
+	log "Closing connection with " + std::string(inet_ntoa(this->_connections[index]._addr.sin_addr))
+		+ ":" + std::to_string(ntohs(this->_connections[index]._addr.sin_port)) line;
 	this->_webserv->_pollArray.erase(this->_webserv->_pollArray.begin() + index);
 	this->_webserv->updateIndexs(this->_index, -1);
 	index -= this->_webserv->_indexTable[this->_index];

@@ -43,7 +43,8 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	tmpf = std::tmpfile();
 
 	array.push_back("CONTENT_LENGTH=" + std::to_string(req.getContentLen()));
-	array.push_back("CONTENT_TYPE=" + req.getContentType());
+	if (req.getConnectionType().size())
+		array.push_back("CONTENT_TYPE=" + req.getContentType());
 	array.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	array.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	array.push_back("SERVER_PORT=" +  std::to_string(req.getConnection()->getPort()));
@@ -52,13 +53,13 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	array.push_back("SERVER_SOFTWARE=webserv");
 	array.push_back("REMOTE_ADDR=" + req.getConnection()->getIp());
 	array.push_back("PATH_INFO=" + req.getUri());
-	array.push_back("PATH_TRANSLATED=" + std::string(getcwd(NULL,0)) + req.getUri());
+	array.push_back("PATH_TRANSLATED=" + root + req.getUri());
 	array.push_back("SCRIPT_NAME=" + req.getUri());
 	array.push_back("QUERY_STRING=" + req.getQuery());
 
 	std::vector<Request::Header> headers = req.getHeaders();
 	for (std::vector<Request::Header>::iterator it = headers.begin(); it != headers.end(); ++it)
-		array.push_back("http_" + it->name + "=" + it->value);
+		array.push_back("HTTP_" + it->name + "=" + it->value);
 
 	pid = fork();
 
@@ -73,7 +74,8 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 		dup2(fd, STDOUT_FILENO);
 
 		chdir(root.c_str());
-		execve(cgi_path.c_str(), (char *const *)argv, env);
+		if (execve(cgi_path.c_str(), (char *const *)argv, env) == -1)
+			exit(1);
 	}
 	else
 		waitpid(pid, nullptr, 0);

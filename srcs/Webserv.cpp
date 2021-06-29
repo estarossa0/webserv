@@ -62,7 +62,13 @@ Server	&Webserv::serverAt(int index)
 static void	hookPollIn(Webserv &web, size_t i)
 {
 	if (web[i].is_Server())
-		web[i].getServer()->connect();
+	{
+		try{
+			web[i].getServer()->connect();}
+		catch (std::runtime_error & e) {
+			outputLogs(e.what());
+		}
+	}
 	else
 	{
 		int l = web[i].read();
@@ -126,10 +132,20 @@ void	Webserv::init(std::vector<ServerData> const &svsdata)
 				goto MAINLOOP;
 			}
 		}
-		this->addServer(svsdata[index]);
+		try {
+			this->addServer(svsdata[index]);}
+		catch (std::runtime_error &e) {
+			outputLogs(e.what());
+			continue ;
+		}
 		ports.push_back(svsdata[index].getPort());
 		hosts.push_back(svsdata[index].getHost());
 		MAINLOOP: continue;
+	}
+	if (this->_servers.size() == 0)
+	{
+		outputLogs("Error: Could not create any server! Webserv stoping...");
+		exit(1);
 	}
 }
 

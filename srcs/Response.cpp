@@ -138,7 +138,7 @@ std::string Response::getCodeStatus()
 	return "";
 }
 
-void Response::checkFilePermission(std::string &path, int mode)
+void Response::checkFilePermission(std::string const &path, int mode)
 {
 	int returnval = access(path.c_str(), mode);
 	if (returnval != 0)
@@ -388,6 +388,8 @@ void Response::makeBody()
 		}
 		if (_location.isCGI())
 		{
+			getFileNameFromUri(_request.getUri());
+			checkFilePermission(_location.getFastCgiPass(), X_OK);
 			FILE *f = callCGI(_request, _data.getRootDir(), _location.getFastCgiPass());
 			this->_cgi = parseCgiResponse(f);
 		}

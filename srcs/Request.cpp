@@ -273,7 +273,7 @@ void Request::parseRequest()
 			isDone = true;
 	} catch (std::exception &e)
 	{
-		log "exception at request parsing: " << e.what() line;
+		outputLogs("exception at request parsing: " + std::string(e.what()));
 		isDone = true;
 		_error = 1;
 	}
@@ -299,8 +299,6 @@ void Request::parseRequest()
 		if (!_host.length())
 			error = 1;
 		_error = error;
-		// if (_error)
-			// log "ERROR in request" line;
 	}
 }
 
@@ -360,8 +358,7 @@ bool Request::checkDataDone()
 					_data.append("Content-Length: ").append(std::to_string(chunked.length())).append("\r\n\r\n");
 					_data.append(chunked).append("\r\n\r\n");
 				} catch (std::exception &e) {
-					if (DEBUG)
-						log "exception at checkDataDone: " << e.what() line;
+					outputLogs("exception at checkDataDone: " + std::string(e.what()));
 					_error = 1;
 				}
 				_isDone = true;

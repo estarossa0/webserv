@@ -201,7 +201,7 @@ void Response::uploadFile()
 		}
 	} catch (std::exception &e)
 	{
-		log "Exception at uploadFile: " << e.what() line;
+		outputLogs("exception at uploadFile: " + std::string(e.what()));
 		_status = ST_SERVER_ERROR;
 		throw Response::ServerError();
 	}
@@ -397,10 +397,8 @@ void Response::makeBody()
 		else if (_request.getMethod().compare("DELETE") == 0)
 			methodDelete();
 	}
-	catch (std::exception &e)
-	{
-		if (DEBUG)
-			log "Exception at makeBody : " << e.what() line;
+	catch (std::exception &e) {
+		outputLogs("exception at makeBody: " + std::string(e.what()));
 	}
 }
 

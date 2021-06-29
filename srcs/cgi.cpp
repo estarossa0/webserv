@@ -52,13 +52,13 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	array.push_back("SERVER_SOFTWARE=webserv");
 	array.push_back("REMOTE_ADDR=" + req.getConnection()->getIp());
 	array.push_back("PATH_INFO=" + req.getUri());
-	array.push_back("PATH_TRANSLATED=" + std::string(getcwd(NULL,0)) + req.getUri());
+	array.push_back("PATH_TRANSLATED=" + root + req.getUri());
 	array.push_back("SCRIPT_NAME=" + req.getUri());
 	array.push_back("QUERY_STRING=" + req.getQuery());
 
 	std::vector<Request::Header> headers = req.getHeaders();
 	for (std::vector<Request::Header>::iterator it = headers.begin(); it != headers.end(); ++it)
-		array.push_back("http_" + it->name + "=" + it->value);
+		array.push_back("HTTP_" + it->name + "=" + it->value);
 
 	pid = fork();
 

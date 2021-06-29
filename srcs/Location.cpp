@@ -9,7 +9,7 @@ char const *Location::standard_allowed_methods[3] = {
 Location::Location() : _path("/"),
 					   _isRedirection(false),
 					   _isCGI(false),
-					   _upload_enable(true)
+					   _upload_enable(false)
 {
 	for (size_t i = 0; i < 3; i++)
 		_allowed_methods.insert(std::pair<std::string, bool>(standard_allowed_methods[i], false));

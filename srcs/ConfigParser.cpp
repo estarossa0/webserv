@@ -227,6 +227,20 @@ void ConfigParser::_indexServers()
 		throw std::runtime_error(ERROR_EMPTY_CONFIGURATION);
 }
 
+static std::string convertStrArrToString(std::vector<std::string> const &arr, std::string const delimiter)
+{
+	std::string retval = "[";
+
+	for (size_t i = 0; i < arr.size(); i++)
+	{
+		retval.append(arr[i]);
+		if (i + 1 < arr.size())
+			retval.append(delimiter);
+	}
+	retval.append("]");
+	return retval;
+}
+
 void ConfigParser::_parseContent()
 {
 	size_t start;
@@ -281,8 +295,11 @@ void ConfigParser::_parseContent()
 				throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[start] + "]");
 			start++;
 		}
-		if (!sv.hasNecessaryElements())
-			throw std::runtime_error(ERROR_MISSING_NECESSARY_ELEMENT);
+		std::vector<std::string> missing_elements = sv.hasNecessaryElements();
+		if (!missing_elements.empty())
+			throw std::runtime_error(std::to_string(missing_elements.size()) + std::string(ERROR_MISSING_ELEMENTS) +
+									 convertStrArrToString(missing_elements, ", ") + " in the server N°" +
+									 std::to_string((i + 2) / 2) + " configuration");
 		if (sv.getLocations().size() == 0)
 			sv.addLocation(Location());
 

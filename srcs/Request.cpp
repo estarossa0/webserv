@@ -375,10 +375,20 @@ bool Request::checkDataDone()
 			try {
 				len = std::stoi(_data.substr(_data.find("Content-Length: ") + 16));
 				std::string tmp = _data.substr(i + 4);
-				if (tmp.length() == len)
+				if (tmp[0] == '\r')
+					throw std::invalid_argument("bad request");
+				if (isSuffix("\r\n", tmp) && tmp.length() == len + 2) {
+					_data.erase(_data.length() - 2);
 					_isDone = true;
+				}
+				else if (tmp.length() == len)
+					_isDone = true;
+				else if (tmp.length() > len)
+					throw std::invalid_argument("bad request");
 			} catch (std::exception &e)
 			{
+				_isDone = true;
+				_error = 1;
 			}
 		}
 		else

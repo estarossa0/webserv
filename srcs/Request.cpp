@@ -39,7 +39,7 @@ bool isSuffix(std::string s1, std::string s2)
 bool isPreffix(std::string s1, std::string s2)
 {
 	int n1 = s1.length(), n2 = s2.length();
-	if (!s1.length() || !s2.length())
+	if (!s1.length() || !s2.length() || n1 > n2)
 		return false;
 	for (int i = 0; i < n1; i++)
 		if (s1[i] != s2[i])
@@ -330,13 +330,13 @@ bool Request::validateContentLength()
 		throw std::invalid_argument("bad request");
 	if (!tmp.length())
 		return false;
-	if (isSuffix("\r\n\r\n", tmp)) {
+	if (isSuffix("\r\n\r\n", tmp) && _data.find("boundary") == std::string::npos) {
 		tmp.erase(tmp.end() - 4, tmp.end());
 		len += std::count(tmp.begin(), tmp.end(), '\r');
 		_isDone = true;
 		if (len != tmp.length())
 			_error = 1;
-	} else if (tmp.length() == len && tmp.find("\r") == std::string::npos)
+	} else if (tmp.length() == len && (tmp.find("\r") == std::string::npos || _data.find("boundary") != std::string::npos))
 		_isDone = true;
 	return _isDone;
 }

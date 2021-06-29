@@ -43,7 +43,8 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	tmpf = std::tmpfile();
 
 	array.push_back("CONTENT_LENGTH=" + std::to_string(req.getContentLen()));
-	array.push_back("CONTENT_TYPE=" + req.getContentType());
+	if (req.getConnectionType().size())
+		array.push_back("CONTENT_TYPE=" + req.getContentType());
 	array.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	array.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	array.push_back("SERVER_PORT=" +  std::to_string(req.getConnection()->getPort()));

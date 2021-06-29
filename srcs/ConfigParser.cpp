@@ -49,7 +49,6 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 
 	_parseContent();
 	output << "content has been parsed successfully" << std::endl;
-	// std::cout << "content has been parsed successfully" << std::endl;
 
 	output << "======================== SERVERS PARSING ==========================" << std::endl;
 
@@ -57,6 +56,7 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 	{
 		output << _servers[i] << std::endl;
 	}
+	outputLogs("configuration file has been parsed successfully");
 }
 
 ConfigParser::~ConfigParser()
@@ -68,20 +68,25 @@ ConfigParser::~ConfigParser()
 	_checked_location_primitives.clear();
 }
 
-std::vector<ServerData> const &ConfigParser::getServers() const
+std::vector<ServerData> ConfigParser::getServers() const
 {
-	return this->_servers;
+	std::vector<ServerData> splitedServers;
+
+	for (size_t i = 0; i < _servers.size(); i++)
+	{
+		std::vector<int> ports = _servers[i].getPorts();
+		for (size_t j = 0; j < ports.size(); j++)
+		{
+			ServerData server = _servers[i];
+			server.setPort(ports[j]);
+			splitedServers.push_back(server);
+		}
+	}
+	return splitedServers;
 }
 
 void ConfigParser::addServer(ServerData const &sv)
 {
-	for (size_t i = 0; i < _servers.size(); i++)
-	{
-		if (sv.getName() == _servers[i].getName())
-			throw std::runtime_error(ERROR_DUPLICATE_SERVER_NAME + sv.getName());
-		if (sv.getHost() == _servers[i].getHost() && sv.getPort() == _servers[i].getPort())
-			throw std::runtime_error(ERROR_DUPLICATE_SERVER_HOST_AND_PORT + sv.getHost() + " - " + std::to_string(sv.getPort()));
-	}
 	_servers.push_back(sv);
 }
 
@@ -124,15 +129,16 @@ std::vector<std::string> ConfigParser::_split(std::string const &_line, char c)
 
 void ConfigParser::_getFileContent()
 {
-	std::vector<std::string> fileParts = _split(_filename, '.');
-	if (fileParts.back() != "conf")
-		throw std::invalid_argument(ERROR_FILE_EXTENSION);
-
 	std::ifstream inFile(_filename);
 	std::string buff;
 
 	if (!inFile.is_open())
 		throw std::invalid_argument(ERROR_FILE);
+
+	std::vector<std::string> fileParts = _split(_filename, '.');
+	if (fileParts.back() != "conf")
+		throw std::invalid_argument(ERROR_FILE_EXTENSION);
+
 	size_t hashPos;
 	while (std::getline(inFile, buff))
 	{
@@ -192,7 +198,6 @@ void ConfigParser::_indexServers()
 			if (--isBracesValid < 0)
 				throw std::runtime_error(ERROR_BRACES);
 		}
-
 		if (serverBraceOpen && isBracesValid == 0)
 		{
 			serverBraceOpen = false;
@@ -220,6 +225,20 @@ void ConfigParser::_indexServers()
 		throw std::runtime_error(ERROR_BRACES);
 	if (_serversIndexing.size() == 0)
 		throw std::runtime_error(ERROR_EMPTY_CONFIGURATION);
+}
+
+static std::string convertStrArrToString(std::vector<std::string> const &arr, std::string const delimiter)
+{
+	std::string retval = "[";
+
+	for (size_t i = 0; i < arr.size(); i++)
+	{
+		retval.append(arr[i]);
+		if (i + 1 < arr.size())
+			retval.append(delimiter);
+	}
+	retval.append("]");
+	return retval;
 }
 
 void ConfigParser::_parseContent()
@@ -261,6 +280,7 @@ void ConfigParser::_parseContent()
 			{
 				if (primitives_openings[parserIndex] != ERROR_PAGE_OP &&
 					primitives_openings[parserIndex] != LOCATION_OP &&
+					primitives_openings[parserIndex] != PORT_OP &&
 					_checked_primitives[primitives_openings[parserIndex]])
 					throw std::runtime_error(ERROR_SERVER_DUPLICATE_FIELD + getStringType("[") + _fileLines[start] + "]");
 
@@ -275,8 +295,11 @@ void ConfigParser::_parseContent()
 				throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[start] + "]");
 			start++;
 		}
-		if (!sv.hasNecessaryElements())
-			throw std::runtime_error(ERROR_MISSING_NECESSARY_ELEMENT);
+		std::vector<std::string> missing_elements = sv.hasNecessaryElements();
+		if (!missing_elements.empty())
+			throw std::runtime_error(std::to_string(missing_elements.size()) + std::string(ERROR_MISSING_ELEMENTS) +
+									 convertStrArrToString(missing_elements, ", ") + " in the server N°" +
+									 std::to_string((i + 2) / 2) + " configuration");
 		if (sv.getLocations().size() == 0)
 			sv.addLocation(Location());
 
@@ -341,9 +364,9 @@ int ConfigParser::_portParser(size_t index, ServerData &sv)
 	{
 		if (tokens[0] != PORT_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(PORT_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		if (!_isSet(tokens[1], &(std::isdigit)))
+		if (!_isSet(tokens[1], std::isdigit))
 			throw std::runtime_error(ERROR_PORT_NAN);
-		sv.setPort(std::atoi(tokens[1].c_str()));
+		sv.addPort(std::atoi(tokens[1].c_str()));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
@@ -380,11 +403,12 @@ int ConfigParser::_serverNameParser(size_t index, ServerData &sv)
 	_semicolonChecker(_line);
 
 	std::vector<std::string> tokens = _split(_line);
-	if (tokens.size() == 2)
+	if (tokens.size() >= 2)
 	{
 		if (tokens[0] != SERVER_NAME_OP)
 			throw std::runtime_error(DID_YOU_MEAN + getStringType(SERVER_NAME_OP) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-		sv.setName(tokens[1]);
+		tokens.erase(tokens.begin());
+		sv.setNames(tokens);
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
@@ -569,10 +593,9 @@ void ConfigParser::_locIndexParser(size_t index, Location &loc)
 	std::vector<std::string> tokens = _split(_line);
 	if (tokens[0] != LOC_INDEX)
 		throw std::runtime_error(DID_YOU_MEAN + getStringType(LOC_INDEX) + IN_THIS_LINE + "[" + _fileLines[index] + "] ?");
-	if (tokens.size() < 2)
+	if (tokens.size() != 2)
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-	tokens.erase(tokens.begin());
-	loc.setDefaultFiles(tokens);
+	loc.setDefaultFile(tokens[1]);
 }
 
 void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
@@ -702,14 +725,7 @@ void ConfigParser::_locCGIParser(size_t index, Location &loc)
 			throw std::runtime_error(CGI_NOT_SUPPORTED + loc.getPath() + " ]");
 		loc.setPath("." + insideTokens[1]);
 		loc.setIsCGI(true);
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG && tokens[1] != "on" && tokens[1] != "off")
-			throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
-			loc.setIsCGI(tokens[1] == "on");
-		if (!GHANDIRO_LPATH_DYAL_CGI_FLCONFIG)
-			loc.setFastCgiPass(tokens[1]);
-		else
-			loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
+		loc.setFastCgiPass(_removeDuplicateChar(tokens[1], '/'));
 	}
 	else
 		throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[index] + "]");

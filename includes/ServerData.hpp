@@ -3,40 +3,44 @@
 
 #include "Webserv.hpp"
 
-#define NUMBER_OF_NECESSARY_ELEMENTS 4
+#define NUMBER_OF_NECESSARY_ELEMENTS 3
 
 #define PORT_NECESSITY_NUMBER 0
 #define HOST_NECESSITY_NUMBER 1
 #define ROOT_NECESSITY_NUMBER 2
-#define NAME_NECESSITY_NUMBER 3
 
 class ServerData
 {
 private:
+	std::vector<int> _ports;
 	int _port;
 	std::string _host;
-	std::string _name;
+	std::vector<std::string> _names;
 	int _client_body_size;
 	// error_pages<error code, path of html error page>
 	std::map<int, std::string> _error_pages;
 	std::string _root_dir;
 	std::vector<Location> _locations;
 	bool _necessary_elements[NUMBER_OF_NECESSARY_ELEMENTS];
+	std::vector<std::string> _necessary_elements_identifiers;
 
 public:
 	ServerData();
 	ServerData(ServerData const &);
-	ServerData const &operator=(ServerData const &);
+	ServerData &operator=(ServerData const &);
 	~ServerData();
 
 	void setPort(int const &);
-	int const & getPort() const;
+	int const &getPort() const;
+
+	void addPort(int const &);
+	std::vector<int> const &getPorts() const;
 
 	void setHost(std::string const &);
 	std::string const &getHost() const;
 
-	void setName(std::string const &);
-	std::string const & getName() const;
+	void setNames(std::vector<std::string> const &);
+	std::vector<std::string> const &getNames() const;
 	
 	void setClientBodySize(int const &);
 	int const &getClientBodySize() const;
@@ -50,7 +54,8 @@ public:
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
 
-	bool const hasNecessaryElements() const;
+	std::vector<std::string> hasNecessaryElements() const;
+	bool const doesHavePort(int const & port) const;
 
 };
 

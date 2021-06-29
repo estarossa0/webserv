@@ -62,7 +62,13 @@ Server	&Webserv::serverAt(int index)
 static void	hookPollIn(Webserv &web, size_t i)
 {
 	if (web[i].is_Server())
-		web[i].getServer()->connect();
+	{
+		try{
+			web[i].getServer()->connect();}
+		catch (std::runtime_error & e) {
+			outputLogs(e.what());
+		}
+	}
 	else
 	{
 		int l = web[i].read();
@@ -72,8 +78,6 @@ static void	hookPollIn(Webserv &web, size_t i)
 
 static void	hookPollOut(Webserv &web, size_t i)
 {
-	if (DEBUG)
-		log web[i].getRequest().getData() line;
 	if (web[i].getRequest().getData().length())
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
@@ -115,8 +119,66 @@ void	Webserv::hook()
 
 void	Webserv::init(std::vector<ServerData> const &svsdata)
 {
+	std::vector<int> ports;
+	std::vector<std::string> hosts;
+
 	for (size_t index = 0; index < svsdata.size(); index++)
 	{
-		this->addServer(svsdata[index]);
+		for (size_t j = 0; j < ports.size(); j++)
+		{
+			if (svsdata[index].getPort() == ports[j] && svsdata[index].getHost() == hosts[j])
+			{
+				this->_servers[j].addData(svsdata[index]);
+				goto MAINLOOP;
+			}
+		}
+		try {
+			this->addServer(svsdata[index]);}
+		catch (std::runtime_error &e) {
+			outputLogs(e.what());
+			continue ;
+		}
+		ports.push_back(svsdata[index].getPort());
+		hosts.push_back(svsdata[index].getHost());
+		MAINLOOP: continue;
+	}
+	if (this->_servers.size() == 0)
+	{
+		outputLogs("Error: Could not create any server! Webserv stoping...");
+		exit(1);
 	}
 }
+
+// Get current date/time in this format YYYY-MM-DD HH:mm:ss
+static std::string const currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+    return buf;
+}
+
+void outputLogs(std::string logs)
+{
+	std::fstream logsFile(LOGS_FILE, std::ios::app);
+	if (!logsFile.is_open())
+		throw std::runtime_error("Could NOT open the logs file");
+	std::ifstream logsFileIn(LOGS_FILE, std::ios::in);
+	std::string buff;
+	std::getline(logsFileIn, buff);
+	if (!buff.empty())
+		while (logs.front() == '\n')
+		{
+			logsFile << std::endl;
+			logs.erase(0, 1);
+		}
+	else
+		while (logs.front() == '\n')
+			logs.erase(0, 1);
+    logsFile << "[" << currentDateTime() << "]: " << logs << std::endl;
+	logsFile.close();
+	logsFileIn.close();
+}
+

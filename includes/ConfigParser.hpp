@@ -38,10 +38,6 @@
 #define PHP_EXTENTION ".php"
 #define PYTHON_EXTENTION ".py"
 
-#ifndef GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
-#define GHANDIRO_LPATH_DYAL_CGI_FLCONFIG false
-#endif // !GHANDIRO_LPATH_DYAL_CGI_FLCONFIG
-
 #define LOCALHOST "127.0.0.1"
 
 // error messages
@@ -55,10 +51,10 @@
 #define ERROR_EMPTY_SERVER_CONFIGURATION "A server must not have an empty configuration"
 #define ERROR_INVALID_CONFIGURATION "This configuration file is invalid.\nERROR in this line -> "
 #define ERROR_EMPTY_CONFIGURATION "Your file does not contains any server configuration"
-#define ERROR_MISSING_NECESSARY_ELEMENT "Make sure that all servers in file configuration contains at least these 4 elements: [port, host, name, root]"
+#define ERROR_MISSING_ELEMENTS " necessary missing elements: "
 #define ERROR_MISSING_SEMICOLON "Missing a semicolon in this line: "
 #define ERROR_DOUBLE_SEMICOLON "Should be only one semicolon at the end of this line: "
-#define ERROR_PORT_NAN "The value of port must be a non-zero positive number"
+#define ERROR_PORT_NAN "The port value must be a positive number"
 #define ERROR_CLIENT_BODY_SIZE_UNITY "The client max body size must end with 'm' (refers to megabytes) as its unity"
 #define ERROR_CLIENT_BODY_SIZE_NAN "The value of client max body size must be a non-zero positive number"
 #define ERROR_ERRPAGE_CODE_NAN "The value of an error page code must be a non-zero positive number"
@@ -75,7 +71,6 @@
 #define IN_THIS_LINE " field in this line -> "
 #define ERROR_DUPLICATE_SERVER_NAME "Try to use a unique name for each server: duplicate name -> "
 #define ERROR_DUPLICATE_SERVER_HOST_AND_PORT "Two servers cannot have the same host and port, at least one must differ.\nduplicate host and port: "
-// #define ERROR_CGI_LOCATION_PATH "path of cgi location is invalid, error in this line-> "
 #define ERROR_INVALID_IDENTIFIER "Invalid identifier: in this line -> "
 #define CGI_NOT_SUPPORTED "Only these extensions are supported for CGI: [.php] and [.py]\nError in this line:[ location "
 
@@ -130,7 +125,7 @@ private:
 
 public:
 	ConfigParser(char const *inFilename);
-	std::vector<ServerData> const &getServers() const;
+	std::vector<ServerData> getServers() const;
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];
 	static std::string const location_identifiers[NUMBER_OF_LOCATION_PRIMITIVES];

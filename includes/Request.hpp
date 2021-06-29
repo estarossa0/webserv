@@ -33,7 +33,6 @@ private:
 	std::string _boundary;
 	std::string _disp;
 	std::string _contype;
-	std::string _cookies;
 	std::vector<Header> _headers;
 	std::vector<Argument> _args;
 	Connection *_connection;
@@ -43,6 +42,7 @@ private:
 	void appendToBody(std::string );
 	int getSpaceIndex(const std::string &, int);
 	Argument parseArgument(const std::string &);
+	bool validateContentLength();
 
 public:
 	bool isDone;
@@ -52,6 +52,7 @@ public:
 	~Request();
 
 	void parseRequest();
+	void parseBody();
 	void clear();
 	void printRequest();
 	void parseHeader(std::string &);
@@ -70,10 +71,9 @@ public:
 	const std::string &getDisposition() const;
 	const std::string &getData() const;
 	const std::string &getConnectionType() const;
-	const std::string &getCookies() const;
 	void setConnectionType(std::string const &);
 	Connection	*getConnection();
-	ServerData	getServerData();
+	std::vector<ServerData> getServerData(std::string &);
 	int getRequestError();
 
 	void setUri(std::string const &);

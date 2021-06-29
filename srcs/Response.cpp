@@ -100,13 +100,15 @@ bool	Response::checkFileExists(std::string &path)
 	return isOpen;
 }
 
-bool Response::isDirectory(const std::string &s)
+bool Response::isDirectory(const std::string &s, int is_full)
 {
-	if (opendir((getPulicDirectory() + s).c_str()) == NULL) {
-		_status = ST_NOT_FOUND;
-		throw Response::NotFound();
+	std::string dir = s;
+	if (!is_full)
+		dir = getPulicDirectory().append(s);
+	if (opendir(s.c_str()) == NULL) {
+		return false;
     }
-	return 1;
+	return true;
 }
 
 std::string Response::getFileNameFromUri(std::string uri)
@@ -114,7 +116,7 @@ std::string Response::getFileNameFromUri(std::string uri)
 	std::string path;
 
 	path = uri;
-	if (isDirectory(path))
+	if (isDirectory(path, 0))
 	{
 		if (!this->_location.getAutoIndex() && isPreffix(_location.getPath(), path))
 		{
@@ -220,9 +222,15 @@ void Response::uploadFile()
 std::string Response::getUploadDirectory()
 {
 	std::string dir = getPulicDirectory();
+
 	dir.append(_location.getUploadLocation());
 	if (dir.back() != '/')
 		dir.append("/");
+	if (!isDirectory(dir, 1))
+	{
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
+	}
 	return dir;
 }
 
@@ -300,7 +308,7 @@ void Response::generateDirectoryListing()
 void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	if (isDirectory(_request.getUri()))
+	if (isDirectory(_request.getUri(), 0))
 	{
 		if (_location.getAutoIndex())
 			generateDirectoryListing();
@@ -318,7 +326,7 @@ void Response::methodGet()
 void Response::methodPost()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	if (_location.getUploadEnabled() && isDirectory(_request.getUri()))
+	if (_location.getUploadEnabled())
 		uploadFile();
 	else
 		readFile(file);
@@ -328,7 +336,7 @@ void Response::methodPost()
 void Response::methodDelete()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	if (isDirectory(file))
+	if (isDirectory(file, 1))
 	{
 		_status = ST_NOT_FOUND;
 		throw Response::NotFound();
@@ -361,7 +369,9 @@ void Response::makeBody()
 				cgi = true;
 				break ;
 			}
-			else if (isPreffix((*it).getPath(), _request.getUri()))
+			else if (isPreffix((*it).getPath(), _request.getUri()) &&
+				(*(_request.getUri().c_str() + (*it).getPath().length()) == '/' ||
+					!*(_request.getUri().c_str() + (*it).getPath().length())))
 			{
 				if (!getLocation().getPath().length())
 				{

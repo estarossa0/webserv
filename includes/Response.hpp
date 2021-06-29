@@ -35,10 +35,9 @@ private:
 	void readFile(std::string);
 	void uploadFile();
 	void setErrorPage();
-	bool isDirectory(const std::string &s);
-	std::string getDefaultErrorPage(int status);
+	bool isDirectory(const std::string &, int);
+	std::string getDefaultErrorPage(int);
 	std::string getResponseContentType();
-	// std::string getCookiesSetter();
 
 	std::string getUploadDirectory();
 	std::string getFilePath(std::string);

@@ -54,7 +54,7 @@
 #define ERROR_MISSING_ELEMENTS " necessary missing elements: "
 #define ERROR_MISSING_SEMICOLON "Missing a semicolon in this line: "
 #define ERROR_DOUBLE_SEMICOLON "Should be only one semicolon at the end of this line: "
-#define ERROR_PORT_NAN "The value of port must be a non-zero positive number"
+#define ERROR_PORT_NAN "The port value must be a positive number"
 #define ERROR_CLIENT_BODY_SIZE_UNITY "The client max body size must end with 'm' (refers to megabytes) as its unity"
 #define ERROR_CLIENT_BODY_SIZE_NAN "The value of client max body size must be a non-zero positive number"
 #define ERROR_ERRPAGE_CODE_NAN "The value of an error page code must be a non-zero positive number"

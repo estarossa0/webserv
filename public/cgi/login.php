@@ -1,17 +1,5 @@
 <?php
 setcookie("cgi", "1");
-perform_task();
-header('Location: /cgi/home.php');
-
-function perform_task() {
-  $start_time = time();
-
-  while(true) {
-    if ((time() - $start_time) > 2000) {
-      return false;
-    }
-  }
-}
 ?>
 
 <!DOCTYPE html>
@@ -26,7 +14,8 @@ function perform_task() {
 <body>
 	<div class="container">
 		<div class="d-flex flex-row justify-content-center">
-			<h1>Logging in...</h1>
+			<h1>Logged in successfully</h1>
+			<a href="index.php" >Go home</a>
 		</div>
 	</div>
 </body>

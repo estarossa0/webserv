@@ -74,7 +74,8 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 		dup2(fd, STDOUT_FILENO);
 
 		chdir(root.c_str());
-		execve(cgi_path.c_str(), (char *const *)argv, env);
+		if (execve(cgi_path.c_str(), (char *const *)argv, env) == -1)
+			exit(1);
 	}
 	else
 		waitpid(pid, nullptr, 0);

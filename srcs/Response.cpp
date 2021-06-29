@@ -477,6 +477,8 @@ std::string Response::getResponseContentType()
 std::string Response::parseCgiResponse(FILE *file)
 {
 	std::string buffer;
+	std::string tmp;
+
 	int fd = fileno(file);
 	char lines[1024];
 	int r;
@@ -489,18 +491,25 @@ std::string Response::parseCgiResponse(FILE *file)
 	int i = buffer.find("Status: ");
 	if (i != std::string::npos) {
 		_status = std::stoi(buffer.substr(i + 8, 3));
-		buffer.erase(i, 13);
+		buffer.erase(i, buffer.find("\r\n") + 2);
 	}
+	else
+		_status = 200;
 	i = buffer.find("\r\n\r\n");
-    if (i != std::string::npos) {
-        std::string tmp = buffer.substr(i);
-        std::string len_str("Content-Length: ");
-        len_str.append(std::to_string(tmp.length() - 4));
-        tmp.insert(0, len_str);
-        buffer.erase(i);
-        buffer.append("\r\n");
-        buffer.append(tmp);
-    }
+	std::string len_str("Content-Length: ");
+    if (i != std::string::npos)
+	{
+        tmp = buffer.substr(i);
+		len_str.append(std::to_string(tmp.length() - 4));
+		tmp.insert(0, len_str);
+		buffer.erase(i);
+		buffer.append("\r\n");
+		buffer.append(tmp);
+	} else {
+		len_str.append(std::to_string(buffer.length()));
+		len_str.append("\r\n\r\n");
+		buffer.insert(0, len_str);
+	}
 	if (!_status)
 		_status = ST_OK;
 	return buffer;

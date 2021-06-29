@@ -51,6 +51,7 @@ public:
 	~Request();
 
 	void parseRequest();
+	void parseBody();
 	void clear();
 	void printRequest();
 	void parseHeader(std::string &);

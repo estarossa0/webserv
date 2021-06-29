@@ -146,6 +146,58 @@ void Request::appendToBody(std::string content)
 		_body.append(content).append("\n");
 }
 
+void Request::parseBody()
+{
+	std::string buffer;
+	bool boundary = false;
+	std::string tmp = _data.substr(_data.find("\r\n\r\n") + 4);
+	std::istringstream lines(tmp);
+
+	while (std::getline(lines, buffer)) {
+		
+		if (!_boundary.empty())
+		{
+			if (isBoundary(_boundary, buffer))
+			{
+				if (!_isArg)
+					_isArg = true;
+				else
+				{
+					_args.push_back(parseArgument(_body));
+					_body.clear();
+				}
+			}
+			else if (isPreffix(_boundary, buffer))
+			{
+				_isArg = false;
+				_args.push_back(parseArgument(_body));
+				_body.clear();
+				isDone = true;
+			}
+			else if (_isArg)
+				_body.append(buffer).append("\n");
+		} else {
+			if (_isArg)
+			{
+				buffer.pop_back();
+				_body.append(buffer);
+				if (_body.length() == _clen)
+				{
+					Request::Argument arg = {};
+					arg.data = _body;
+					_args.push_back(arg);
+					_body.clear();
+					_isArg = false;
+				}
+				else
+					_body.append("\n");
+			}
+			else
+				_isArg = true;
+		}
+	}
+}
+
 void Request::parseRequest()
 {
 	std::string buffer;
@@ -155,7 +207,6 @@ void Request::parseRequest()
 	try {
 		while (std::getline(lines, buffer))
 		{
-			// log "current line: " << buffer line;
 			if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 			{
 				_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
@@ -205,47 +256,19 @@ void Request::parseRequest()
 					throw std::invalid_argument("invalid content-length header");
 				_clen = std::stoi(buffer.substr(buffer.find(":") + 2));
 			}
-			else if (!_contype.length() && buffer.find("Connection") != std::string::npos)
+			else if (buffer.find("Connection") != std::string::npos)
 			{
 				if (buffer.find("Connection: ") == std::string::npos)
 					throw std::invalid_argument("invalid connection header");
 				_contype = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
 			}
-			else if (buffer.find("Cookie") != std::string::npos)
-			{
-				if (buffer.find("Cookie: ") == std::string::npos)
-					throw std::invalid_argument("invalid cookie header");
-				// if (_cookies.length())
-				// 	_cookies.append(";");
-				// _cookies.append(buffer.substr(buffer.find(":") + 2));
-				// _cookies.pop_back();
-				parseHeader(buffer);
-			}
-			else if (!_clen)
-				parseHeader(buffer);
-			else if (_clen && !_boundary.length())
-			{
-				if (_isArg)
-				{
-					buffer.pop_back();
-					_body.append(buffer);
-					if (_body.length() == _clen)
-					{
-						Request::Argument arg = {};
-						arg.data = _body;
-						_args.push_back(arg);
-						_body.clear();
-						_isArg = false;
-					}
-					else
-						_body.append("\n");
-				}
-				else
-					_isArg = true;
-			}
+			else if (buffer[0] == '\r')
+				break ;
 			else
-				appendToBody(buffer);
+				parseHeader(buffer);
 		}
+		if (_data.find("\r\n\r\n") != std::string::npos)
+			parseBody();
 		if (checkDataDone())
 			isDone = true;
 	} catch (std::exception &e)

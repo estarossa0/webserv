@@ -83,13 +83,28 @@ std::string Response::getFileNameFromDisp(std::string disp)
 
 bool	Response::checkFileExists(std::string &path)
 {
-	return true;
+	std::fstream file(path);
+
+	bool isOpen = file.is_open();
+	if(isOpen)
+		file.close();
+	else
+	{
+		try {
+			checkFilePermission(path, W_OK);
+		} catch (std::exception &e) {
+			if (_status == ST_FORBIDDEN)
+				return true;
+		}
+	}
+	return isOpen;
 }
 
 bool Response::isDirectory(const std::string &s)
 {
 	if (opendir((getPulicDirectory() + s).c_str()) == NULL) {
-		return 0;
+		_status = ST_NOT_FOUND;
+		throw Response::NotFound();
     }
 	return 1;
 }
@@ -186,24 +201,19 @@ void Response::readFile(std::string path)
 
 void Response::uploadFile()
 {
-	try {
-		for (size_t i = 0; i < _request.getLenArguments(); i++)
-		{
-			Request::Argument arg = _request.getArgument(i);
-			if (_request.getArgument(i).ctype.length())
-			{
-				std::string name = getFileNameFromDisp(arg.disp);
-				std::string dir = getUploadDirectory().append(name);
-				std::ofstream file(dir);
-				file << arg.data;
-				file.close();
-			}
-		}
-	} catch (std::exception &e)
+	for (size_t i = 0; i < _request.getLenArguments(); i++)
 	{
-		outputLogs("exception at uploadFile: " + std::string(e.what()));
-		_status = ST_SERVER_ERROR;
-		throw Response::ServerError();
+		Request::Argument arg = _request.getArgument(i);
+		if (_request.getArgument(i).ctype.length())
+		{
+			std::string name = getFileNameFromDisp(arg.disp);
+			std::string dir = getUploadDirectory().append(name);
+			if (checkFileExists(dir))
+				checkFilePermission(dir, W_OK);
+			std::ofstream file(dir);
+			file << arg.data;
+			file.close();
+		}
 	}
 }
 

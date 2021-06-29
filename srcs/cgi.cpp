@@ -3,7 +3,6 @@
 FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path)
 {
 	std::FILE*					tmpf;
-	int							pipefds[2];
 	char				const*	argv[3];
 	int							fd;
 	pid_t						pid;

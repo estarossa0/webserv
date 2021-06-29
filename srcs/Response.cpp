@@ -105,7 +105,7 @@ bool Response::isDirectory(const std::string &s, int is_full)
 	std::string dir = s;
 	if (!is_full)
 		dir = getPulicDirectory().append(s);
-	if (opendir(s.c_str()) == NULL) {
+	if (opendir(dir.c_str()) == NULL) {
 		return false;
     }
 	return true;
@@ -120,13 +120,10 @@ std::string Response::getFileNameFromUri(std::string uri)
 	{
 		if (!this->_location.getAutoIndex() && isPreffix(_location.getPath(), path))
 		{
-			if (checkFileExists(path))
-			{
-				if (path.back() != '/')
-					path.append("/"); 
-				path.append(_location.getDefaultFile());
-				_request.setUri(path);
-			}
+			if (path.back() != '/')
+				path.append("/"); 
+			path.append(_location.getDefaultFile());
+			_request.setUri(path);
 		}
 	}
 	return path;

@@ -307,8 +307,11 @@ void Response::methodGet()
 
 void Response::methodPost()
 {
-	if (_location.getUploadEnabled())
+	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
+	if (_location.getUploadEnabled() && isDirectory(_request.getUri()))
 		uploadFile();
+	else
+		readFile(file);
 	_status = ST_OK;
 }
 

@@ -406,14 +406,37 @@ void Response::makeBody()
 
 std::string Response::getDefaultErrorPage(int status)
 {
-	std::string default_page("	<!DOCTYPE html>\n\
-	<html lang=\"en\">\n\
-		<head>\n\
-			<title>Http dial 3bar</title>\n\
-		</head>\n\
-		<body>\n\
-			<h1>Error page - $1</h1>\n\
-		</body>\n\
+	std::string default_page("	<!DOCTYPE html>\
+	<html>\
+	<head>\
+		<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\" crossorigin=\"anonymous\">\
+		<title>Document</title>\
+		<style>\
+			html {\
+				font-family: sans-serif;\
+				height: 100%;\
+			}\
+			body {\
+				height: 100vh;\
+			}\
+			.size {\
+				font-size: 66px;\
+				color: white;\
+			}\
+			.-mt {\
+				margin-top: -30px;\
+			}\
+		</style>\
+	</head>\
+	<body class=\"bg-info overflow-hidden\">\
+		<h1 class=\"text-white text-center\">webserv</h1>\
+		<div class=\"mx-auto h-75 d-flex w-100 justify-content-center -mt\">\
+			<div class=\"d-flex flex-column my-auto\">\
+				<h1 class=\"size text-center\">Error</h1>\
+				<h1 class=\"text-center text-white\">$1</h1>\
+			</div>\
+		</div>\
+	</body>\
 	</html>");
 	default_page = default_page.replace(default_page.find("$1"), 2, std::to_string(status));
 	return default_page;

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -29,11 +28,21 @@
 	<h1 class="text-white text-center">webserv</h1>
 	<div class="mx-auto h-75 d-flex w-100 justify-content-center -mt">
 		<div class="d-flex flex-column my-auto">
-			<h1 class="size text-center">HTTP</h1>
-			<h1 class="text-center text-white">DIAL</h1>
-			<h2 class="text-center mt-5 text-white">3BAR</h2>
+			<h1 class="size text-center">
+				<?php 
+					if (!isset($_COOKIE['cgi'])) { 
+						echo "Not logged in";
+					} else 
+					echo "Welcome home";
+					?>
+				</h1>
+				<?php 
+				if (!isset($_COOKIE['cgi']))
+					echo '<a href="login.php" class="btn btn-primary text-center mt-5 text-decoration-none">Login</a>';
+				else
+					echo '<a href="logout.php" class="btn btn-primary text-center mt-5 text-decoration-none">Login</a>';
+				?>
 		</div>
 	</div>
 </body>
-
 </html>

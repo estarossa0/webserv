@@ -6,7 +6,7 @@
 #    By: obouykou <obouykou@student.1337.ma>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/05/18 16:04:41 by arraji            #+#    #+#              #
-#    Updated: 2021/06/30 10:32:20 by obouykou         ###   ########.fr        #
+#    Updated: 2021/06/30 11:56:43 by obouykou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ SRC_FILES = main.cpp \
 			Location.cpp \
 			ServerData.cpp \
 			cgi.cpp \
+			outputLogs.cpp \
 
 
 OBJECT_FILES = $(SRC_FILES:.cpp=.o)

@@ -40,7 +40,7 @@
 				if (!isset($_COOKIE['cgi']))
 					echo '<a href="login.php" class="btn btn-primary text-center mt-5 text-decoration-none">Login</a>';
 				else
-					echo '<a href="logout.php" class="btn btn-primary text-center mt-5 text-decoration-none">Login</a>';
+					echo '<a href="logout.php" class="btn btn-primary text-center mt-5 text-decoration-none">Logout</a>';
 				?>
 		</div>
 	</div>

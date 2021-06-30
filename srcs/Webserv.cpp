@@ -101,7 +101,7 @@ void	Webserv::hook()
 		if (p < 0)
 			break ;
 		size = this->_conSize;
-		for (size_t i = 0; i < size; i++)
+		for (size_t i = 0; i < this->_pollArray.size(); i++)
 		{
 			if (this->_pollArray[i].revents == 0)
 				continue ;

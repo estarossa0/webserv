@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Webserv.hpp"
+#include "Request.hpp"
+class Request;
+class Connection;
 
 FILE* callCGI(Request &req, std::string const &root, std::string const &cgi_path);
-
-class Request;
 
 class Response
 {

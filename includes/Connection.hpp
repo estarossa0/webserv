@@ -10,9 +10,9 @@ class	Connection
 	friend class	Server;
 	int				_socketfd;
 	Server			*_server;
+	bool			_is_Server;
 	Request			_request;
 	Response		_response;
-	bool			_is_Server;
 	struct sockaddr_in	_addr;
 
 public:

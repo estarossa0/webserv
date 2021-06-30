@@ -352,7 +352,7 @@ void Response::makeBody()
 	_data = _servers[0];
 	_location.setPath("");
 	bool cgi = false;
-	for(int i = 0; i < _servers.size(); i++)
+	for(size_t i = 0; i < _servers.size(); i++)
 	{
 		std::vector<Location> locations = _servers[i].getLocations();
 		if (this->_location.getPath().length() == 0)
@@ -508,7 +508,7 @@ std::string Response::parseCgiResponse(FILE *file)
 		lines[r] = '\0';
 		buffer.append(lines);
 	}
-	int i = buffer.find("Status: ");
+	size_t i = buffer.find("Status: ");
 	if (i != std::string::npos) {
 		_status = std::stoi(buffer.substr(i + 8, 3));
 		buffer.erase(i, buffer.find("\r\n") + 2);

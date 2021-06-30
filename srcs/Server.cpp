@@ -35,7 +35,7 @@ Server::~Server()
 {}
 
 Server::Server(Server const &other) :
-_data(other._data), _socketfd(other._socketfd), _index(other._index), _webserv(other._webserv), _namesTable(other._namesTable)
+_socketfd(other._socketfd), _index(other._index), _webserv(other._webserv), _data(other._data), _namesTable(other._namesTable), _port(other._port)
 {
 	this->_connections = other._connections;
 	for (std::vector<Connection>::iterator it = this->_connections.begin(); it != this->_connections.end(); ++it)

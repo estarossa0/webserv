@@ -36,7 +36,7 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 	_indexServers();
 
 	output << std::endl
-		   << "\nservers has been indexed successfully" << std::endl
+		   << "\nservers have been indexed successfully" << std::endl
 		   << std::endl;
 	output << "======================== SERVERS INDEXING ==========================";
 	output << std::endl
@@ -52,9 +52,10 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 
 	output << "======================== SERVERS PARSING ==========================" << std::endl;
 
-	for (size_t i = 0; i < _servers.size(); i++)
+	std::vector<ServerData> servers = getServers();
+	for (size_t i = 0; i < servers.size(); i++)
 	{
-		output << _servers[i] << std::endl;
+		output << servers[i] << std::endl;
 	}
 	outputLogs("configuration file has been parsed successfully");
 }

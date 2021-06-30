@@ -18,7 +18,7 @@ void		Webserv::addServer(int port)
 
 Connection &Webserv::operator[](int index)
 {
-	if (index > this->_conSize || index < 0)
+	if (index >= this->_conSize || index < 0)
 		throw std::out_of_range("Out of Webserv range");
 	std::vector<int>::iterator it = std::upper_bound(this->_indexTable.begin(), this->_indexTable.end(), index);
 	--it;

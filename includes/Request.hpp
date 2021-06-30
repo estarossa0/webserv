@@ -78,7 +78,7 @@ public:
 
 	void setUri(std::string const &);
 
-	void	appendToData(std::string);
+	void	appendToData(char *);
 
 	size_t getLenArguments();
 	Argument getArgument(int i);

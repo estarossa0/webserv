@@ -469,7 +469,7 @@ const std::string &Request::getConnectionType() const
 	return _contype;
 }
 
-void Request::appendToData(std::string content)
+void Request::appendToData(char *content)
 {
 	if (content[0] != '\r' || _data.length())
 	{

@@ -245,8 +245,8 @@ void ConfigParser::_parseContent()
 {
 	size_t start;
 	size_t end;
-	int parserIndex;
-	int doneParsingIndex;
+	size_t parserIndex;
+	size_t doneParsingIndex;
 	ParserFuncPtr _server_primitive_parser[NUMBER_OF_SERVER_PRIMITIVES] = {
 		&ConfigParser::_portParser,
 		&ConfigParser::_hostParser,
@@ -623,7 +623,7 @@ void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 
 	//  1 <= number of methods <= 3 and number of commas + 1 = number of methods
 	if (tokens.size() < 1 || tokens.size() > 3 ||
-		tokens.size() != std::count(_line.begin(), _line.end(), ',') + 1)
+		tokens.size() != (size_t)std::count(_line.begin(), _line.end(), ',') + 1)
 		throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + getStringType("[") + _fileLines[index] + "]");
 	for (size_t i = 0; i < tokens.size(); i++)
 	{

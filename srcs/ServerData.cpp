@@ -70,7 +70,7 @@ std::vector<int> const &ServerData::getPorts() const
 	return _ports;
 }
 
-bool const ServerData::doesHavePort(int const & port) const
+bool ServerData::doesHavePort(int const & port) const
 {
 	for (size_t i = 0; i < _ports.size(); i++)
 	{

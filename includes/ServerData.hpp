@@ -55,7 +55,7 @@ public:
 	std::vector<Location> const &getLocations() const;
 
 	std::vector<std::string> hasNecessaryElements() const;
-	bool const doesHavePort(int const & port) const;
+	bool doesHavePort(int const & port) const;
 
 };
 

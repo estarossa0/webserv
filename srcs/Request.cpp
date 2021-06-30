@@ -196,6 +196,8 @@ void Request::parseRequest()
 			if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
 			{
 				_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
+				if (!isSet(_method, isupper))
+					throw std::invalid_argument("invalid method");
 				_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
 				if (_uri.find("?") != std::string::npos)
 				{

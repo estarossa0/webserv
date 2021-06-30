@@ -1,5 +1,17 @@
 #include "Webserv.hpp"
 
+static	std::string metaVarSyntax(std::string str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+	{
+		if (str[i] == '-')
+			str[i] = '_';
+		else
+			str[i] = toupper(str[i]);
+	}
+	return str;
+}
+
 FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path)
 {
 	std::FILE*					tmpf;
@@ -24,7 +36,7 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 
 	std::vector<Request::Header> headers = req.getHeaders();
 	for (std::vector<Request::Header>::iterator it = headers.begin(); it != headers.end(); ++it)
-		setenv(("HTTP_" + it->name).c_str(), it->value.c_str(), 1);
+		setenv(("HTTP_" + metaVarSyntax(it->name)).c_str(), it->value.c_str(), 1);
 
 	pid = fork();
 

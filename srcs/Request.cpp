@@ -182,6 +182,7 @@ void Request::parseBody()
 				_isArg = true;
 		}
 	}
+	_body = _data.substr(_data.find("\r\n\r\n") + 4);
 }
 
 void Request::parseRequest()

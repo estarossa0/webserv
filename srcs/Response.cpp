@@ -103,11 +103,13 @@ bool	Response::checkFileExists(std::string &path)
 bool Response::isDirectory(const std::string &s, int is_full)
 {
 	std::string dir = s;
+	DIR *d;
 	if (!is_full)
 		dir = getPulicDirectory().append(s);
-	if (opendir(dir.c_str()) == NULL) {
+	if ((d = opendir(dir.c_str())) == NULL) {
 		return false;
     }
+	closedir(d);
 	return true;
 }
 

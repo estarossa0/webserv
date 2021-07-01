@@ -402,7 +402,10 @@ void Response::makeBody()
 		std::map<std::string, bool> loc_methods = _location.getAllowedMethods();
 		if (!loc_methods[_request.getMethod()])
 		{
-			_status = ST_METHOD_NOT_ALLOWED;
+			if (_request.getMethod() != "GET" && _request.getMethod() != "POST" && _request.getMethod() != "DELETE")
+				_status = ST_NOT_IMPLEMENTED;
+			else
+				_status = ST_METHOD_NOT_ALLOWED;
 			throw Response::MethodNotAllowed();
 		}
 		if (_location.isCGI())

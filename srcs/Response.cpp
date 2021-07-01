@@ -67,6 +67,11 @@ const char *Response::BadRequest::what() const throw()
 	return "BadRequest";
 }
 
+const char *Response::BadGateway::what() const throw()
+{
+	return "BadGateway";
+}
+
 void	Response::clear()
 {
 	this->_body.clear();
@@ -151,6 +156,8 @@ std::string Response::getCodeStatus()
 		return "Not Implemented\r\n";
 	else if (this->_status == ST_PAYLOAD_LARGE)
 		return "Payload Too Large\r\n";
+	else if (this->_status == ST_BAD_GATEWAY)
+		return "Bad Gateway\r\n";
 	return "";
 }
 
@@ -515,8 +522,8 @@ std::string Response::parseCgiResponse(FILE *file)
 	}
 	if (buffer.empty())
 	{
-		_status = ST_SERVER_ERROR;
-		throw Response::ServerError();
+		_status = ST_BAD_GATEWAY;
+		throw Response::BadGateway();
 	}
 	size_t i = buffer.find("Status: ");
 	if (i != std::string::npos) {

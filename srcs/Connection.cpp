@@ -25,7 +25,7 @@ int				Connection::read()
 			_request.appendToData(buffer);
 			size += retval;
 		}
-		if (_request.checkDataDone())
+		if (retval < 1000)
 			break ;
 	}
 	return size;

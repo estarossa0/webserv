@@ -82,13 +82,13 @@ void	hookPollOut(Webserv &web, size_t i)
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
 		web[i].send();
-		web[i].getRequest().clear();
-		web[i].getResponse().clear();
 		if (web[i].getRequest().getConnectionType() == "close" || web[i].getRequest().getRequestError())
 		{
 			web._pollArray[i].revents = POLLHUP;
 			return;
 		}
+		web[i].getRequest().clear();
+		web[i].getResponse().clear();
 	}
 	web._pollArray[i].events = POLLIN;
 }

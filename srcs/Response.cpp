@@ -198,8 +198,8 @@ void Response::readFile(std::string path)
 
 	if (!fileReader.good())
 	{
-		_status = ST_NOT_FOUND;
-		throw Response::NotFound();
+		_status = ST_SERVER_ERROR;
+		throw Response::ServerError();
 	}
 	while (getline(fileReader, buffer))
 		body.append(buffer).append("\n");

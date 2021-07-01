@@ -23,6 +23,10 @@ private:
 	std::vector<Location> _locations;
 	bool _necessary_elements[NUMBER_OF_NECESSARY_ELEMENTS];
 	std::vector<std::string> _necessary_elements_identifiers;
+	std::vector<std::string> hasNecessaryElements() const;
+	void activateParsingMode();
+
+	friend class ConfigParser;
 
 public:
 	ServerData();
@@ -54,9 +58,7 @@ public:
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
 
-	std::vector<std::string> hasNecessaryElements() const;
-	bool doesHavePort(int const & port) const;
-
+	bool doesHavePort(int const &port) const;
 };
 
 std::ostream &operator<<(std::ostream &, const ServerData &);

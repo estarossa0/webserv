@@ -2,14 +2,6 @@
 
 ServerData::ServerData() : _client_body_size(2)
 {
-	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
-	{
-		_necessary_elements[i] = false;
-	}
-	_necessary_elements_identifiers.push_back("listen {port}");
-	_necessary_elements_identifiers.push_back("host");
-	_necessary_elements_identifiers.push_back("root");
-	_error_pages.clear();
 }
 
 ServerData::ServerData(ServerData const &rhs)
@@ -44,6 +36,18 @@ ServerData::~ServerData()
 	_locations.clear();
 }
 
+void ServerData::activateParsingMode()
+{
+	for (size_t i = 0; i < NUMBER_OF_NECESSARY_ELEMENTS; i++)
+	{
+		_necessary_elements[i] = false;
+	}
+	_necessary_elements_identifiers.push_back("listen {port}");
+	_necessary_elements_identifiers.push_back("host");
+	_necessary_elements_identifiers.push_back("root");
+	_error_pages.clear();
+}
+
 void ServerData::setPort(int const &port)
 {
 	_port = port;
@@ -70,7 +74,7 @@ std::vector<int> const &ServerData::getPorts() const
 	return _ports;
 }
 
-bool ServerData::doesHavePort(int const & port) const
+bool ServerData::doesHavePort(int const &port) const
 {
 	for (size_t i = 0; i < _ports.size(); i++)
 	{
@@ -79,7 +83,6 @@ bool ServerData::doesHavePort(int const & port) const
 	}
 	return false;
 }
-
 
 void ServerData::setHost(std::string const &h)
 {

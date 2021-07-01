@@ -272,6 +272,7 @@ void ConfigParser::_parseContent()
 			throw std::runtime_error(ERROR_EMPTY_SERVER_CONFIGURATION);
 
 		ServerData sv = ServerData();
+		sv.activateParsingMode();
 		for (size_t i = 0; i < NUMBER_OF_SERVER_PRIMITIVES; i++)
 			_checked_primitives[primitives_openings[i]] = false;
 

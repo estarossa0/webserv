@@ -4,7 +4,7 @@ Request::Request()
 {
 }
 
-Request::Request(Connection *_connection) : _data(""), _clen(0), _boundary(""), _connection(_connection), _isArg(false), _error(0), isDone(false)
+Request::Request(Connection *_connection) : _data(""), _clen(0), _boundary(""), _contype("close"), _connection(_connection), _isArg(false), _error(0), isDone(false)
 {
 }
 

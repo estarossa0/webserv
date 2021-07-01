@@ -517,7 +517,10 @@ std::string Response::parseCgiResponse(FILE *file)
 	}
 	else
 		_status = 200;
-	i = buffer.find("\r\n\r\n");
+	if (isSuffix(".py", this->_request.getUri()))
+		i = buffer.find("\n\n");
+	else
+		i = buffer.find("\r\n\r\n");
 	std::string len_str("Content-Length: ");
     if (i != std::string::npos)
 	{
@@ -532,6 +535,7 @@ std::string Response::parseCgiResponse(FILE *file)
 		len_str.append("\r\n\r\n");
 		buffer.insert(0, len_str);
 	}
+	close(fd);
 	if (!_status)
 		_status = ST_OK;
 	return buffer;

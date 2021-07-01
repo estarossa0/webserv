@@ -82,10 +82,13 @@ void	hookPollOut(Webserv &web, size_t i)
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
 		web[i].send();
-		if (web[i].getRequest().getConnectionType() == "close" || web[i].getRequest().getRequestError())
-			web[i].getServer()->erase(i);
 		web[i].getRequest().clear();
 		web[i].getResponse().clear();
+		if (web[i].getRequest().getConnectionType() == "close" || web[i].getRequest().getRequestError())
+		{
+			web._pollArray[i].revents = POLLHUP;
+			return;
+		}
 	}
 	web._pollArray[i].events = POLLIN;
 }
@@ -106,6 +109,7 @@ void	Webserv::hook()
 			if ((this->_pollArray[i].revents & POLLNVAL) || (this->_pollArray[i].revents & POLLERR))
 			{
 				(*this)[i].getServer()->erase(i);
+				i--;
 				continue ;
 			}
 			if (this->_pollArray[i].revents & POLLIN)
@@ -113,7 +117,10 @@ void	Webserv::hook()
 			if (this->_pollArray[i].revents & POLLOUT)
 				hookPollOut(*this, i);
 			if (this->_pollArray[i].revents & POLLHUP)
+			{
 				(*this)[i].getServer()->erase(i);
+				i--;
+			}
 		}
 	}
 }

@@ -33,15 +33,34 @@
 	<h1 class="text-white text-center">webserv</h1>
 	<div class="mx-auto h-75 d-flex w-100 justify-content-center -mt">
 		<div class="d-flex flex-column my-auto">
+            <?php
+
+                if (isset($_POST['name']))
+                {
+                    echo "<h2 class=\"text-center text-white\"> Welcome </h2>";
+                    echo "<p class=\"text-center\"> name: " . $_POST['name'];
+                    if (isset($_POST['email']))
+                        echo " | email: " . $_POST['email'];
+                    echo "</p>";
+                }
+
+                if (isset($_POST['name']) && !isset($_POST['email']))
+                    echo "<h2 class=\"text-center\">email is required</h2>";
+            ?>
 			<h1 class="size text-center">POST FORM</h1>
-			<form class="mt-5 d-flex flex-column" action="form.html" method="post" enctype="multipart/form-data">
+			<form class="mt-5 d-flex flex-column" action="form.php" method="post">
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text" id="basic-addon1">Name</span>
+					</div>
+					<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" name="name">
+				</div>
 				<div class="input-group mb-3">
 					<div class="input-group-prepend">
 						<span class="input-group-text" id="basic-addon1">@</span>
 					</div>
-					<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1" name="username">
+					<input type="text" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="basic-addon1" name="email">
 				</div>
-				<input class="mb-3" type="file" name="file" />
 				<input type="submit" class="btn btn-primary" value="Submit" />
 			</form>
 		</div>

@@ -17,6 +17,7 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	std::FILE*					tmpf;
 	char				const*	argv[3];
 	int							fd;
+    int							fds[2];
 	pid_t						pid;
 
 	tmpf = std::tmpfile();
@@ -38,10 +39,14 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 	for (std::vector<Request::Header>::iterator it = headers.begin(); it != headers.end(); ++it)
 		setenv(("HTTP_" + metaVarSyntax(it->name)).c_str(), it->value.c_str(), 1);
 
+	pipe(fds);
 	pid = fork();
 
 	if (pid == 0)
 	{
+		dup2(fds[0], 0);
+		close(fds[1]);
+		close(fds[0]);
 		argv[0] = cgi_path.c_str();
 		argv[1] = req.getUri().c_str() + 1;
 		argv[2] = NULL;
@@ -53,7 +58,12 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 			exit(1);
 	}
 	else
+	{
+		close(fds[0]);
+		write(fds[1], req.getBody().c_str(), req.getBody().length());
+		close(fds[1]);
 		waitpid(pid, nullptr, 0);
+	}
 	std::rewind(tmpf);
 	return tmpf;
 }

@@ -510,6 +510,11 @@ std::string Response::parseCgiResponse(FILE *file)
 		lines[r] = '\0';
 		buffer.append(lines);
 	}
+	if (buffer.empty())
+	{
+		_status = ST_SERVER_ERROR;
+		throw Response::ServerError();
+	}
 	size_t i = buffer.find("Status: ");
 	if (i != std::string::npos) {
 		_status = std::stoi(buffer.substr(i + 8, 3));

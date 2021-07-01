@@ -19,9 +19,12 @@ int				Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
-		buffer[retval] = '\0';
-		_request.appendToData(buffer);
-		size += retval;
+		if (retval != -1)
+		{
+			buffer[retval] = '\0';
+			_request.appendToData(buffer);
+			size += retval;
+		}
 		if (_request.checkDataDone())
 			break ;
 	}

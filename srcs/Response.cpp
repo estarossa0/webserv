@@ -547,6 +547,8 @@ std::string Response::parseCgiResponse(FILE *file)
 		buffer.append(tmp);
 	} else {
 		len_str.append(std::to_string(buffer.length()));
+		len_str.append("\r\n");
+		len_str.append("Connection: " + _request.getConnectionType());
 		len_str.append("\r\n\r\n");
 		buffer.insert(0, len_str);
 	}
@@ -583,7 +585,9 @@ void Response::makeResponse()
 			_resp.append("Content-Length: ");
 			_resp.append(std::to_string(strlen(_body.c_str())));
 			_resp.append("\r\n");
-			_resp.append("\r\n");
+			_resp.append("Connection: ");
+			_resp.append(_request.getConnectionType());
+			_resp.append("\r\n\r\n");
 			_resp.append(_body);
 		}
 		_resp.append("\r\n");

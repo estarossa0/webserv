@@ -58,7 +58,6 @@ public:
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
 
-	bool doesHavePort(int const &port) const;
 };
 
 std::ostream &operator<<(std::ostream &, const ServerData &);

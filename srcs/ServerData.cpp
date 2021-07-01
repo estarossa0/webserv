@@ -74,16 +74,6 @@ std::vector<int> const &ServerData::getPorts() const
 	return _ports;
 }
 
-bool ServerData::doesHavePort(int const &port) const
-{
-	for (size_t i = 0; i < _ports.size(); i++)
-	{
-		if (_ports[i] == port)
-			return true;
-	}
-	return false;
-}
-
 void ServerData::setHost(std::string const &h)
 {
 	_host = h;

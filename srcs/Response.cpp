@@ -123,9 +123,9 @@ std::string Response::getFileNameFromUri(std::string uri)
 	std::string path;
 
 	path = uri;
-	if (isDirectory(path, 0))
+	if (isDirectory(path, 0) || uri.empty())
 	{
-		if (!this->_location.getAutoIndex() && isPreffix(_location.getPath(), path))
+		if (!this->_location.getAutoIndex())
 		{
 			if (path.back() != '/')
 				path.append("/"); 
@@ -158,6 +158,8 @@ std::string Response::getCodeStatus()
 		return "Payload Too Large\r\n";
 	else if (this->_status == ST_BAD_GATEWAY)
 		return "Bad Gateway\r\n";
+	else if (this->_status == ST_NOT_SUPPORTED)
+		return "HTTP Version Not Supported\r\n";
 	return "";
 }
 
@@ -270,7 +272,7 @@ std::string Response::getPulicDirectory()
 
 	dir = _data.getRootDir();
 	if (_location.getRootDir().length())
-		dir.append(_location.getRootDir());
+		dir = _location.getRootDir();
 	return dir;
 }
 
@@ -354,6 +356,7 @@ void Response::methodDelete()
 void Response::httpRedirection()
 {
 	_status = _location.getReturnCode();
+	getConnection()->getRequest().setConnectionType("close");
 }
 
 void Response::makeBody()
@@ -394,11 +397,15 @@ void Response::makeBody()
 		if (cgi)
 			break ;
 	}
+	if (!_location.isCGI())
+		_request.setUri(_request.getUri().substr(_location.getPath().length()));
 	try
 	{
 		if (_request.getRequestError())
 		{
 			_status = ST_BAD_REQUEST;
+			if (_request.getRequestError() == 2)
+				_status = ST_NOT_SUPPORTED;
 			throw Response::BadRequest();
 		}
 		if (_request.getContentLen() > this->_data.getClientBodySize() * 1024 * 1024)
@@ -432,6 +439,7 @@ void Response::makeBody()
 			methodDelete();
 	}
 	catch (std::exception &e) {
+		_request.setConnectionType("close");
 		outputLogs("exception at makeBody: " + std::string(e.what()));
 	}
 }

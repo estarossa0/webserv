@@ -194,7 +194,7 @@ void Request::parseRequest()
 	try {
 		while (std::getline(lines, buffer))
 		{
-			if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
+			if (!_method.length() && buffer.find("HTTP/") != std::string::npos)
 			{
 				_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
 				if (!isSet(_method, isupper))
@@ -207,6 +207,11 @@ void Request::parseRequest()
 				}
 				_protocol = buffer.substr(getSpaceIndex(buffer, 2));
 				_protocol.pop_back();
+				if (_protocol != "HTTP/1.1")
+				{
+					_error = 2;
+					throw std::runtime_error("invalid protocol");
+				}
 			}
 			else if (!_host.length() && buffer.find("Host") != std::string::npos)
 			{
@@ -264,7 +269,8 @@ void Request::parseRequest()
 	{
 		outputLogs("exception at request parsing: " + std::string(e.what()));
 		isDone = true;
-		_error = 1;
+		if (!_error)
+			_error = 1;
 	}
 	if (isDone && !_error)
 	{

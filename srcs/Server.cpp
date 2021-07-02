@@ -6,7 +6,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 	struct sockaddr_in	addr;
 
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_addr.s_addr = inet_addr(data.getHost().c_str());
 	addr.sin_port = htons(_port);
 
 	if ((this->_socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)

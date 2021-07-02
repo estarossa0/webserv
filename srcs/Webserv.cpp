@@ -82,7 +82,7 @@ void	hookPollOut(Webserv &web, size_t i)
 	if (web[i].getRequest().getData().length() && web[i].getRequest().checkDataDone())
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
-		if (web[i].send() < (int)web[i].getResponse().getResponse().length())
+		if (web[i].send() < (int)web[i].getResponse().getResponseLength())
 			return ;
 		if (web[i].getRequest().getConnectionType() == "close" || web[i].getRequest().getRequestError())
 		{

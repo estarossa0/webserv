@@ -13,7 +13,7 @@ private:
 	size_t _status;
 	std::string _name;
 	std::string _ctype;
-	std::string _clen;
+	int _clen;
 	std::string _body;
 	std::string _resp;
 	std::string _cgi;
@@ -63,13 +63,16 @@ public:
 	unsigned int getStatus() const;
 	const std::string &getName() const;
 	const std::string &getContentType() const;
-	const std::string &getContentLength() const;
+	int getContentLength() const;
 	const std::string &getBody() const;
 	const std::string &getResponse() const;
+	int getResponseLength() const;
+
 	Connection *getConnection();
 	std::vector<ServerData> getServerData(std::string);
 	Location getLocation() const;
 
+	void	updateContentLength(int);
 	void	setLocation(Location &);
 
 	class NotFound : public std::exception

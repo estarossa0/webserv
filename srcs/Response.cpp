@@ -2,6 +2,7 @@
 
 Response::Response(Connection *connection) : _connection(connection)
 {
+	this->_clen = 0;
 }
 
 Response::Response(Response const &rhs)
@@ -77,6 +78,7 @@ void	Response::clear()
 	this->_body.clear();
 	this->_resp.clear();
 	this->_status = 0;
+	this->_clen = 0;
 	this->_ctype.clear();
 	this->_cgi.clear();
 }
@@ -623,4 +625,19 @@ Location Response::getLocation() const
 void Response::setLocation(Location &location)
 {
 	this->_location = location;
+}
+
+int Response::getContentLength() const
+{
+	return this->_clen;
+}
+
+void Response::updateContentLength(int len)
+{
+	this->_clen += len;
+}
+
+int Response::getResponseLength() const
+{
+	return this->_resp.length();
 }

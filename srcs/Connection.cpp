@@ -7,6 +7,20 @@ Connection::Connection(const Connection &other) :
 _socketfd(other._socketfd), _server(other._server), _is_Server(other._is_Server), _request(this), _response(this), _addr(other._addr)
 {};
 
+Connection &Connection::operator=(const Connection &other)
+{
+	if (this != &other)
+	{
+		_socketfd = other._socketfd;
+		_server = other._server;
+		_is_Server = other._is_Server;
+		_request = other._request;
+		_response = other._response;
+		_addr = other._addr;
+	}
+	return *this;
+}
+
 int				Connection::read()
 {
 	char	buffer[1001] = {0};

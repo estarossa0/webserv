@@ -41,6 +41,7 @@
 #define ST_SERVER_ERROR 500
 #define ST_NOT_IMPLEMENTED 501
 #define ST_BAD_GATEWAY 502
+#define ST_NOT_SUPPORTED 505
 
 #define LOGS_FILE "webserv_logs"
 

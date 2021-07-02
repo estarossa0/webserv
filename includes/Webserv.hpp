@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <vector>
 #include <set>
 #include <string>

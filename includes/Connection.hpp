@@ -18,6 +18,7 @@ class	Connection
 public:
 	Connection(int, Server *, bool, struct sockaddr_in);
 	Connection(const Connection &);
+	Connection &operator=(const Connection &);
 
 	int					read();
 	int					send();

@@ -115,7 +115,7 @@ std::vector<ServerData>const &	Server::getData(std::string &name)
 void		Server::addData(ServerData const &data)
 {
 	this->_data.push_back(data);
-	for (std::vector<std::string const>::iterator it = data.getNames().begin(); it != data.getNames().end(); ++it)
+	for (std::vector<std::string>::const_iterator it = data.getNames().begin(); it != data.getNames().end(); ++it)
 	{
 		this->_namesTable[*it].push_back(data);
 	}

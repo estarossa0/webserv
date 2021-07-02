@@ -86,5 +86,5 @@ public:
 	std::vector<Header> getHeaders();
 };
 
-bool isPreffix(std::string s1, std::string s2);
-bool isSuffix(std::string s1, std::string s2);
+bool isPreffix(std::string, std::string);
+bool isSuffix(std::string, std::string);

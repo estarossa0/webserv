@@ -71,7 +71,8 @@ void	hookPollIn(Webserv &web, size_t i)
 	}
 	else
 	{
-		web[i].read();
+		if (web[i].read() < 0)
+			return;
 		web._pollArray[i].events = POLLOUT | POLLIN;
 	}
 }

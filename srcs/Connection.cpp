@@ -19,6 +19,8 @@ int				Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
+		if (retval < 0)
+			return -1;
 		if (retval != -1)
 		{
 			buffer[retval] = '\0';

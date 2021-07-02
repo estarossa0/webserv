@@ -21,7 +21,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 		throw std::runtime_error(std::string("WARNING server <")
 			+ data.getHost() + ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 
-	if (listen(this->_socketfd, 3) < 0)
+	if (listen(this->_socketfd, 0) < 0)
 		throw std::runtime_error(std::string("WARNING server <")
 			+ data.getHost()+ ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 

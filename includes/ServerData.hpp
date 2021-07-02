@@ -45,19 +45,18 @@ public:
 
 	void setNames(std::vector<std::string> const &);
 	std::vector<std::string> const &getNames() const;
-	
+
 	void setClientBodySize(int const &);
 	int const &getClientBodySize() const;
-	
+
 	void addErrorPage(int const &, std::string const &);
 	std::map<int, std::string> const &getErrorPageMap() const;
-	
+
 	void setRootDir(std::string const &);
 	std::string const &getRootDir() const;
-	
+
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
-
 };
 
 std::ostream &operator<<(std::ostream &, const ServerData &);

@@ -67,6 +67,11 @@ const char *Response::BadRequest::what() const throw()
 	return "BadRequest";
 }
 
+const char *Response::BadGateway::what() const throw()
+{
+	return "BadGateway";
+}
+
 void	Response::clear()
 {
 	this->_body.clear();
@@ -151,6 +156,8 @@ std::string Response::getCodeStatus()
 		return "Not Implemented\r\n";
 	else if (this->_status == ST_PAYLOAD_LARGE)
 		return "Payload Too Large\r\n";
+	else if (this->_status == ST_BAD_GATEWAY)
+		return "Bad Gateway\r\n";
 	return "";
 }
 
@@ -191,8 +198,8 @@ void Response::readFile(std::string path)
 
 	if (!fileReader.good())
 	{
-		_status = ST_NOT_FOUND;
-		throw Response::NotFound();
+		_status = ST_SERVER_ERROR;
+		throw Response::ServerError();
 	}
 	while (getline(fileReader, buffer))
 		body.append(buffer).append("\n");
@@ -402,7 +409,10 @@ void Response::makeBody()
 		std::map<std::string, bool> loc_methods = _location.getAllowedMethods();
 		if (!loc_methods[_request.getMethod()])
 		{
-			_status = ST_METHOD_NOT_ALLOWED;
+			if (_request.getMethod() != "GET" && _request.getMethod() != "POST" && _request.getMethod() != "DELETE")
+				_status = ST_NOT_IMPLEMENTED;
+			else
+				_status = ST_METHOD_NOT_ALLOWED;
 			throw Response::MethodNotAllowed();
 		}
 		if (_location.isCGI())
@@ -510,6 +520,11 @@ std::string Response::parseCgiResponse(FILE *file)
 		lines[r] = '\0';
 		buffer.append(lines);
 	}
+	if (buffer.empty())
+	{
+		_status = ST_BAD_GATEWAY;
+		throw Response::BadGateway();
+	}
 	size_t i = buffer.find("Status: ");
 	if (i != std::string::npos) {
 		_status = std::stoi(buffer.substr(i + 8, 3));
@@ -532,6 +547,8 @@ std::string Response::parseCgiResponse(FILE *file)
 		buffer.append(tmp);
 	} else {
 		len_str.append(std::to_string(buffer.length()));
+		len_str.append("\r\n");
+		len_str.append("Connection: " + _request.getConnectionType());
 		len_str.append("\r\n\r\n");
 		buffer.insert(0, len_str);
 	}
@@ -568,7 +585,9 @@ void Response::makeResponse()
 			_resp.append("Content-Length: ");
 			_resp.append(std::to_string(strlen(_body.c_str())));
 			_resp.append("\r\n");
-			_resp.append("\r\n");
+			_resp.append("Connection: ");
+			_resp.append(_request.getConnectionType());
+			_resp.append("\r\n\r\n");
 			_resp.append(_body);
 		}
 		_resp.append("\r\n");

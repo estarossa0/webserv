@@ -33,6 +33,8 @@ int				Connection::read()
 	{
 		bzero(buffer, 1000);
 		retval = recv(this->_socketfd, (void *)&buffer, 1000, 0);
+		if (retval < 0)
+			return -1;
 		if (retval != -1)
 		{
 			buffer[retval] = '\0';
@@ -53,7 +55,9 @@ int				Connection::send()
 	this->_response.makeResponse();
 	if (DEBUG)
 		outputLogs("[++++]  RESPONSE  [++++]\n" + this->_response.getResponse() + "[----]  END RESPONSE  [----]");
-	return ::send(this->_socketfd, (void *)this->_response.getResponse().c_str(), this->_response.getResponse().length(), 0);
+	int r = ::send(this->_socketfd, (void *)(this->_response.getResponse().c_str() + this->_response.getContentLength()), this->_response.getResponse().length() - this->_response.getContentLength(), 0);
+	this->_response.updateContentLength(r);
+	return this->_response.getContentLength();
 }
 
 Request		&Connection::getRequest()

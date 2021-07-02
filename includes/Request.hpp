@@ -56,8 +56,8 @@ public:
 	void clear();
 	void printRequest();
 	void parseHeader(std::string &);
-	
-	bool checkDataDone(); 
+
+	bool checkDataDone();
 
 	const std::string &getMethod() const;
 	const std::string &getUri() const;

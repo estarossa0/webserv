@@ -128,7 +128,7 @@ std::string Response::getFileNameFromUri(std::string uri)
 		if (!this->_location.getAutoIndex())
 		{
 			if (path.back() != '/')
-				path.append("/"); 
+				path.append("/");
 			path.append(_location.getDefaultFile());
 			_request.setUri(path);
 		}
@@ -391,7 +391,7 @@ void Response::makeBody()
 				{
 					setLocation(*it);
 					_data = _servers[i];
-				}	
+				}
 			}
 		}
 		if (cgi)
@@ -485,7 +485,7 @@ std::string Response::getDefaultErrorPage(int status)
 void Response::setErrorPage()
 {
 	std::map<int, std::string> errors = _data.getErrorPageMap();
-	
+
 	try {
 		if (errors[_status].length())
 			readFile(getFilePath(errors[_status]));

@@ -140,7 +140,7 @@ void Request::parseBody()
 	std::istringstream lines(tmp);
 
 	while (std::getline(lines, buffer)) {
-		
+
 		if (!_boundary.empty())
 		{
 			if (isBoundary(_boundary, buffer))

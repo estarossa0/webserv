@@ -5,7 +5,7 @@
 class Request;
 class Connection;
 
-FILE* callCGI(Request &req, std::string const &root, std::string const &cgi_path);
+FILE* callCGI(Request &, std::string const &, std::string const &);
 
 class Response
 {

@@ -25,45 +25,43 @@ public:
 	Location &operator=(Location const &);
 	~Location();
 
-
 	void setPath(std::string const &);
-	std::string const & getPath() const;
+	std::string const &getPath() const;
 
 	void setRootDir(std::string const &);
-	std::string const & getRootDir() const;
+	std::string const &getRootDir() const;
 
 	void setAutoIndex(bool const &);
-	bool const & getAutoIndex() const;
+	bool const &getAutoIndex() const;
 
 	void setDefaultFile(std::string const &);
 	std::string const &getDefaultFile() const;
-	
+
 	void setAllowedMethods(std::vector<std::string> const &);
 	std::map<std::string, bool> const &getAllowedMethods() const;
-	
+
 	void setReturnCode(int const &);
-	int const & getReturnCode() const;
+	int const &getReturnCode() const;
 
 	void setReturnUrl(std::string const &);
-	std::string const & getReturnUrl() const;
-	bool const & isRedirection() const;
+	std::string const &getReturnUrl() const;
+	bool const &isRedirection() const;
 
 	void setFastCgiPass(std::string const &);
-	std::string const & getFastCgiPass() const;
+	std::string const &getFastCgiPass() const;
 
 	void setIsCGI(bool const &);
-	bool const & isCGI() const;
+	bool const &isCGI() const;
 
 	void setUploadEnabled(bool const &);
-	bool const & getUploadEnabled() const;
+	bool const &getUploadEnabled() const;
 
 	void setUploadLocation(std::string const &);
-	std::string const & getUploadLocation() const;
+	std::string const &getUploadLocation() const;
 
-	static char const * standard_allowed_methods[3];
+	static char const *standard_allowed_methods[3];
 };
 
 std::ostream &operator<<(std::ostream &, const Location &);
 
-
-#endif // !LOCATION_HPP 
+#endif // !LOCATION_HPP

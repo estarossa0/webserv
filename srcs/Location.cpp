@@ -81,7 +81,7 @@ void Location::setDefaultFile(std::string const &df)
 	_default_file = df;
 }
 
-std::string const & Location::getDefaultFile() const
+std::string const &Location::getDefaultFile() const
 {
 	return _default_file;
 }

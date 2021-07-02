@@ -10,14 +10,15 @@ class	Connection
 	friend class	Server;
 	int				_socketfd;
 	Server			*_server;
+	bool			_is_Server;
 	Request			_request;
 	Response		_response;
-	bool			_is_Server;
 	struct sockaddr_in	_addr;
 
 public:
 	Connection(int, Server *, bool, struct sockaddr_in);
 	Connection(const Connection &);
+	Connection &operator=(const Connection &);
 
 	int					read();
 	int					send();

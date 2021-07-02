@@ -56,15 +56,15 @@ public:
 	void clear();
 	void printRequest();
 	void parseHeader(std::string &);
-	
-	bool checkDataDone(); 
+
+	bool checkDataDone();
 
 	const std::string &getMethod() const;
 	const std::string &getUri() const;
 	const std::string &getQuery() const;
 	const std::string &getProtocol() const;
 	const std::string &getHost() const;
-	unsigned int getContentLen() const;
+	int getContentLen() const;
 	const std::string &getContentType() const;
 	const std::string &getBody() const;
 	const std::string &getBoundary() const;
@@ -78,7 +78,7 @@ public:
 
 	void setUri(std::string const &);
 
-	void	appendToData(std::string);
+	void	appendToData(char *);
 
 	size_t getLenArguments();
 	Argument getArgument(int i);
@@ -86,5 +86,5 @@ public:
 	std::vector<Header> getHeaders();
 };
 
-bool isPreffix(std::string s1, std::string s2);
-bool isSuffix(std::string s1, std::string s2);
+bool isPreffix(std::string, std::string);
+bool isSuffix(std::string, std::string);

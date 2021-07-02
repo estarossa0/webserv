@@ -5,7 +5,7 @@ Webserv::Webserv() : _conSize(0)
 
 Webserv::~Webserv()
 {
-	for (size_t index; index < this->_conSize; index++)
+	for (size_t index = 0; index < this->_conSize; index++)
 		(*this)[index].close();
 }
 
@@ -16,9 +16,9 @@ void		Webserv::addServer(ServerData const &data)
 	this->updateIndexs(-2, 1);
 }
 
-Connection &Webserv::operator[](int index)
+Connection &Webserv::operator[](size_t index)
 {
-	if (index > this->_conSize || index < 0)
+	if (index >= this->_conSize || index < 0)
 		throw std::out_of_range("Out of Webserv range");
 	std::vector<int>::iterator it = std::upper_bound(this->_indexTable.begin(), this->_indexTable.end(), index);
 	--it;
@@ -46,7 +46,7 @@ void	Webserv::updateIndexs(int index, int type)
 	}
 	else
 	{
-		while(index < this->_indexTable.size())
+		while(index < (int)this->_indexTable.size())
 		{
 			this->_indexTable[index] += type;
 			index++;
@@ -59,7 +59,7 @@ Server	&Webserv::serverAt(int index)
 	return this->_servers[index];
 }
 
-static void	hookPollIn(Webserv &web, size_t i)
+void	hookPollIn(Webserv &web, size_t i)
 {
 	if (web[i].is_Server())
 	{
@@ -71,19 +71,24 @@ static void	hookPollIn(Webserv &web, size_t i)
 	}
 	else
 	{
-		int l = web[i].read();
+		if (web[i].read() < 0)
+			return;
 		web._pollArray[i].events = POLLOUT | POLLIN;
 	}
 }
 
-static void	hookPollOut(Webserv &web, size_t i)
+void	hookPollOut(Webserv &web, size_t i)
 {
-	if (web[i].getRequest().getData().length())
+	if (web[i].getRequest().getData().length() && web[i].getRequest().checkDataDone())
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
-		web[i].send();
+		if (web[i].send() < (int)web[i].getResponse().getResponseLength())
+			return ;
 		if (web[i].getRequest().getConnectionType() == "close" || web[i].getRequest().getRequestError())
-			web[i].getServer()->erase(i);
+		{
+			web._pollArray[i].revents = POLLHUP;
+			return;
+		}
 		web[i].getRequest().clear();
 		web[i].getResponse().clear();
 	}
@@ -93,26 +98,31 @@ static void	hookPollOut(Webserv &web, size_t i)
 void	Webserv::hook()
 {
 	int		p;
-	int		size;
 
 	while (1)
 	{
 		p = poll(&(this->_pollArray[0]), this->_conSize, -1);
 		if (p < 0)
 			break ;
-		size = this->_conSize;
-		for (size_t i = 0; i < size; i++)
+		for (size_t i = 0; i < this->_pollArray.size(); i++)
 		{
 			if (this->_pollArray[i].revents == 0)
 				continue ;
 			if ((this->_pollArray[i].revents & POLLNVAL) || (this->_pollArray[i].revents & POLLERR))
-				exit(1);
+			{
+				(*this)[i].getServer()->erase(i);
+				i--;
+				continue ;
+			}
 			if (this->_pollArray[i].revents & POLLIN)
 				hookPollIn(*this, i);
 			if (this->_pollArray[i].revents & POLLOUT)
 				hookPollOut(*this, i);
 			if (this->_pollArray[i].revents & POLLHUP)
+			{
 				(*this)[i].getServer()->erase(i);
+				i--;
+			}
 		}
 	}
 }
@@ -148,37 +158,3 @@ void	Webserv::init(std::vector<ServerData> const &svsdata)
 		exit(1);
 	}
 }
-
-// Get current date/time in this format YYYY-MM-DD HH:mm:ss
-static std::string const currentDateTime() {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-    return buf;
-}
-
-void outputLogs(std::string logs)
-{
-	std::fstream logsFile(LOGS_FILE, std::ios::app);
-	if (!logsFile.is_open())
-		throw std::runtime_error("Could NOT open the logs file");
-	std::ifstream logsFileIn(LOGS_FILE, std::ios::in);
-	std::string buff;
-	std::getline(logsFileIn, buff);
-	if (!buff.empty())
-		while (logs.front() == '\n')
-		{
-			logsFile << std::endl;
-			logs.erase(0, 1);
-		}
-	else
-		while (logs.front() == '\n')
-			logs.erase(0, 1);
-    logsFile << "[" << currentDateTime() << "]: " << logs << std::endl;
-	logsFile.close();
-	logsFileIn.close();
-}
-

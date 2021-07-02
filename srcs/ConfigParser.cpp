@@ -36,7 +36,7 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 	_indexServers();
 
 	output << std::endl
-		   << "\nservers has been indexed successfully" << std::endl
+		   << "\nservers have been indexed successfully" << std::endl
 		   << std::endl;
 	output << "======================== SERVERS INDEXING ==========================";
 	output << std::endl
@@ -52,9 +52,10 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 
 	output << "======================== SERVERS PARSING ==========================" << std::endl;
 
-	for (size_t i = 0; i < _servers.size(); i++)
+	std::vector<ServerData> servers = getServers();
+	for (size_t i = 0; i < servers.size(); i++)
 	{
-		output << _servers[i] << std::endl;
+		output << servers[i] << std::endl;
 	}
 	outputLogs("configuration file has been parsed successfully");
 }
@@ -245,8 +246,8 @@ void ConfigParser::_parseContent()
 {
 	size_t start;
 	size_t end;
-	int parserIndex;
-	int doneParsingIndex;
+	size_t parserIndex;
+	size_t doneParsingIndex;
 	ParserFuncPtr _server_primitive_parser[NUMBER_OF_SERVER_PRIMITIVES] = {
 		&ConfigParser::_portParser,
 		&ConfigParser::_hostParser,
@@ -271,6 +272,7 @@ void ConfigParser::_parseContent()
 			throw std::runtime_error(ERROR_EMPTY_SERVER_CONFIGURATION);
 
 		ServerData sv = ServerData();
+		sv.activateParsingMode();
 		for (size_t i = 0; i < NUMBER_OF_SERVER_PRIMITIVES; i++)
 			_checked_primitives[primitives_openings[i]] = false;
 
@@ -623,7 +625,7 @@ void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 
 	//  1 <= number of methods <= 3 and number of commas + 1 = number of methods
 	if (tokens.size() < 1 || tokens.size() > 3 ||
-		tokens.size() != std::count(_line.begin(), _line.end(), ',') + 1)
+		tokens.size() != (size_t)std::count(_line.begin(), _line.end(), ',') + 1)
 		throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + getStringType("[") + _fileLines[index] + "]");
 	for (size_t i = 0; i < tokens.size(); i++)
 	{

@@ -4,7 +4,7 @@ Request::Request()
 {
 }
 
-Request::Request(Connection *_connection) : isDone(false), _clen(0), _data(""), _boundary(""), _isArg(false), _connection(_connection), _error(0)
+Request::Request(Connection *_connection) : _data(""), _clen(0), _boundary(""), _contype("keep-alive"), _connection(_connection), _isArg(false), _error(0), isDone(false)
 {
 }
 
@@ -136,12 +136,11 @@ void Request::appendToBody(std::string content)
 void Request::parseBody()
 {
 	std::string buffer;
-	bool boundary = false;
 	std::string tmp = _data.substr(_data.find("\r\n\r\n") + 4);
 	std::istringstream lines(tmp);
 
 	while (std::getline(lines, buffer)) {
-		
+
 		if (!_boundary.empty())
 		{
 			if (isBoundary(_boundary, buffer))
@@ -183,6 +182,7 @@ void Request::parseBody()
 				_isArg = true;
 		}
 	}
+	_body = _data.substr(_data.find("\r\n\r\n") + 4);
 }
 
 void Request::parseRequest()
@@ -194,9 +194,11 @@ void Request::parseRequest()
 	try {
 		while (std::getline(lines, buffer))
 		{
-			if (!_method.length() && buffer.find("HTTP/1.1") != std::string::npos)
+			if (!_method.length() && buffer.find("HTTP/") != std::string::npos)
 			{
 				_method = buffer.substr(0, getSpaceIndex(buffer, 1) - 1);
+				if (!isSet(_method, isupper))
+					throw std::invalid_argument("invalid method");
 				_uri = buffer.substr(getSpaceIndex(buffer, 1), getSpaceIndex(buffer, 2) - getSpaceIndex(buffer, 1) - 1);
 				if (_uri.find("?") != std::string::npos)
 				{
@@ -205,6 +207,11 @@ void Request::parseRequest()
 				}
 				_protocol = buffer.substr(getSpaceIndex(buffer, 2));
 				_protocol.pop_back();
+				if (_protocol != "HTTP/1.1")
+				{
+					_error = 2;
+					throw std::runtime_error("invalid protocol");
+				}
 			}
 			else if (!_host.length() && buffer.find("Host") != std::string::npos)
 			{
@@ -262,7 +269,8 @@ void Request::parseRequest()
 	{
 		outputLogs("exception at request parsing: " + std::string(e.what()));
 		isDone = true;
-		_error = 1;
+		if (!_error)
+			_error = 1;
 	}
 	if (isDone && !_error)
 	{
@@ -320,7 +328,7 @@ std::string parseChunked(std::string &content)
 
 bool Request::validateContentLength()
 {
-	int len;
+	size_t len;
 	bool _isDone = false;
 	size_t i = _data.find("\r\n\r\n");
 
@@ -347,7 +355,6 @@ bool Request::checkDataDone()
 	std::istringstream lines(_data);
 	bool _isDone = false;
 	std::string chunked;
-	int len = 1;
 
 	size_t i = _data.find("\r\n\r\n");
 	if (_data.find(4) != std::string::npos)
@@ -405,10 +412,10 @@ void Request::printRequest()
 	outputLogs("disposition: " + _disp);
 	outputLogs("connection type: " + _contype);
 	outputLogs("headers size: " + std::to_string(_headers.size()));
-	for (int i = 0; i < _headers.size(); i++)
+	for (size_t i = 0; i < _headers.size(); i++)
 		outputLogs(_headers[i].name + "=" + _headers[i].value);
 	outputLogs("argument size: " + std::to_string(_args.size()));
-	for (int i = 0; i < _args.size(); i++)
+	for (size_t i = 0; i < _args.size(); i++)
 		outputLogs("disp: " + _args[i].disp + "| type: " + _args[i].ctype + "| data: " + _args[i].data);
 	outputLogs("[----]  END REQUEST  [----]");
 }
@@ -444,7 +451,7 @@ const std::string &Request::getUri() const
 	return _uri;
 }
 
-unsigned int Request::getContentLen() const
+int Request::getContentLen() const
 {
 	return _clen;
 }
@@ -469,7 +476,7 @@ const std::string &Request::getConnectionType() const
 	return _contype;
 }
 
-void Request::appendToData(std::string content)
+void Request::appendToData(char *content)
 {
 	if (content[0] != '\r' || _data.length())
 	{

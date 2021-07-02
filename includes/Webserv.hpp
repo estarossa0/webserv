@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <vector>
 #include <set>
 #include <string>
@@ -38,21 +40,21 @@
 #define ST_NOT_FOUND 404
 #define ST_METHOD_NOT_ALLOWED 405
 #define ST_PAYLOAD_LARGE 413
-#define ST_URI_TOO_LONG 414
 #define ST_SERVER_ERROR 500
 #define ST_NOT_IMPLEMENTED 501
 #define ST_BAD_GATEWAY 502
+#define ST_NOT_SUPPORTED 505
 
 #define LOGS_FILE "webserv_logs"
 
 extern char **environ;
 
 #ifndef DEBUG
-# define DEBUG 1
+# define DEBUG 0
 #endif
 
-static void		hookPollIn(Webserv &, size_t);
-static void		hookPollOutn(Webserv &, size_t);
+void		hookPollIn(Webserv &, size_t);
+void		hookPollOut(Webserv &, size_t);
 
 void outputLogs(std::string);
 
@@ -70,7 +72,7 @@ public:
 	void		hook();
 	Server		&serverAt(int);
 	void		addServer(ServerData const &);
-	Connection	&operator[](int);
+	Connection	&operator[](size_t);
 	void		updateIndexs(int, int);
 	void		init(std::vector<ServerData> const &);
 

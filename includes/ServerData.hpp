@@ -23,6 +23,10 @@ private:
 	std::vector<Location> _locations;
 	bool _necessary_elements[NUMBER_OF_NECESSARY_ELEMENTS];
 	std::vector<std::string> _necessary_elements_identifiers;
+	std::vector<std::string> hasNecessaryElements() const;
+	void activateParsingMode();
+
+	friend class ConfigParser;
 
 public:
 	ServerData();
@@ -41,22 +45,18 @@ public:
 
 	void setNames(std::vector<std::string> const &);
 	std::vector<std::string> const &getNames() const;
-	
+
 	void setClientBodySize(int const &);
 	int const &getClientBodySize() const;
-	
+
 	void addErrorPage(int const &, std::string const &);
 	std::map<int, std::string> const &getErrorPageMap() const;
-	
+
 	void setRootDir(std::string const &);
 	std::string const &getRootDir() const;
-	
+
 	void addLocation(Location const &);
 	std::vector<Location> const &getLocations() const;
-
-	std::vector<std::string> hasNecessaryElements() const;
-	bool const doesHavePort(int const & port) const;
-
 };
 
 std::ostream &operator<<(std::ostream &, const ServerData &);

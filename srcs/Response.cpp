@@ -2,6 +2,7 @@
 
 Response::Response(Connection *connection) : _connection(connection)
 {
+	this->_clen = 0;
 }
 
 Response::Response(Response const &rhs)
@@ -67,11 +68,17 @@ const char *Response::BadRequest::what() const throw()
 	return "BadRequest";
 }
 
+const char *Response::BadGateway::what() const throw()
+{
+	return "BadGateway";
+}
+
 void	Response::clear()
 {
 	this->_body.clear();
 	this->_resp.clear();
 	this->_status = 0;
+	this->_clen = 0;
 	this->_ctype.clear();
 	this->_cgi.clear();
 }
@@ -103,11 +110,13 @@ bool	Response::checkFileExists(std::string &path)
 bool Response::isDirectory(const std::string &s, int is_full)
 {
 	std::string dir = s;
+	DIR *d;
 	if (!is_full)
 		dir = getPulicDirectory().append(s);
-	if (opendir(s.c_str()) == NULL) {
+	if ((d = opendir(dir.c_str())) == NULL) {
 		return false;
     }
+	closedir(d);
 	return true;
 }
 
@@ -116,17 +125,14 @@ std::string Response::getFileNameFromUri(std::string uri)
 	std::string path;
 
 	path = uri;
-	if (isDirectory(path, 0))
+	if (isDirectory(path, 0) || uri.empty())
 	{
-		if (!this->_location.getAutoIndex() && isPreffix(_location.getPath(), path))
+		if (!this->_location.getAutoIndex())
 		{
-			if (checkFileExists(path))
-			{
-				if (path.back() != '/')
-					path.append("/"); 
-				path.append(_location.getDefaultFile());
-				_request.setUri(path);
-			}
+			if (path.back() != '/')
+				path.append("/");
+			path.append(_location.getDefaultFile());
+			_request.setUri(path);
 		}
 	}
 	return path;
@@ -152,6 +158,10 @@ std::string Response::getCodeStatus()
 		return "Not Implemented\r\n";
 	else if (this->_status == ST_PAYLOAD_LARGE)
 		return "Payload Too Large\r\n";
+	else if (this->_status == ST_BAD_GATEWAY)
+		return "Bad Gateway\r\n";
+	else if (this->_status == ST_NOT_SUPPORTED)
+		return "HTTP Version Not Supported\r\n";
 	return "";
 }
 
@@ -192,8 +202,8 @@ void Response::readFile(std::string path)
 
 	if (!fileReader.good())
 	{
-		_status = ST_NOT_FOUND;
-		throw Response::NotFound();
+		_status = ST_SERVER_ERROR;
+		throw Response::ServerError();
 	}
 	while (getline(fileReader, buffer))
 		body.append(buffer).append("\n");
@@ -264,7 +274,7 @@ std::string Response::getPulicDirectory()
 
 	dir = _data.getRootDir();
 	if (_location.getRootDir().length())
-		dir.append(_location.getRootDir());
+		dir = _location.getRootDir();
 	return dir;
 }
 
@@ -348,6 +358,7 @@ void Response::methodDelete()
 void Response::httpRedirection()
 {
 	_status = _location.getReturnCode();
+	getConnection()->getRequest().setConnectionType("close");
 }
 
 void Response::makeBody()
@@ -355,7 +366,7 @@ void Response::makeBody()
 	_data = _servers[0];
 	_location.setPath("");
 	bool cgi = false;
-	for(int i = 0; i < _servers.size(); i++)
+	for(size_t i = 0; i < _servers.size(); i++)
 	{
 		std::vector<Location> locations = _servers[i].getLocations();
 		if (this->_location.getPath().length() == 0)
@@ -382,17 +393,21 @@ void Response::makeBody()
 				{
 					setLocation(*it);
 					_data = _servers[i];
-				}	
+				}
 			}
 		}
 		if (cgi)
 			break ;
 	}
+	if (!_location.isCGI())
+		_request.setUri(_request.getUri().substr(_location.getPath().length()));
 	try
 	{
 		if (_request.getRequestError())
 		{
 			_status = ST_BAD_REQUEST;
+			if (_request.getRequestError() == 2)
+				_status = ST_NOT_SUPPORTED;
 			throw Response::BadRequest();
 		}
 		if (_request.getContentLen() > this->_data.getClientBodySize() * 1024 * 1024)
@@ -403,7 +418,10 @@ void Response::makeBody()
 		std::map<std::string, bool> loc_methods = _location.getAllowedMethods();
 		if (!loc_methods[_request.getMethod()])
 		{
-			_status = ST_METHOD_NOT_ALLOWED;
+			if (_request.getMethod() != "GET" && _request.getMethod() != "POST" && _request.getMethod() != "DELETE")
+				_status = ST_NOT_IMPLEMENTED;
+			else
+				_status = ST_METHOD_NOT_ALLOWED;
 			throw Response::MethodNotAllowed();
 		}
 		if (_location.isCGI())
@@ -423,20 +441,44 @@ void Response::makeBody()
 			methodDelete();
 	}
 	catch (std::exception &e) {
+		_request.setConnectionType("close");
 		outputLogs("exception at makeBody: " + std::string(e.what()));
 	}
 }
 
 std::string Response::getDefaultErrorPage(int status)
 {
-	std::string default_page("	<!DOCTYPE html>\n\
-	<html lang=\"en\">\n\
-		<head>\n\
-			<title>Http dial 3bar</title>\n\
-		</head>\n\
-		<body>\n\
-			<h1>Error page - $1</h1>\n\
-		</body>\n\
+	std::string default_page("	<!DOCTYPE html>\
+	<html>\
+	<head>\
+		<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\" crossorigin=\"anonymous\">\
+		<title>Document</title>\
+		<style>\
+			html {\
+				font-family: sans-serif;\
+				height: 100%;\
+			}\
+			body {\
+				height: 100vh;\
+			}\
+			.size {\
+				font-size: 66px;\
+				color: white;\
+			}\
+			.-mt {\
+				margin-top: -30px;\
+			}\
+		</style>\
+	</head>\
+	<body class=\"bg-info overflow-hidden\">\
+		<h1 class=\"text-white text-center\">webserv</h1>\
+		<div class=\"mx-auto h-75 d-flex w-100 justify-content-center -mt\">\
+			<div class=\"d-flex flex-column my-auto\">\
+				<h1 class=\"size text-center\">Error</h1>\
+				<h1 class=\"text-center text-white\">$1</h1>\
+			</div>\
+		</div>\
+	</body>\
 	</html>");
 	default_page = default_page.replace(default_page.find("$1"), 2, std::to_string(status));
 	return default_page;
@@ -445,7 +487,7 @@ std::string Response::getDefaultErrorPage(int status)
 void Response::setErrorPage()
 {
 	std::map<int, std::string> errors = _data.getErrorPageMap();
-	
+
 	try {
 		if (errors[_status].length())
 			readFile(getFilePath(errors[_status]));
@@ -477,6 +519,8 @@ std::string Response::getResponseContentType()
 std::string Response::parseCgiResponse(FILE *file)
 {
 	std::string buffer;
+	std::string tmp;
+
 	int fd = fileno(file);
 	char lines[1024];
 	int r;
@@ -486,21 +530,39 @@ std::string Response::parseCgiResponse(FILE *file)
 		lines[r] = '\0';
 		buffer.append(lines);
 	}
-	int i = buffer.find("Status: ");
+	if (buffer.empty())
+	{
+		_status = ST_BAD_GATEWAY;
+		throw Response::BadGateway();
+	}
+	size_t i = buffer.find("Status: ");
 	if (i != std::string::npos) {
 		_status = std::stoi(buffer.substr(i + 8, 3));
-		buffer.erase(i, 13);
+		buffer.erase(i, buffer.find("\r\n") + 2);
 	}
-	i = buffer.find("\r\n\r\n");
-    if (i != std::string::npos) {
-        std::string tmp = buffer.substr(i);
-        std::string len_str("Content-Length: ");
-        len_str.append(std::to_string(tmp.length() - 4));
-        tmp.insert(0, len_str);
-        buffer.erase(i);
-        buffer.append("\r\n");
-        buffer.append(tmp);
-    }
+	else
+		_status = 200;
+	if (isSuffix(".py", this->_request.getUri()))
+		i = buffer.find("\n\n");
+	else
+		i = buffer.find("\r\n\r\n");
+	std::string len_str("Content-Length: ");
+    if (i != std::string::npos)
+	{
+        tmp = buffer.substr(i);
+		len_str.append(std::to_string(tmp.length() - 4));
+		tmp.insert(0, len_str);
+		buffer.erase(i);
+		buffer.append("\r\n");
+		buffer.append(tmp);
+	} else {
+		len_str.append(std::to_string(buffer.length()));
+		len_str.append("\r\n");
+		len_str.append("Connection: " + _request.getConnectionType());
+		len_str.append("\r\n\r\n");
+		buffer.insert(0, len_str);
+	}
+	close(fd);
 	if (!_status)
 		_status = ST_OK;
 	return buffer;
@@ -533,7 +595,9 @@ void Response::makeResponse()
 			_resp.append("Content-Length: ");
 			_resp.append(std::to_string(strlen(_body.c_str())));
 			_resp.append("\r\n");
-			_resp.append("\r\n");
+			_resp.append("Connection: ");
+			_resp.append(_request.getConnectionType());
+			_resp.append("\r\n\r\n");
 			_resp.append(_body);
 		}
 		_resp.append("\r\n");
@@ -569,4 +633,19 @@ Location Response::getLocation() const
 void Response::setLocation(Location &location)
 {
 	this->_location = location;
+}
+
+int Response::getContentLength() const
+{
+	return this->_clen;
+}
+
+void Response::updateContentLength(int len)
+{
+	this->_clen += len;
+}
+
+int Response::getResponseLength() const
+{
+	return this->_resp.length();
 }

@@ -47,7 +47,7 @@
 extern char **environ;
 
 #ifndef DEBUG
-# define DEBUG 1
+# define DEBUG 0
 #endif
 
 void		hookPollIn(Webserv &, size_t);

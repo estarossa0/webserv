@@ -26,6 +26,7 @@ Server::Server(ServerData const &data, size_t index, Webserv *wb) : _index(index
 			+ data.getHost()+ ":" + std::to_string(_port) + "> " + std::string(strerror(errno)) + "; SKIPPED");
 
 	log "Binding on " + data.getHost()+ ":" + std::to_string(_port) line;
+	fcntl(this->_socketfd,  F_SETFL, O_NONBLOCK);
 	this->addData(data);
 	this->_connections.push_back(Connection(this->_socketfd, this, true, addr));
 	this->_webserv->_pollArray.push_back((struct pollfd){this->_socketfd, POLLIN, 0});
@@ -55,6 +56,7 @@ int		Server::connect()
 			+ inet_ntoa(client_addr.sin_addr) + ":" + std::to_string(ntohs(client_addr.sin_port))
 			+ "> " + std::string(strerror(errno)));
 	}
+	fcntl(newfd,  F_SETFL, O_NONBLOCK);
 	log "Accepted connection from " + std::string(inet_ntoa(client_addr.sin_addr))
 		+ ":" + std::to_string(ntohs(client_addr.sin_port)) line;
 	this->_connections.push_back(Connection(newfd, this, false, client_addr));

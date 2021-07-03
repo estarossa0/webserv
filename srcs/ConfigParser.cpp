@@ -21,12 +21,26 @@ std::string const ConfigParser::location_identifiers[NUMBER_OF_LOCATION_PRIMITIV
 	UPLOAD_LOC_STORE,
 };
 
-ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
+void ConfigParser::_parseArguments(int ac, char *av[])
 {
-	std::fstream output("./outputParser", std::ios::out | std::ios::trunc);
+	if (ac > 2 || ac < 1 || av == NULL)
+		throw std::runtime_error("Invalid arguments: USAGE [ ./webserv configFile.conf ]");
+	if (ac == 2)
+		_filename = av[1];
+	else
+		_filename = "./webserv.conf";
+}
+
+ConfigParser::ConfigParser(int ac, char *av[])
+{
+	_parseArguments(ac, av);
+	std::fstream output;
+	if (DEBUG)
+		output.open("./outputParser", std::ios::out | std::ios::trunc);
 	_getFileContent();
-	output << "got file content successfully" << std::endl;
-	if (output.is_open())
+	if (DEBUG)
+		output << "got file content successfully" << std::endl;
+	if (DEBUG && output.is_open())
 	{
 		for (size_t i = 0; i < _fileLines.size(); i++)
 		{
@@ -35,29 +49,34 @@ ConfigParser::ConfigParser(char const *inFilename) : _filename(inFilename)
 	}
 	_indexServers();
 
-	output << std::endl
-		   << "\nservers have been indexed successfully" << std::endl
-		   << std::endl;
-	output << "======================== SERVERS INDEXING ==========================";
-	output << std::endl
-		   << std::endl;
-
-	for (size_t i = 0; i < _serversIndexing.size(); i += 2)
+	if (DEBUG)
 	{
-		output << "start = [" << _serversIndexing[i] << "], end[" << _serversIndexing[i + 1] << "]" << std::endl;
+		output << std::endl
+			   << "\nservers have been indexed successfully" << std::endl
+			   << std::endl;
+		output << "======================== SERVERS INDEXING ==========================";
+		output << std::endl
+			   << std::endl;
+
+		for (size_t i = 0; i < _serversIndexing.size(); i += 2)
+		{
+			output << "start = [" << _serversIndexing[i] << "], end[" << _serversIndexing[i + 1] << "]" << std::endl;
+		}
 	}
 
 	_parseContent();
-	output << "content has been parsed successfully" << std::endl;
 
-	output << "======================== SERVERS PARSING ==========================" << std::endl;
-
-	std::vector<ServerData> servers = getServers();
-	for (size_t i = 0; i < servers.size(); i++)
+	if (DEBUG)
 	{
-		output << servers[i] << std::endl;
+		output << "content has been parsed successfully" << std::endl;
+		output << "======================== SERVERS PARSING ==========================" << std::endl;
+		std::vector<ServerData> servers = getServers();
+		for (size_t i = 0; i < servers.size(); i++)
+		{
+			output << servers[i] << std::endl;
+		}
 	}
-	outputLogs("configuration file has been parsed successfully");
+	outputLogs(std::string("configuration ") + _filename + " file has been parsed successfully");
 }
 
 ConfigParser::~ConfigParser()

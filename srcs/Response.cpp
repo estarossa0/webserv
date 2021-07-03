@@ -322,7 +322,7 @@ void Response::generateDirectoryListing()
 void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	if (isDirectory(_request.getUri(), 0))
+	if (isDirectory(file, 1))
 	{
 		if (_location.getAutoIndex())
 			generateDirectoryListing();

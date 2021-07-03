@@ -1,3 +1,9 @@
+<?php
+
+if (isset($_GET['path']))
+	unset($_COOKIE['cgi']);
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,14 +39,14 @@
 					if (!isset($_COOKIE['cgi'])) { 
 						echo "Not logged in";
 					} else 
-					echo "Welcome home";
+						echo "Welcome home";
 					?>
 				</h1>
 				<?php 
 				if (!isset($_COOKIE['cgi']))
 					echo '<a href="login.php" class="btn btn-primary text-center mt-5 text-decoration-none">Login</a>';
 				else
-					echo '<a href="logout.php" class="btn btn-primary text-center mt-5 text-decoration-none">Logout</a>';
+					echo '<a href="home.php?path=logout" class="btn btn-primary text-center mt-5 text-decoration-none">Logout</a>';
 				?>
 		</div>
 	</div>

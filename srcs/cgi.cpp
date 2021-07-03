@@ -24,7 +24,7 @@ FILE*	callCGI(Request &req, std::string const &root, std::string const &cgi_path
 
 	setenv("CONTENT_LENGTH", std::to_string(req.getContentLen()).c_str(), 1);
 	if (req.getConnectionType().size())
-		setenv("CONTENT_TYPE", req.getContentType().c_str(), 1);
+		setenv("CONTENT_TYPE", req.getOriginContentType().c_str(), 1);
 	setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
 	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
 	setenv("SERVER_PORT", std::to_string(req.getConnection()->getPort()).c_str(), 1);

@@ -206,7 +206,11 @@ void Response::readFile(std::string path)
 		throw Response::ServerError();
 	}
 	while (getline(fileReader, buffer))
-		body.append(buffer).append("\n");
+	{
+		body.append(buffer);
+		if (!fileReader.eof())
+			body.append("\n");
+	}
 	fileReader.close();
 	_body = body;
 }
@@ -318,7 +322,7 @@ void Response::generateDirectoryListing()
 void Response::methodGet()
 {
 	std::string file = getFilePath(getFileNameFromUri(_request.getUri()));
-	if (isDirectory(_request.getUri(), 0))
+	if (isDirectory(file, 1))
 	{
 		if (_location.getAutoIndex())
 			generateDirectoryListing();

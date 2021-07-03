@@ -641,10 +641,6 @@ void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 	_line.erase(_line.size() - 1, 1);
 	// get the allowed methods by splitting with comma
 	std::vector<std::string> tokens = _split(_line, ',');
-	// check if all supplied methods are in upper case
-	for (size_t i = 0; i < tokens.size(); i++)
-		if (!_isSet(tokens[i], std::isupper))
-			throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + getStringType("[") + _fileLines[index] + "]");
 
 	//  1 <= number of methods <= 3 and number of commas + 1 = number of methods
 	if (tokens.size() < 1 || tokens.size() > 3 ||
@@ -653,7 +649,7 @@ void ConfigParser::_locAllowedMethodsParser(size_t index, Location &loc)
 	for (size_t i = 0; i < tokens.size(); i++)
 	{
 		_trim(tokens[i]);
-		if (tokens[i].empty())
+		if (!_isSet(tokens[i], std::isupper) || tokens[i].empty())
 			throw std::runtime_error(ERROR_ALLOWED_METHODS_SYNTAX + getStringType("[") + _fileLines[index] + "]");
 	}
 	loc.setAllowedMethods(tokens);

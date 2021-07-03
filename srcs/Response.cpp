@@ -206,7 +206,11 @@ void Response::readFile(std::string path)
 		throw Response::ServerError();
 	}
 	while (getline(fileReader, buffer))
-		body.append(buffer).append("\n");
+	{
+		body.append(buffer);
+		if (!fileReader.eof())
+			body.append("\n");
+	}
 	fileReader.close();
 	_body = body;
 }

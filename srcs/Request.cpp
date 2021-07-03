@@ -231,6 +231,7 @@ void Request::parseRequest()
 					_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.find_first_of(";") - 14);
 					_boundary = _boundary.append("--").append(buffer.substr(buffer.find("boundary=") + 9));
 					_boundary.pop_back();
+					_ctype_origin = buffer.substr(buffer.find(":") + 2, buffer.length() - buffer.find(":") - 3);
 				}
 				else
 					_ctype = buffer.substr(buffer.find_first_of(": ") + 2, buffer.length() - buffer.find_first_of(":") - 3);
@@ -459,6 +460,11 @@ int Request::getContentLen() const
 const std::string &Request::getContentType() const
 {
 	return _ctype;
+}
+
+const std::string &Request::getOriginContentType() const
+{
+	return _ctype_origin;
 }
 
 const std::string &Request::getBody() const

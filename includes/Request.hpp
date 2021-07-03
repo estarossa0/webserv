@@ -29,6 +29,7 @@ private:
 	std::string _protocol;
 	unsigned int _clen;
 	std::string _ctype;
+	std::string _ctype_origin;
 	std::string _body;
 	std::string _boundary;
 	std::string _disp;
@@ -66,6 +67,7 @@ public:
 	const std::string &getHost() const;
 	int getContentLen() const;
 	const std::string &getContentType() const;
+	const std::string &getOriginContentType() const;
 	const std::string &getBody() const;
 	const std::string &getBoundary() const;
 	const std::string &getDisposition() const;

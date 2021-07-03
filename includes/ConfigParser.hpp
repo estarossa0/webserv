@@ -96,6 +96,7 @@ private:
 	void _indexServers();
 	int _isPrimitive(std::string const &);
 	int _isLocationPrimitive(std::string const &);
+	void _parseArguments(int ac, char *av[]);
 
 	// partial server fields parsers
 	int _portParser(size_t, ServerData &);
@@ -124,7 +125,7 @@ private:
 	void addServer(ServerData const &);
 
 public:
-	ConfigParser(char const *inFilename);
+	ConfigParser(int ac, char *av[]);
 	std::vector<ServerData> getServers() const;
 	~ConfigParser();
 	static std::string const primitives_openings[NUMBER_OF_SERVER_PRIMITIVES];

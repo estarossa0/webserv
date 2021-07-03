@@ -79,7 +79,7 @@ void	hookPollIn(Webserv &web, size_t i)
 
 void	hookPollOut(Webserv &web, size_t i)
 {
-	if (web[i].getRequest().getData().length() && web[i].getRequest().checkDataDone())
+	if (web[i].getRequest().isDone == false && web[i].getRequest().getData().length() && web[i].getRequest().checkDataDone())
 		web[i].getRequest().parseRequest();
 	if (web[i].getRequest().isDone) {
 		if (web[i].send() < (int)web[i].getResponse().getResponseLength())

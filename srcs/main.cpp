@@ -2,21 +2,16 @@
 
 int main(int ac, char **av)
 {
+	Webserv web;
 	try
 	{
-		outputLogs("\n\n-- starting new webserv session --");
 		ConfigParser parser(ac, av);
-		Webserv web;
 		web.init(parser.getServers());
 		web.hook();
-		outputLogs("-- ending the webserv session successfuly --");
 	}
 	catch (std::exception &e)
 	{
-		log e.what() line;
-		outputLogs("Error: " + std::string(e.what()));
-		outputLogs("-- ending the webserv session with an error --");
-		return 1;
+		web.logError(std::string(e.what()));
 	}
-	return 0;
+	return web.success ? 0 : 1;
 }

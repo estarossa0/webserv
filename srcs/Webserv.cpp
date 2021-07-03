@@ -1,10 +1,16 @@
 #include "Webserv.hpp"
 
-Webserv::Webserv() : _conSize(0)
-{}
+Webserv::Webserv() : _conSize(0), success(true)
+{
+	outputLogs("\n\n-- starting new webserv session --");
+}
 
 Webserv::~Webserv()
 {
+	if (success)
+		outputLogs("-- ending the webserv session successfuly --");
+	else
+		outputLogs("-- ending the webserv session with an error --");
 	for (size_t index = 0; index < this->_conSize; index++)
 		(*this)[index].close();
 }
@@ -154,4 +160,11 @@ void	Webserv::init(std::vector<ServerData> const &svsdata)
 	}
 	if (this->_servers.size() == 0)
 		throw std::runtime_error("Could not create any server! Webserv stoping...");
+}
+
+void	Webserv::logError(std::string err)
+{
+		this->success = false;
+		log err line;
+		outputLogs("Error: " + err);
 }

@@ -69,6 +69,9 @@ public:
 	Webserv();
 	~Webserv();
 
+	bool		success;
+	void		logError(std::string);
+
 	void		hook();
 	Server		&serverAt(int);
 	void		addServer(ServerData const &);

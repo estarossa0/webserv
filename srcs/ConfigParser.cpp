@@ -265,8 +265,8 @@ void ConfigParser::_parseContent()
 {
 	size_t start;
 	size_t end;
-	size_t parserIndex;
-	size_t doneParsingIndex;
+	int parserIndex;
+	int doneParsingIndex;
 	ParserFuncPtr _server_primitive_parser[NUMBER_OF_SERVER_PRIMITIVES] = {
 		&ConfigParser::_portParser,
 		&ConfigParser::_hostParser,
@@ -307,7 +307,7 @@ void ConfigParser::_parseContent()
 
 				_checked_primitives[primitives_openings[parserIndex]] = true;
 
-				if ((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) == end + 1)
+				if (static_cast<size_t>((doneParsingIndex = (this->*_server_primitive_parser[parserIndex])(start, sv)) == end + 1)
 					throw std::runtime_error(ERROR_INVALID_CONFIGURATION + getStringType("[") + _fileLines[start] + "]");
 				start = static_cast<size_t>(doneParsingIndex);
 				continue;
